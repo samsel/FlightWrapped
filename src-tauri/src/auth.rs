@@ -6,8 +6,7 @@ use oauth2::{
 use serde::{Deserialize, Serialize};
 use std::io::{BufRead, BufReader, Write};
 use std::net::TcpListener;
-use tauri::Emitter;
-use tauri::Manager;
+use tauri_plugin_opener::OpenerExt;
 use url::Url;
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -60,29 +59,10 @@ pub async fn start_google_auth(app: tauri::AppHandle) -> Result<AuthResult, Stri
         .set_pkce_challenge(pkce_challenge)
         .url();
 
-    // Open the browser
-    if let Some(shell) = app.get_webview_window("main") {
-        // Using shell plugin to open
-        // Ideally use tauri_plugin_shell::ShellExt or just simple open if available
-        // Actually, we can use the `tauri_plugin_shell` api from JS or Rust.
-        // In Rust, we can emit an event or use the scanner.
-        // Let's use the shell plugin via the AppHandle if possible, or just std::process for macOS open command
-        // which is "open" command.
-        // Better: use the plugin properly.
-        // But for simplicity in this function, I will just use `open` crate or simpler:
-        // `tauri::async_runtime::spawn` to call shell open.
-        // Wait, `tauri-plugin-opener` usually handles `open`.
-        // Let's use `tauri_plugin_opener`
-    }
-    // We can just use the shell plugin api if we have access, but simpler is to return the URL for frontend to open?
-    // No, we want to start listening BEFORE opening.
-
-    // Let's use `open` crate logic:
-    #[cfg(target_os = "macos")]
-    std::process::Command::new("open")
-        .arg(authorize_url.as_str())
-        .spawn()
-        .map_err(|e| e.to_string())?;
+    // Open the browser using tauri-plugin-opener
+    app.opener()
+        .open_url(authorize_url.as_str(), None::<&str>)
+        .map_err(|e| format!("Failed to open browser: {}", e))?;
 
     // Wait for the code
     let mut stream = listener
