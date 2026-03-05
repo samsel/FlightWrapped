@@ -70,3 +70,25 @@ export interface NormalizedEmail {
 export interface RawEmail {
   raw: string // raw MIME content
 }
+
+export interface FunStats {
+  earthOrbits: number
+  moonPercent: number
+  daysInAir: number
+  speedComparison: number
+  distanceLabel: string
+}
+
+export interface Insight {
+  id: string
+  title: string
+  description: string
+  icon: string
+}
+
+export interface Archetype {
+  id: string
+  name: string
+  description: string
+  icon: string
+}

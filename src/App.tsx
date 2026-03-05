@@ -1,9 +1,13 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import InputScreen from '@/components/InputScreen'
 import ParsingProgress from '@/components/ParsingProgress'
 import { getCallbackCode, clearCallbackParams, handleCallback, searchFlightEmails, batchFetchMessages, configureGmail } from '@/lib/gmail'
 import { normalizeEmails } from '@/lib/email-normalizer'
 import { streamMbox, parseEmlFile, getFileType } from '@/lib/mbox'
+import { calculateStats } from '@/lib/stats'
+import { calculateFunStats } from '@/lib/funStats'
+import { generateInsights } from '@/lib/insights'
+import { determineArchetype } from '@/lib/archetypes'
 import type { Flight, ParseProgress, WorkerOutMessage, RawEmail } from '@/lib/types'
 
 type AppState = 'landing' | 'parsing' | 'results'
@@ -149,6 +153,11 @@ function App() {
     setError(message)
   }, [])
 
+  const stats = useMemo(() => calculateStats(flights), [flights])
+  const funStats = useMemo(() => calculateFunStats(stats), [stats])
+  const insights = useMemo(() => generateInsights(flights, stats), [flights, stats])
+  const archetype = useMemo(() => determineArchetype(flights, stats), [flights, stats])
+
   if (appState === 'landing') {
     return (
       <>
@@ -178,16 +187,61 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-950 text-white flex flex-col items-center justify-center px-4">
       <h1 className="text-3xl font-bold mb-4">MyFlights</h1>
-      <p className="text-gray-400 mb-8">
-        Found {flights.length} flights. Dashboard coming in Part 5.
-      </p>
+
+      <div className="max-w-lg w-full space-y-4 text-sm">
+        <div className="bg-gray-900 rounded-lg p-4 space-y-2">
+          <p className="text-lg font-semibold">{archetype.icon} {archetype.name}</p>
+          <p className="text-gray-400">{archetype.description}</p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div className="bg-gray-900 rounded-lg p-3">
+            <p className="text-gray-400">Flights</p>
+            <p className="text-xl font-bold">{stats.totalFlights}</p>
+          </div>
+          <div className="bg-gray-900 rounded-lg p-3">
+            <p className="text-gray-400">Miles</p>
+            <p className="text-xl font-bold">{stats.totalMiles.toLocaleString()}</p>
+          </div>
+          <div className="bg-gray-900 rounded-lg p-3">
+            <p className="text-gray-400">Airports</p>
+            <p className="text-xl font-bold">{stats.uniqueAirports}</p>
+          </div>
+          <div className="bg-gray-900 rounded-lg p-3">
+            <p className="text-gray-400">Countries</p>
+            <p className="text-xl font-bold">{stats.uniqueCountries}</p>
+          </div>
+          <div className="bg-gray-900 rounded-lg p-3">
+            <p className="text-gray-400">Earth Orbits</p>
+            <p className="text-xl font-bold">{funStats.earthOrbits}</p>
+          </div>
+          <div className="bg-gray-900 rounded-lg p-3">
+            <p className="text-gray-400">Days in Air</p>
+            <p className="text-xl font-bold">{funStats.daysInAir}</p>
+          </div>
+        </div>
+
+        {insights.length > 0 && (
+          <div className="bg-gray-900 rounded-lg p-4">
+            <p className="font-semibold mb-2">Insights</p>
+            <ul className="space-y-1 text-gray-400">
+              {insights.map((i) => (
+                <li key={i.id}>{i.title}: {i.description}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        <p className="text-gray-500 text-center text-xs">Full dashboard coming in Part 5</p>
+      </div>
+
       <button
         onClick={() => {
           setAppState('landing')
           setFlights([])
           setProgress({ phase: 'scanning', current: 0, total: 0, flightsFound: 0 })
         }}
-        className="px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-500 transition-colors"
+        className="mt-6 px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-500 transition-colors"
       >
         Start Over
       </button>
