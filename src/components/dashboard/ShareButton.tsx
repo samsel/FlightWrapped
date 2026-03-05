@@ -71,7 +71,7 @@ export default function ShareButton({ stats, funStats, archetype, flights }: Pro
           onClick={close}
         >
           <div
-            className="bg-gray-900 rounded-xl border border-gray-700 max-w-2xl w-full p-6 space-y-4"
+            className="bg-gray-900 rounded-xl border border-gray-700 max-w-2xl w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between">

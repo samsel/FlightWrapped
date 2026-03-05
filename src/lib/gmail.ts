@@ -125,10 +125,16 @@ function buildFlightSearchQuery(): string {
   return `(${domainQuery}) ${keywordQuery}`
 }
 
+export interface RateLimitInfo {
+  retryAfter: number
+  attempt: number
+}
+
 /** Search Gmail for flight-related emails, returns message IDs */
 export async function searchFlightEmails(
   token: string,
   onProgress?: (fetched: number) => void,
+  onRateLimit?: (info: RateLimitInfo) => void,
 ): Promise<string[]> {
   const query = buildFlightSearchQuery()
   const messageIds: string[] = []
@@ -141,7 +147,7 @@ export async function searchFlightEmails(
     })
     if (pageToken) params.set('pageToken', pageToken)
 
-    const response = await fetchWithRetry(`${GMAIL_API_BASE}/messages?${params}`, token)
+    const response = await fetchWithRetry(`${GMAIL_API_BASE}/messages?${params}`, token, MAX_RETRIES, onRateLimit)
     const data = await response.json()
 
     if (data.messages) {
@@ -162,6 +168,7 @@ export async function batchFetchMessages(
   ids: string[],
   token: string,
   onProgress?: (fetched: number, total: number) => void,
+  onRateLimit?: (info: RateLimitInfo) => void,
 ): Promise<RawEmail[]> {
   const results: RawEmail[] = []
 
@@ -177,6 +184,8 @@ export async function batchFetchMessages(
       const response = await fetchWithRetry(
         `${GMAIL_API_BASE}/messages/${id}?format=raw`,
         token,
+        MAX_RETRIES,
+        onRateLimit,
       )
       const data = await response.json()
       // Gmail returns base64url-encoded raw message
@@ -192,7 +201,12 @@ export async function batchFetchMessages(
   return results
 }
 
-async function fetchWithRetry(url: string, token: string, retries = MAX_RETRIES): Promise<Response> {
+async function fetchWithRetry(
+  url: string,
+  token: string,
+  retries = MAX_RETRIES,
+  onRateLimit?: (info: RateLimitInfo) => void,
+): Promise<Response> {
   for (let attempt = 0; attempt < retries; attempt++) {
     const response = await fetch(url, {
       headers: { Authorization: `Bearer ${token}` },
@@ -201,7 +215,15 @@ async function fetchWithRetry(url: string, token: string, retries = MAX_RETRIES)
     if (response.ok) return response
 
     if (response.status === 429 || response.status >= 500) {
-      const backoff = Math.pow(2, attempt) * 1000 + Math.random() * 3000
+      const retryAfterHeader = response.headers.get('Retry-After')
+      const backoff = retryAfterHeader
+        ? parseInt(retryAfterHeader, 10) * 1000
+        : Math.pow(2, attempt) * 1000 + Math.random() * 3000
+
+      if (response.status === 429) {
+        onRateLimit?.({ retryAfter: Math.round(backoff / 1000), attempt: attempt + 1 })
+      }
+
       await sleep(backoff)
       continue
     }

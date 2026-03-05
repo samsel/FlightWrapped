@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import InputScreen from '@/components/InputScreen'
 import ParsingProgress from '@/components/ParsingProgress'
-import { getCallbackCode, clearCallbackParams, handleCallback, searchFlightEmails, batchFetchMessages, configureGmail } from '@/lib/gmail'
+import { getCallbackCode, clearCallbackParams, handleCallback, searchFlightEmails, batchFetchMessages, configureGmail, type RateLimitInfo } from '@/lib/gmail'
 import { normalizeEmails } from '@/lib/email-normalizer'
 import { streamMbox, parseEmlFile, getFileType } from '@/lib/mbox'
 import { calculateStats } from '@/lib/stats'
@@ -75,10 +75,14 @@ function App() {
 
       const token = await handleCallback(code)
 
+      const handleRateLimit = (info: RateLimitInfo) => {
+        setProgress((p) => ({ ...p, message: `Rate limited by Gmail — retrying in ${info.retryAfter}s...` }))
+      }
+
       setProgress({ phase: 'scanning', current: 0, total: 0, flightsFound: 0, message: 'Searching for flight emails...' })
       const messageIds = await searchFlightEmails(token, (fetched) => {
         setProgress((p) => ({ ...p, current: fetched, message: `Found ${fetched} potential flight emails...` }))
-      })
+      }, handleRateLimit)
 
       if (messageIds.length === 0) {
         setProgress({ phase: 'done', current: 0, total: 0, flightsFound: 0, message: 'No flight emails found' })
@@ -88,7 +92,7 @@ function App() {
       setProgress({ phase: 'scanning', current: 0, total: messageIds.length, flightsFound: 0, message: 'Fetching emails...' })
       const rawEmails = await batchFetchMessages(messageIds, token, (fetched, total) => {
         setProgress({ phase: 'scanning', current: fetched, total, flightsFound: 0, message: `Fetching email ${fetched.toLocaleString()} of ${total.toLocaleString()}...` })
-      })
+      }, handleRateLimit)
 
       await sendToWorker(rawEmails)
     } catch (err) {
@@ -159,9 +163,16 @@ function App() {
   const insights = useMemo(() => generateInsights(flights, stats), [flights, stats])
   const archetype = useMemo(() => determineArchetype(flights, stats), [flights, stats])
 
+  const resetToLanding = useCallback(() => {
+    setAppState('landing')
+    setFlights([])
+    setError(null)
+    setProgress({ phase: 'scanning', current: 0, total: 0, flightsFound: 0 })
+  }, [])
+
   if (appState === 'landing') {
     return (
-      <>
+      <div className="animate-fade-in">
         <InputScreen onFilesSelected={handleFilesSelected} onError={handleError} />
         {error && (
           <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-red-900/90 text-red-200 px-6 py-3 rounded-lg shadow-lg">
@@ -171,32 +182,30 @@ function App() {
             </button>
           </div>
         )}
-      </>
+      </div>
     )
   }
 
   if (appState === 'parsing') {
     return (
-      <div className="min-h-screen bg-gray-950 text-white flex flex-col items-center justify-center px-4">
+      <div className="min-h-screen bg-gray-950 text-white flex flex-col items-center justify-center px-4 animate-fade-in">
         <h1 className="text-3xl font-bold mb-8">MyFlights</h1>
-        <ParsingProgress progress={progress} />
+        <ParsingProgress progress={progress} onReset={resetToLanding} />
       </div>
     )
   }
 
   return (
-    <Dashboard
-      flights={flights}
-      stats={stats}
-      funStats={funStats}
-      insights={insights}
-      archetype={archetype}
-      onReset={() => {
-        setAppState('landing')
-        setFlights([])
-        setProgress({ phase: 'scanning', current: 0, total: 0, flightsFound: 0 })
-      }}
-    />
+    <div className="animate-fade-in">
+      <Dashboard
+        flights={flights}
+        stats={stats}
+        funStats={funStats}
+        insights={insights}
+        archetype={archetype}
+        onReset={resetToLanding}
+      />
+    </div>
   )
 }
 
