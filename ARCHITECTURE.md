@@ -30,15 +30,18 @@ We deliberately chose **no backend-for-frontend (BFF)**. The entire app runs cli
 
 **Note on `sessionStorage` for PKCE code verifier:** The code verifier is stored in `sessionStorage` briefly during the OAuth redirect. This is necessary since the page reloads. `sessionStorage` is accessible to any JS on the same origin — if third-party scripts were ever added, they could theoretically read it during the brief redirect window. Non-issue for this project, but worth documenting.
 
-### Three-Tier Extraction Pipeline
+### Pure Local LLM Extraction
 
-Flight data is extracted using a cascading approach:
+Flight data is extracted entirely by a local LLM running in the browser — no regex heuristics, no JSON-LD scraping, no server-side AI. This is a deliberate architectural choice:
 
-1. **Tier 1 — JSON-LD (confidence: 0.99):** Structured schema.org data embedded by airlines. Ground truth when available.
-2. **Tier 2 — Regex (confidence: 0.70–0.90):** Pattern matching for airport codes, flight numbers, dates. Only runs if Tier 1 finds nothing.
-3. **Tier 3 — Local LLM (confidence: 0.80–0.95):** In-browser LLM via WebLLM. Opt-in only. Only runs if Tier 1 and 2 fail on airline-domain emails.
+- **Privacy-first:** Email content never leaves the device. The model runs via WebGPU/WASM using WebLLM (Phi-3.5-mini, ~2GB, cached in IndexedDB after first download).
+- **Simpler architecture:** One extraction path instead of a cascading multi-tier pipeline. Easier to reason about, test, and maintain.
+- **Stronger portfolio story:** Demonstrates real on-device AI inference, not just string matching dressed up as "AI-powered."
+- **Better generalization:** An LLM handles the long tail of airline email formats naturally, whereas regex/JSON-LD only covers known patterns.
 
-Each flight is tagged with its extraction tier and confidence score — visible in the UI for transparency.
+The tradeoff is speed — LLM inference is slower per email than regex. We mitigate this by pre-filtering emails against a curated airline/booking domain list (~200 domains) so only relevant emails are sent to the model.
+
+Each extracted flight includes a confidence score. IATA codes are validated against the airport database (5,500+ airports) post-extraction to catch hallucinations.
 
 ### Deduplication Strategy
 

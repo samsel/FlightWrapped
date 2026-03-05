@@ -5,6 +5,7 @@ interface ParsingProgressProps {
 }
 
 const phaseLabels: Record<ParseProgress['phase'], string> = {
+  'loading-model': 'Loading AI model',
   scanning: 'Scanning emails',
   extracting: 'Extracting flight data',
   deduplicating: 'Deduplicating flights',
@@ -26,6 +27,8 @@ export default function ParsingProgress({ progress }: ParsingProgressProps) {
             `Found ${progress.flightsFound.toLocaleString()} flights`
           ) : progress.phase === 'error' ? (
             progress.message ?? 'An error occurred'
+          ) : progress.phase === 'loading-model' ? (
+            progress.message ?? 'Downloading model (cached after first use)...'
           ) : (
             <>
               {progress.current.toLocaleString()} of {progress.total.toLocaleString()} emails

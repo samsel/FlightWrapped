@@ -14,11 +14,8 @@ export interface Flight {
   date: string // ISO date string YYYY-MM-DD
   airline: string
   flightNumber: string
-  extractionTier: ExtractionTier
   confidence: number
 }
-
-export type ExtractionTier = 'jsonld' | 'regex' | 'llm'
 
 export interface FlightStats {
   totalFlights: number
@@ -42,7 +39,7 @@ export interface FlightStats {
 }
 
 export interface ParseProgress {
-  phase: 'scanning' | 'extracting' | 'deduplicating' | 'done' | 'error'
+  phase: 'loading-model' | 'scanning' | 'extracting' | 'deduplicating' | 'done' | 'error'
   current: number
   total: number
   flightsFound: number
@@ -50,6 +47,7 @@ export interface ParseProgress {
 }
 
 export type WorkerInMessage =
+  | { type: 'init-llm' }
   | { type: 'parse-emails'; data: NormalizedEmail[] }
   | { type: 'ping' }
 
@@ -57,6 +55,7 @@ export type WorkerOutMessage =
   | { type: 'progress'; data: ParseProgress }
   | { type: 'result'; data: Flight[] }
   | { type: 'error'; data: { message: string } }
+  | { type: 'llm-ready' }
   | { type: 'pong' }
 
 export interface NormalizedEmail {
