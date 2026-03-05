@@ -207,6 +207,7 @@ describe('calculateFunStats', () => {
       shortestRoute: null,
       domesticRatio: 0.5,
       flightsByYear: {},
+      flightsByMonth: {},
       estimatedHours: 1000,
       co2Tons: 127.5,
     }
@@ -234,6 +235,7 @@ describe('calculateFunStats', () => {
       shortestRoute: null,
       domesticRatio: 1,
       flightsByYear: {},
+      flightsByMonth: {},
       estimatedHours: 1,
       co2Tons: 0.1,
     }

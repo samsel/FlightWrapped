@@ -1,0 +1,75 @@
+import { useRef, useState, useEffect, useMemo, Suspense, lazy } from 'react'
+import { lookupAirport } from '@/lib/airports'
+import type { Flight } from '@/lib/types'
+
+const GlobeInner = lazy(() => import('./GlobeInner'))
+
+interface Props {
+  flights: Flight[]
+}
+
+export default function GlobePanel({ flights }: Props) {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [dimensions, setDimensions] = useState({ width: 800, height: 500 })
+
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+
+    const observer = new ResizeObserver(([entry]) => {
+      const { width } = entry.contentRect
+      setDimensions({ width, height: Math.min(width * 0.65, 600) })
+    })
+
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+
+  const { arcsData, pointsData } = useMemo(() => {
+    const seenRoutes = new Set<string>()
+    const seenAirports = new Set<string>()
+    const arcs: { startLat: number; startLng: number; endLat: number; endLng: number }[] = []
+    const points: { lat: number; lng: number; label: string }[] = []
+
+    for (const f of flights) {
+      const orig = lookupAirport(f.origin)
+      const dest = lookupAirport(f.destination)
+      if (!orig || !dest) continue
+
+      const rk = [f.origin, f.destination].sort().join('-')
+      if (!seenRoutes.has(rk)) {
+        seenRoutes.add(rk)
+        arcs.push({ startLat: orig.lat, startLng: orig.lng, endLat: dest.lat, endLng: dest.lng })
+      }
+
+      for (const ap of [orig, dest]) {
+        if (!seenAirports.has(ap.iata)) {
+          seenAirports.add(ap.iata)
+          points.push({ lat: ap.lat, lng: ap.lng, label: `${ap.iata} · ${ap.city}` })
+        }
+      }
+    }
+
+    return { arcsData: arcs, pointsData: points }
+  }, [flights])
+
+  return (
+    <div ref={containerRef} className="w-full flex justify-center bg-gray-950 overflow-hidden">
+      <Suspense
+        fallback={
+          <div
+            className="bg-gray-900 animate-pulse rounded-full"
+            style={{ width: dimensions.height, height: dimensions.height }}
+          />
+        }
+      >
+        <GlobeInner
+          width={dimensions.width}
+          height={dimensions.height}
+          arcsData={arcsData}
+          pointsData={pointsData}
+        />
+      </Suspense>
+    </div>
+  )
+}

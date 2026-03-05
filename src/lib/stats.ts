@@ -26,6 +26,7 @@ export function calculateStats(flights: Flight[]): FlightStats {
       flightsByYear: {},
       estimatedHours: 0,
       co2Tons: 0,
+      flightsByMonth: {},
     }
   }
 
@@ -151,5 +152,6 @@ export function calculateStats(flights: Flight[]): FlightStats {
     flightsByYear: yearCounts,
     estimatedHours: Math.round((totalMiles / 500) * 10) / 10,
     co2Tons: Math.round(totalMiles * 0.000255 * 1000) / 1000,
+    flightsByMonth: monthCounts,
   }
 }

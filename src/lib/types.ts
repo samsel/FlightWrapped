@@ -36,6 +36,7 @@ export interface FlightStats {
   flightsByYear: Record<string, number>
   estimatedHours: number
   co2Tons: number
+  flightsByMonth: Record<string, number>
 }
 
 export interface ParseProgress {

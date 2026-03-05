@@ -1,0 +1,37 @@
+const ICON_MAP: Record<string, string> = {
+  calendar: '📅',
+  crown: '👑',
+  globe: '🌍',
+  plane: '✈️',
+  star: '⭐',
+  fire: '🔥',
+  moon: '🌙',
+  sun: '☀️',
+  trophy: '🏆',
+  chart: '📊',
+  clock: '🕐',
+  pin: '📍',
+  flag: '🏁',
+  lightning: '⚡',
+  heart: '❤️',
+  compass: '🧭',
+  rocket: '🚀',
+  mountain: '🏔️',
+  sunrise: '🌅',
+  night: '🌃',
+  owl: '🦉',
+  briefcase: '💼',
+  backpack: '🎒',
+  sparkle: '✨',
+  earth: '🌎',
+  warning: '⚠️',
+  leaf: '🍃',
+  snowflake: '❄️',
+  umbrella: '☂️',
+  anchor: '⚓',
+  wave: '🌊',
+}
+
+export function getIcon(token: string): string {
+  return ICON_MAP[token] ?? '✈️'
+}
