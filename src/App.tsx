@@ -8,6 +8,7 @@ import { calculateFunStats } from '@/lib/funStats'
 import { generateInsights } from '@/lib/insights'
 import { determineArchetype } from '@/lib/archetypes'
 import Dashboard from '@/components/dashboard/Dashboard'
+import { DEMO_FLIGHTS } from '@/components/landing/demoFlights'
 import type { Flight, ParseProgress, WorkerOutMessage, RawEmail } from '@/lib/types'
 
 type AppState = 'landing' | 'parsing' | 'results'
@@ -109,6 +110,11 @@ function App() {
     workerRef.current?.postMessage({ type: 'parse-emails', data: normalized })
   }
 
+  const handleDemoClick = useCallback(() => {
+    setFlights(DEMO_FLIGHTS)
+    setAppState('results')
+  }, [])
+
   const handleError = useCallback((message: string) => {
     setError(message)
   }, [])
@@ -128,7 +134,7 @@ function App() {
   if (appState === 'landing') {
     return (
       <div className="animate-fade-in">
-        <InputScreen onError={handleError} />
+        <InputScreen onError={handleError} onDemoClick={handleDemoClick} />
         {error && (
           <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-red-900/90 text-red-200 px-6 py-3 rounded-lg shadow-lg">
             {error}
