@@ -1,10 +1,10 @@
 # MyFlights
 
-Your flight stats, visualized. Connect your Gmail or upload email files to see beautiful analytics from your flight confirmation emails.
+Your flight stats, visualized. Connect your Gmail to see beautiful analytics from your flight confirmation emails.
 
 ## How It Works
 
-1. **Connect** — Sign in with Gmail (OAuth) or upload `.mbox`/`.eml` files
+1. **Connect** — Sign in with Gmail (OAuth)
 2. **Extract** — A 3-tier pipeline (JSON-LD → regex → local LLM) pulls flight data from confirmation emails
 3. **Visualize** — See your flights on a 3D globe, get stats, insights, and a shareable image card
 

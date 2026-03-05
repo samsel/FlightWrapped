@@ -3,7 +3,6 @@ import InputScreen from '@/components/InputScreen'
 import ParsingProgress from '@/components/ParsingProgress'
 import { getCallbackCode, clearCallbackParams, handleCallback, searchFlightEmails, batchFetchMessages, configureGmail, type RateLimitInfo } from '@/lib/gmail'
 import { normalizeEmails } from '@/lib/email-normalizer'
-import { streamMbox, parseEmlFile, getFileType } from '@/lib/mbox'
 import { calculateStats } from '@/lib/stats'
 import { calculateFunStats } from '@/lib/funStats'
 import { generateInsights } from '@/lib/insights'
@@ -110,50 +109,6 @@ function App() {
     workerRef.current?.postMessage({ type: 'parse-emails', data: normalized })
   }
 
-  const handleFilesSelected = useCallback(async (files: File[]) => {
-    setAppState('parsing')
-    setError(null)
-
-    try {
-      const rawEmails: RawEmail[] = []
-      let totalProcessed = 0
-
-      for (const file of files) {
-        const type = getFileType(file)
-
-        if (type === 'mbox') {
-          setProgress({ phase: 'scanning', current: 0, total: 0, flightsFound: 0, message: `Reading ${file.name}...` })
-          for await (const email of streamMbox(file)) {
-            rawEmails.push(email)
-            totalProcessed++
-            setProgress({ phase: 'scanning', current: totalProcessed, total: 0, flightsFound: 0, message: `Found ${totalProcessed} emails in ${file.name}...` })
-          }
-        } else if (type === 'eml') {
-          const email = await parseEmlFile(file)
-          rawEmails.push(email)
-          totalProcessed++
-        } else {
-          // Try to parse as mbox for unknown types
-          setProgress({ phase: 'scanning', current: 0, total: 0, flightsFound: 0, message: `Reading ${file.name}...` })
-          for await (const email of streamMbox(file)) {
-            rawEmails.push(email)
-            totalProcessed++
-          }
-        }
-      }
-
-      if (rawEmails.length === 0) {
-        setProgress({ phase: 'done', current: 0, total: 0, flightsFound: 0, message: 'No emails found in uploaded files' })
-        return
-      }
-
-      await sendToWorker(rawEmails)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to process files')
-      setProgress((p) => ({ ...p, phase: 'error', message: err instanceof Error ? err.message : 'Failed to process files' }))
-    }
-  }, [])
-
   const handleError = useCallback((message: string) => {
     setError(message)
   }, [])
@@ -173,7 +128,7 @@ function App() {
   if (appState === 'landing') {
     return (
       <div className="animate-fade-in">
-        <InputScreen onFilesSelected={handleFilesSelected} onError={handleError} />
+        <InputScreen onError={handleError} />
         {error && (
           <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-red-900/90 text-red-200 px-6 py-3 rounded-lg shadow-lg">
             {error}

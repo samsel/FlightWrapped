@@ -1,12 +1,10 @@
 import GmailConnect from './GmailConnect'
-import FileUpload from './FileUpload'
 
 interface InputScreenProps {
-  onFilesSelected: (files: File[]) => void
   onError: (message: string) => void
 }
 
-export default function InputScreen({ onFilesSelected, onError }: InputScreenProps) {
+export default function InputScreen({ onError }: InputScreenProps) {
   return (
     <div className="min-h-screen bg-gray-950 text-white flex flex-col items-center justify-center px-4">
       <div className="max-w-xl w-full text-center">
@@ -23,16 +21,6 @@ export default function InputScreen({ onFilesSelected, onError }: InputScreenPro
               Read-only access. Nothing is stored or sent anywhere.
             </p>
           </div>
-
-          {/* Divider */}
-          <div className="flex items-center gap-4">
-            <div className="flex-1 h-px bg-gray-800" />
-            <span className="text-gray-500 text-sm">or</span>
-            <div className="flex-1 h-px bg-gray-800" />
-          </div>
-
-          {/* File upload path */}
-          <FileUpload onFilesSelected={onFilesSelected} />
         </div>
 
         {/* How it works */}
@@ -41,7 +29,7 @@ export default function InputScreen({ onFilesSelected, onError }: InputScreenPro
             How it works
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Step number={1} title="Connect" description="Link Gmail or upload email files" />
+            <Step number={1} title="Connect" description="Connect your Gmail" />
             <Step number={2} title="Extract" description="AI finds flights in your emails" />
             <Step number={3} title="Visualize" description="See your flight stats on a 3D globe" />
           </div>
