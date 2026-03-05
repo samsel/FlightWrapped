@@ -19,7 +19,13 @@ interface Props {
 export default function Dashboard({ flights, stats, funStats, insights, archetype, onReset }: Props) {
   return (
     <div className="min-h-screen bg-gray-950 text-white">
-      <DashboardHeader archetype={archetype} onReset={onReset} />
+      <DashboardHeader
+        stats={stats}
+        funStats={funStats}
+        archetype={archetype}
+        flights={flights}
+        onReset={onReset}
+      />
 
       <GlobePanel flights={flights} />
 

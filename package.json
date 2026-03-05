@@ -12,6 +12,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "html-to-image": "^1.11.13",
     "postal-mime": "^2.7.3",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
