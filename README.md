@@ -1,26 +1,30 @@
 # MyFlights
 
-Your flight stats, visualized. Connect your Gmail to see beautiful analytics from your flight confirmation emails.
+Your flight stats, visualized. Connect your Gmail to see beautiful analytics from your flight confirmation emails — entirely in your browser.
 
 ## How It Works
 
-1. **Connect** — Sign in with Gmail (OAuth)
-2. **Extract** — A 3-tier pipeline (JSON-LD → regex → local LLM) pulls flight data from confirmation emails
-3. **Visualize** — See your flights on a 3D globe, get stats, insights, and a shareable image card
+1. **Connect** — Sign in with Gmail (read-only OAuth PKCE, no server involved)
+2. **Extract** — A local LLM (Phi-3.5-mini via WebLLM) runs in your browser to parse flight data from confirmation emails
+3. **Visualize** — See your flights on an interactive 3D globe, get stats, insights, your flyer archetype, and export a shareable image card
+
+You can also click **"Try with sample data"** to explore the full dashboard with 46 demo flights — no Gmail setup needed.
 
 ## Privacy
 
-Everything runs entirely in your browser. No server, no database, no data leaves your machine. Email parsing and LLM inference happen locally via Web Workers and WebLLM. The only network call is an optional anonymous counter powered by Firebase.
+Everything runs entirely in your browser. There is no backend — no server, no database, no analytics. Your Gmail token lives only in memory and is discarded when you close the tab. Email content is processed locally via Web Workers and a local LLM (WebLLM). The only external calls are to the Gmail API (from your browser, using your token) and a CDN for the globe texture.
 
 ## Tech Stack
 
-- **Framework:** React + TypeScript + Vite
-- **Styling:** Tailwind CSS v4
-- **3D Globe:** react-globe.gl (Three.js)
-- **Email Parsing:** postal-mime
-- **Image Export:** html-to-image
-- **Local LLM:** WebLLM (in-browser inference)
-- **Counter:** Firebase (anonymous increment only)
+| Layer | Technology |
+|-------|-----------|
+| Framework | React 19 + TypeScript + Vite 7 |
+| Styling | Tailwind CSS v4 |
+| 3D Globe | react-globe.gl (Three.js) |
+| Email Parsing | postal-mime |
+| Local LLM | WebLLM — Phi-3.5-mini-instruct (~2GB, cached in IndexedDB) |
+| Image Export | html-to-image |
+| Charts | Custom SVG (no charting library) |
 
 ## Local Development
 
@@ -29,9 +33,19 @@ npm install
 npm run dev
 ```
 
+### Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start Vite dev server |
+| `npm run build` | Type-check + production build |
+| `npm run lint` | ESLint |
+| `npm test` | Run tests (Vitest, 63 tests) |
+| `npm run preview` | Preview production build |
+
 ## Gmail Setup
 
-To enable the "Connect Gmail" feature you need a Google Cloud OAuth client ID:
+To enable Gmail OAuth you need a Google Cloud OAuth client ID:
 
 1. Go to [Google Cloud Console](https://console.cloud.google.com/) and create a project (or use an existing one)
 2. Enable the **Gmail API** under APIs & Services → Library
@@ -46,7 +60,7 @@ To enable the "Connect Gmail" feature you need a Google Cloud OAuth client ID:
    VITE_GMAIL_REDIRECT_URI=http://localhost:5173
    ```
 
-The app uses OAuth PKCE (no client secret needed). All email data stays in your browser — the Gmail API is called directly from the client.
+The app uses OAuth PKCE (no client secret needed). All email data stays in your browser — the Gmail API is called directly from the client with `gmail.readonly` scope.
 
 ## Deployment
 
