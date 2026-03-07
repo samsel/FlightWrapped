@@ -38,7 +38,7 @@ export default function GlobeInner({ width, height, arcsData, pointsData }: Prop
       width={width}
       height={height}
       backgroundColor="rgba(0,0,0,0)"
-      globeImageUrl="https://cdn.jsdelivr.net/npm/three-globe@2.31.3/example/img/earth-night.jpg"
+      globeImageUrl={`${import.meta.env.BASE_URL}textures/earth-night.jpg`}
       atmosphereColor="#3b82f6"
       atmosphereAltitude={0.2}
       arcsData={arcsData}

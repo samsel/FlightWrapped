@@ -22,7 +22,7 @@ export default function HeroGlobe({ width, height }: { width: number; height: nu
       width={width}
       height={height}
       backgroundColor="rgba(0,0,0,0)"
-      globeImageUrl="https://cdn.jsdelivr.net/npm/three-globe/example/img/earth-blue-marble.jpg"
+      globeImageUrl={`${import.meta.env.BASE_URL}textures/earth-blue-marble.jpg`}
       showAtmosphere={true}
       atmosphereColor="#3b82f6"
       atmosphereAltitude={0.15}
