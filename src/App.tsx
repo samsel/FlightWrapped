@@ -89,7 +89,9 @@ function App() {
     try {
       setAppState('parsing')
       // Request durable storage now that user has initiated the flow
-      navigator.storage?.persist?.()
+      navigator.storage?.persist?.().then((granted) => {
+        if (!granted) console.warn('Durable storage not granted — model cache may be evicted')
+      })
       setProgress({ phase: 'scanning', current: 0, total: 0, flightsFound: 0, message: 'Exchanging auth code...' })
 
       const token = await handleCallback(code, state)

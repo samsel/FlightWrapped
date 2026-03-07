@@ -33,6 +33,14 @@ export async function initLlm(
 
   enginePromise = (async () => {
     try {
+      // Check available storage before attempting ~2GB model download
+      if (navigator.storage?.estimate) {
+        const { quota = 0, usage = 0 } = await navigator.storage.estimate()
+        const availableMB = Math.round((quota - usage) / 1024 / 1024)
+        if (availableMB < 2048) {
+          console.warn(`Low storage: ~${availableMB}MB available, model needs ~2GB`)
+        }
+      }
       const { CreateMLCEngine } = await import('@mlc-ai/web-llm')
       const engine = await CreateMLCEngine(MODEL_ID, {
         initProgressCallback: (report: { text: string; progress: number }) => {
