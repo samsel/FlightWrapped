@@ -2,7 +2,7 @@ import PostalMime from 'postal-mime'
 import type { NormalizedEmail, RawEmail } from './types'
 
 /**
- * Normalize a raw email (from Gmail API or mbox/eml file) into a
+ * Normalize a raw email (from Gmail API) into a
  * structured format suitable for the extraction pipeline.
  */
 export async function normalizeEmail(raw: RawEmail): Promise<NormalizedEmail> {

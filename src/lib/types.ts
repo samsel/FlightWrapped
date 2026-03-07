@@ -69,7 +69,7 @@ export interface NormalizedEmail {
 }
 
 export interface RawEmail {
-  raw: string | ArrayBuffer // raw MIME content (string from .eml/.mbox, ArrayBuffer from Gmail API)
+  raw: string | ArrayBuffer // raw MIME content (ArrayBuffer from Gmail API)
 }
 
 export interface FunStats {
