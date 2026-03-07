@@ -69,6 +69,13 @@ export default function FlightList({ flights }: Props) {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-800">
+            {visible.length === 0 && (
+              <tr>
+                <td colSpan={5} className="px-3 py-8 text-center text-gray-500">
+                  No flights extracted
+                </td>
+              </tr>
+            )}
             {visible.map((f, i) => (
               <tr key={`${f.flightNumber}-${f.date}-${i}`} className="hover:bg-gray-900/50">
                 <td className="px-3 py-2 whitespace-nowrap">{f.date}</td>

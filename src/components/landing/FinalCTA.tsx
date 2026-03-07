@@ -43,7 +43,7 @@ export default function FinalCTA({ onError, onDemoClick }: FinalCTAProps) {
           </button>
         </div>
 
-        <div className="flex items-center justify-center gap-3 text-xs text-gray-600 mt-6 flex-wrap">
+        <div className="flex items-center justify-center gap-3 text-xs text-gray-500 mt-6 flex-wrap">
           <span>Read-only access</span>
           <span className="w-1 h-1 rounded-full bg-gray-700" />
           <span>Nothing stored</span>
@@ -55,7 +55,7 @@ export default function FinalCTA({ onError, onDemoClick }: FinalCTAProps) {
       {/* Footer */}
       <footer className="relative max-w-xl mx-auto text-center mt-24">
         <div className="w-12 h-px bg-gradient-to-r from-transparent via-gray-800 to-transparent mx-auto mb-6" />
-        <p className="text-xs text-gray-700">
+        <p className="text-xs text-gray-600">
           Built with React, WebLLM & globe.gl
         </p>
       </footer>

@@ -26,6 +26,23 @@ export default function ShareButton({ stats, funStats, archetype, flights }: Pro
         height: 630,
         pixelRatio: 2,
       })
+      // Try native share on mobile
+      if (navigator.share && navigator.canShare) {
+        try {
+          const blob = await (await fetch(url)).blob()
+          const file = new File([blob], 'myflights.png', { type: 'image/png' })
+          if (navigator.canShare({ files: [file] })) {
+            await navigator.share({
+              title: 'My Flight Stats',
+              files: [file],
+            })
+            setStatus('idle')
+            return
+          }
+        } catch {
+          // User cancelled or share failed — fall through to modal
+        }
+      }
       setImageUrl(url)
       setStatus('ready')
     } catch {
@@ -51,7 +68,7 @@ export default function ShareButton({ stats, funStats, archetype, flights }: Pro
       <button
         onClick={generate}
         disabled={status === 'generating'}
-        className="text-sm text-gray-400 hover:text-white transition-colors flex items-center gap-1.5 disabled:opacity-50 px-3 py-2"
+        className="text-sm bg-blue-600 hover:bg-blue-500 text-white font-medium transition-colors flex items-center gap-1.5 disabled:opacity-50 px-4 py-2 rounded-lg"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"

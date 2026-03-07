@@ -68,10 +68,10 @@ export default function Dashboard({ flights, stats, funStats, insights, archetyp
         ) : (
           <>
             <div className="animate-fade-in"><StatsGrid stats={stats} /></div>
-            <div className="animate-fade-in" style={{ animationDelay: '0.05s' }}><FunStatsRow funStats={funStats} /></div>
-            <div className="animate-fade-in" style={{ animationDelay: '0.1s' }}><InsightsRow insights={insights} /></div>
-            <div className="animate-fade-in" style={{ animationDelay: '0.15s' }}><ChartsRow stats={stats} flights={flights} /></div>
-            <div className="animate-fade-in" style={{ animationDelay: '0.2s' }}><FlightList flights={flights} /></div>
+            <div className="animate-fade-in" style={{ animationDelay: '0.1s' }}><FunStatsRow funStats={funStats} /></div>
+            <div className="animate-fade-in" style={{ animationDelay: '0.2s' }}><InsightsRow insights={insights} /></div>
+            <div className="animate-fade-in" style={{ animationDelay: '0.3s' }}><ChartsRow stats={stats} flights={flights} /></div>
+            <div className="animate-fade-in" style={{ animationDelay: '0.4s' }}><FlightList flights={flights} /></div>
           </>
         )}
       </main>

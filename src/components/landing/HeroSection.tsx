@@ -112,7 +112,7 @@ export default function HeroSection({ onError, onDemoClick }: HeroSectionProps) 
 
         {/* Trust micro-copy */}
         <div
-          className="hero-stagger flex items-center justify-center gap-3 text-xs text-gray-500 flex-wrap"
+          className="hero-stagger flex items-center justify-center gap-3 text-xs text-gray-400 flex-wrap"
           style={{ animationDelay: '0.75s' }}
         >
           <span className="flex items-center gap-1.5">

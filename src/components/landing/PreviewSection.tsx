@@ -1,5 +1,5 @@
 import { useInView } from './useInView'
-import { useCountUp } from './useCountUp'
+import { useCountUp } from '@/hooks/useCountUp'
 
 const SAMPLE_STATS = [
   { emoji: '✈️', value: 147, label: 'Flights', suffix: '' },
