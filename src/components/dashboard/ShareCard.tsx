@@ -74,8 +74,8 @@ const ShareCard = forwardRef<HTMLDivElement, Props>(
               background: 'rgba(59, 130, 246, 0.2)',
               color: '#93c5fd',
               borderRadius: '9999px',
-              padding: '6px 20px',
-              fontSize: '16px',
+              padding: '8px 24px',
+              fontSize: '18px',
               fontWeight: 500,
               marginBottom: '36px',
             }}
@@ -130,7 +130,7 @@ const ShareCard = forwardRef<HTMLDivElement, Props>(
 
           {/* Footer */}
           <div style={{ fontSize: '13px', color: '#6b7280' }}>
-            {stats.totalFlights} flights{yearRange ? ` · ${yearRange}` : ''}
+            {stats.totalFlights} flights{yearRange ? ` · ${yearRange}` : ''} · myflights.app
           </div>
         </div>
       </div>

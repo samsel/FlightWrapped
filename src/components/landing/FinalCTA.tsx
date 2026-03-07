@@ -22,7 +22,7 @@ export default function FinalCTA({ onError, onDemoClick }: FinalCTAProps) {
         inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
       }`}>
         <h2 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-b from-white to-gray-500 bg-clip-text text-transparent">
-          Ready to see your flight map?
+          Your travel story awaits
         </h2>
         <p className="text-gray-400 text-lg mb-10">
           Takes about 30 seconds. Your emails never leave your browser.

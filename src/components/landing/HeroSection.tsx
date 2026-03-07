@@ -43,7 +43,7 @@ export default function HeroSection({ onError, onDemoClick }: HeroSectionProps) 
       <div className="orb w-[300px] h-[300px] bg-cyan-500/10 top-1/3 left-1/4" style={{ animationDelay: '1s' }} />
 
       {/* Globe background */}
-      <div className="absolute inset-0 flex items-center justify-center opacity-15 md:opacity-25 pointer-events-none" aria-hidden="true">
+      <div className="absolute inset-0 flex items-center justify-center opacity-25 md:opacity-35 pointer-events-none" aria-hidden="true">
         <Suspense fallback={null}>
           <HeroGlobe width={size.width} height={size.height} />
         </Suspense>
