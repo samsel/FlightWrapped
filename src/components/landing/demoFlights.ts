@@ -17,7 +17,7 @@ export const DEMO_FLIGHTS: Flight[] = [
   { origin: 'JFK', destination: 'LHR', date: '2023-05-20', airline: 'British Airways', flightNumber: 'BA178', confidence: 1 },
   { origin: 'LHR', destination: 'CDG', date: '2023-05-23', airline: 'Air France', flightNumber: 'AF1081', confidence: 1 },
   { origin: 'CDG', destination: 'FCO', date: '2023-05-26', airline: 'Air France', flightNumber: 'AF1404', confidence: 1 },
-  { origin: 'FCO', destination: 'JFK', date: '2023-05-30', airline: 'Alitalia', flightNumber: 'AZ608', confidence: 1 },
+  { origin: 'FCO', destination: 'JFK', date: '2023-05-30', airline: 'ITA Airways', flightNumber: 'AZ608', confidence: 1 },
 
   // Asia Pacific
   { origin: 'SFO', destination: 'NRT', date: '2023-06-15', airline: 'ANA', flightNumber: 'NH7', confidence: 1 },

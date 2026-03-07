@@ -5,10 +5,10 @@ export function useCountUp(end: number, duration = 1500, start = false): number 
 
   useEffect(() => {
     if (!start) return
-    let startTime: number
+    let startTime: number | undefined
     let raf: number
     const step = (timestamp: number) => {
-      if (!startTime) startTime = timestamp
+      if (startTime === undefined) startTime = timestamp
       const progress = Math.min((timestamp - startTime) / duration, 1)
       // Ease-out cubic for smoother deceleration
       const eased = 1 - Math.pow(1 - progress, 3)

@@ -11,7 +11,7 @@ interface HeroSectionProps {
 
 export default function HeroSection({ onError, onDemoClick }: HeroSectionProps) {
   const containerRef = useRef<HTMLDivElement>(null)
-  const [size, setSize] = useState({ width: 600, height: 600 })
+  const [size, setSize] = useState({ width: 375, height: 375 })
 
   useEffect(() => {
     const el = containerRef.current

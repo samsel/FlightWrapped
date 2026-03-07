@@ -10,7 +10,7 @@ interface Props {
 
 export default function GlobePanel({ flights }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
-  const [dimensions, setDimensions] = useState({ width: 800, height: 500 })
+  const [dimensions, setDimensions] = useState<{ width: number; height: number } | null>(null)
 
   useEffect(() => {
     const el = containerRef.current
@@ -55,21 +55,25 @@ export default function GlobePanel({ flights }: Props) {
 
   return (
     <div ref={containerRef} className="w-full flex justify-center bg-gray-950 overflow-hidden">
-      <Suspense
-        fallback={
-          <div
-            className="bg-gray-900 animate-pulse rounded-full"
-            style={{ width: dimensions.height, height: dimensions.height }}
+      {dimensions ? (
+        <Suspense
+          fallback={
+            <div
+              className="bg-gray-900 animate-pulse rounded-full"
+              style={{ width: dimensions.height, height: dimensions.height }}
+            />
+          }
+        >
+          <GlobeInner
+            width={dimensions.width}
+            height={dimensions.height}
+            arcsData={arcsData}
+            pointsData={pointsData}
           />
-        }
-      >
-        <GlobeInner
-          width={dimensions.width}
-          height={dimensions.height}
-          arcsData={arcsData}
-          pointsData={pointsData}
-        />
-      </Suspense>
+        </Suspense>
+      ) : (
+        <div className="bg-gray-900 animate-pulse rounded-full" style={{ width: 300, height: 300 }} />
+      )}
     </div>
   )
 }

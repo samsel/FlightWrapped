@@ -1,23 +1,24 @@
-import { useRef, useEffect } from 'react'
+import { useRef } from 'react'
 import Globe, { type GlobeMethods } from 'react-globe.gl'
 
 export default function HeroGlobe({ width, height }: { width: number; height: number }) {
   const globeRef = useRef<GlobeMethods | undefined>(undefined)
 
-  useEffect(() => {
-    if (globeRef.current) {
-      const controls = globeRef.current.controls()
+  const configureControls = () => {
+    const controls = globeRef.current?.controls()
+    if (controls) {
       controls.autoRotate = true
       controls.autoRotateSpeed = 0.3
       controls.enableZoom = false
       controls.enablePan = false
       controls.enableRotate = false
     }
-  }, [])
+  }
 
   return (
     <Globe
       ref={globeRef}
+      onGlobeReady={configureControls}
       width={width}
       height={height}
       backgroundColor="rgba(0,0,0,0)"

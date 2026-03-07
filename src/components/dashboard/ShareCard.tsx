@@ -32,6 +32,7 @@ const ShareCard = forwardRef<HTMLDivElement, Props>(
     return (
       <div
         ref={ref}
+        aria-hidden="true"
         style={{
           position: 'fixed',
           left: '-9999px',

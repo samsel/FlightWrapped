@@ -79,7 +79,9 @@ export function generateInsights(flights: Flight[], stats: FlightStats): Insight
   // Seasonal Traveler: >40% flights in one quarter
   const quarterCounts: Record<string, number> = {}
   for (const flight of flights) {
+    if (!flight.date || flight.date.length < 7) continue
     const month = parseInt(flight.date.slice(5, 7), 10)
+    if (isNaN(month)) continue
     const quarter = `Q${Math.ceil(month / 3)}`
     quarterCounts[quarter] = (quarterCounts[quarter] ?? 0) + 1
   }

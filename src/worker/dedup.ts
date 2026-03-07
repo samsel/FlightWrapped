@@ -75,5 +75,7 @@ function mergeFlight(existing: Flight | undefined, incoming: Flight): Flight {
     ...base,
     airline: base.airline || other.airline,
     flightNumber: base.flightNumber || other.flightNumber,
+    origin: base.origin || other.origin,
+    destination: base.destination || other.destination,
   }
 }

@@ -55,6 +55,11 @@ function App() {
       }
     }
 
+    worker.onerror = (e) => {
+      setError(`Worker failed: ${e.message}`)
+      setAppState('landing')
+    }
+
     return () => worker.terminate()
   }, [])
 

@@ -32,8 +32,8 @@ export default function FlightList({ flights }: Props) {
   const sorted = useMemo(() => {
     const arr = [...flights]
     arr.sort((a, b) => {
-      const va = a[sortKey]
-      const vb = b[sortKey]
+      const va = a[sortKey] ?? ''
+      const vb = b[sortKey] ?? ''
       const cmp = va.localeCompare(vb)
       return sortDir === 'asc' ? cmp : -cmp
     })

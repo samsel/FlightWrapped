@@ -26,18 +26,26 @@ const MODEL_ID = 'Phi-3.5-mini-instruct-q4f16_1-MLC'
 export async function initLlm(
   onProgress?: (progress: { text: string; progress: number }) => void,
 ): Promise<void> {
-  if (enginePromise) return
+  if (enginePromise) {
+    await enginePromise
+    return
+  }
 
   enginePromise = (async () => {
-    const moduleName = '@mlc-ai/web-llm'
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const webllm: any = await import(/* @vite-ignore */ moduleName)
-    const engine = await webllm.CreateMLCEngine(MODEL_ID, {
-      initProgressCallback: (report: { text: string; progress: number }) => {
-        onProgress?.({ text: report.text, progress: report.progress })
-      },
-    })
-    return engine as LlmEngine
+    try {
+      const moduleName = '@mlc-ai/web-llm'
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const webllm: any = await import(/* @vite-ignore */ moduleName)
+      const engine = await webllm.CreateMLCEngine(MODEL_ID, {
+        initProgressCallback: (report: { text: string; progress: number }) => {
+          onProgress?.({ text: report.text, progress: report.progress })
+        },
+      })
+      return engine as LlmEngine
+    } catch (err) {
+      enginePromise = null // allow retry on failure
+      throw err
+    }
   })()
 
   await enginePromise
@@ -90,11 +98,23 @@ ${truncated}`
 }
 
 function parseLlmResponse(content: string, emailDate: string): Flight[] {
-  const jsonMatch = content.match(/\{[\s\S]*\}/)
-  if (!jsonMatch) return []
+  // Try progressively larger matches to find valid JSON
+  const openIdx = content.indexOf('{')
+  if (openIdx === -1) return []
+
+  let parsed: { flights?: unknown; flight?: unknown } | null = null
+  // Find the matching closing brace by trying JSON.parse at each `}` from the end
+  for (let i = content.lastIndexOf('}'); i > openIdx; i = content.lastIndexOf('}', i - 1)) {
+    try {
+      parsed = JSON.parse(content.slice(openIdx, i + 1))
+      break
+    } catch {
+      // try a shorter slice
+    }
+  }
+  if (!parsed) return []
 
   try {
-    const parsed = JSON.parse(jsonMatch[0])
     const rawFlights = parsed.flights ?? parsed.flight ?? []
     const items = Array.isArray(rawFlights) ? rawFlights : [rawFlights]
 
@@ -127,30 +147,40 @@ function parseLlmResponse(content: string, emailDate: string): Flight[] {
   }
 }
 
+function parseDateToIso(str: string): string | null {
+  // Try direct YYYY-MM-DD match first to avoid timezone issues with new Date()
+  const isoMatch = str.match(/(\d{4})-(\d{2})-(\d{2})/)
+  if (isoMatch) {
+    const [, year, month, day] = isoMatch
+    const y = parseInt(year, 10)
+    if (y >= 1990 && y <= 2100) return `${year}-${month}-${day}`
+  }
+
+  // Fallback: use Date with UTC methods to avoid local timezone shift
+  try {
+    const d = new Date(str)
+    if (!isNaN(d.getTime())) {
+      const year = d.getUTCFullYear()
+      if (year >= 1990 && year <= 2100) {
+        return `${year}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`
+      }
+    }
+  } catch {
+    // fall through
+  }
+
+  return null
+}
+
 function parseFlightDate(dateStr: string, fallbackDate: string): string | null {
   if (dateStr) {
-    try {
-      const d = new Date(dateStr)
-      if (!isNaN(d.getTime())) {
-        const year = d.getFullYear()
-        if (year >= 1990 && year <= 2100) {
-          return `${year}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-        }
-      }
-    } catch {
-      // fall through
-    }
+    const result = parseDateToIso(dateStr)
+    if (result) return result
   }
 
   if (fallbackDate) {
-    try {
-      const d = new Date(fallbackDate)
-      if (!isNaN(d.getTime())) {
-        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-      }
-    } catch {
-      // fall through
-    }
+    const result = parseDateToIso(fallbackDate)
+    if (result) return result
   }
 
   return null
@@ -158,6 +188,7 @@ function parseFlightDate(dateStr: string, fallbackDate: string): string | null {
 
 function stripToPlainText(email: NormalizedEmail): string {
   if (email.textBody) return email.textBody
+  if (!email.htmlBody) return ''
 
   return email.htmlBody
     .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')

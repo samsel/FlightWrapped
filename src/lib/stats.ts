@@ -105,8 +105,10 @@ export function calculateStats(flights: Flight[]): FlightStats {
     }
 
     // First/last flight
-    if (date < firstFlight.date) firstFlight = flight
-    if (date > lastFlight.date) lastFlight = flight
+    if (date) {
+      if (!firstFlight.date || date < firstFlight.date) firstFlight = flight
+      if (!lastFlight.date || date > lastFlight.date) lastFlight = flight
+    }
   }
 
   // Find max route

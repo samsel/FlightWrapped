@@ -188,9 +188,13 @@ export async function batchFetchMessages(
         onRateLimit,
       )
       const data = await response.json()
-      // Gmail returns base64url-encoded raw message
-      const raw = atob(data.raw.replace(/-/g, '+').replace(/_/g, '/'))
-      return { raw } as RawEmail
+      // Gmail returns base64url-encoded raw message — decode to Uint8Array
+      // to preserve binary-safe content for PostalMime parsing
+      const b64 = data.raw.replace(/-/g, '+').replace(/_/g, '/')
+      const binary = atob(b64)
+      const bytes = new Uint8Array(binary.length)
+      for (let j = 0; j < binary.length; j++) bytes[j] = binary.charCodeAt(j)
+      return { raw: bytes.buffer } as RawEmail
     })
 
     const batchResults = await Promise.all(promises)
@@ -249,7 +253,9 @@ export function clearCallbackParams(): void {
   const url = new URL(window.location.href)
   url.searchParams.delete('code')
   url.searchParams.delete('scope')
-  window.history.replaceState({}, '', url.pathname)
+  url.searchParams.delete('state')
+  url.searchParams.delete('error')
+  window.history.replaceState({}, '', url.toString())
 }
 
 /** Check if the domain list contains this domain (used by extraction pipeline) */

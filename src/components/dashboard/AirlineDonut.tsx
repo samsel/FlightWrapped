@@ -58,7 +58,7 @@ export default function AirlineDonut({ stats }: Props) {
             )
           })}
           <text x={cx} y={cy - 6} textAnchor="middle" fill="white" fontSize={22} fontWeight="bold">
-            {total}
+            {stats.totalFlights}
           </text>
           <text x={cx} y={cy + 12} textAnchor="middle" fill="#9ca3af" fontSize={11}>
             flights

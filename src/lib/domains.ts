@@ -213,7 +213,6 @@ export const AIRLINE_DOMAINS: Set<string> = new Set([
   // --- Loyalty / Miles ---
   'mileageplus.com',
   'aadvantage.com',
-  'delta.com',
   'rapidrewards.com',
   'points.com',
   'awardwallet.com',

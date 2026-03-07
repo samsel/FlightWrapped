@@ -25,8 +25,8 @@ export default function GlobeInner({ width, height, arcsData, pointsData }: Prop
   const globeRef = useRef<GlobeMethods | undefined>(undefined)
 
   useEffect(() => {
-    if (globeRef.current) {
-      const controls = globeRef.current.controls()
+    const controls = globeRef.current?.controls()
+    if (controls) {
       controls.autoRotate = true
       controls.autoRotateSpeed = 0.6
     }
