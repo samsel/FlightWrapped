@@ -33,11 +33,6 @@ function App() {
   const generationRef = useRef(0) as MutableRefObject<number>
   const processingRef = useRef(false) as MutableRefObject<boolean>
 
-  // Request durable storage so the browser won't evict the cached LLM model
-  useEffect(() => {
-    navigator.storage?.persist?.()
-  }, [])
-
   // Initialize worker
   useEffect(() => {
     const worker = new Worker(new URL('./worker/parser.worker.ts', import.meta.url), {
@@ -93,6 +88,8 @@ function App() {
   const handleGmailCallback = async (code: string, state: string | null) => {
     try {
       setAppState('parsing')
+      // Request durable storage now that user has initiated the flow
+      navigator.storage?.persist?.()
       setProgress({ phase: 'scanning', current: 0, total: 0, flightsFound: 0, message: 'Exchanging auth code...' })
 
       const token = await handleCallback(code, state)
