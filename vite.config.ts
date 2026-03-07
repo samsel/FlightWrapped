@@ -14,4 +14,15 @@ export default defineConfig({
   worker: {
     format: 'es',
   },
+  build: {
+    target: 'es2022',
+    sourcemap: 'hidden',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom'],
+        },
+      },
+    },
+  },
 })

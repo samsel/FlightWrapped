@@ -1,5 +1,4 @@
 import { useState, useRef, useCallback } from 'react'
-import { toPng } from 'html-to-image'
 import type { FlightStats, FunStats, Archetype, Flight } from '@/lib/types'
 import ShareCard from './ShareCard'
 
@@ -21,6 +20,7 @@ export default function ShareButton({ stats, funStats, archetype, flights }: Pro
     if (!cardRef.current) return
     setStatus('generating')
     try {
+      const { toPng } = await import('html-to-image')
       const url = await toPng(cardRef.current, {
         width: 1200,
         height: 630,

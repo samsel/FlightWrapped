@@ -33,15 +33,13 @@ export async function initLlm(
 
   enginePromise = (async () => {
     try {
-      const moduleName = '@mlc-ai/web-llm'
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const webllm: any = await import(/* @vite-ignore */ moduleName)
-      const engine = await webllm.CreateMLCEngine(MODEL_ID, {
+      const { CreateMLCEngine } = await import('@mlc-ai/web-llm')
+      const engine = await CreateMLCEngine(MODEL_ID, {
         initProgressCallback: (report: { text: string; progress: number }) => {
           onProgress?.({ text: report.text, progress: report.progress })
         },
       })
-      return engine as LlmEngine
+      return engine as unknown as LlmEngine
     } catch (err) {
       enginePromise = null // allow retry on failure
       throw err

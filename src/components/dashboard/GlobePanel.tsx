@@ -16,13 +16,17 @@ export default function GlobePanel({ flights }: Props) {
     const el = containerRef.current
     if (!el) return
 
+    let timeout: ReturnType<typeof setTimeout>
     const observer = new ResizeObserver(([entry]) => {
-      const { width } = entry.contentRect
-      setDimensions({ width, height: Math.min(width < 640 ? width * 0.85 : width * 0.65, 600) })
+      clearTimeout(timeout)
+      timeout = setTimeout(() => {
+        const { width } = entry.contentRect
+        setDimensions({ width, height: Math.min(width < 640 ? width * 0.85 : width * 0.65, 600) })
+      }, 150)
     })
 
     observer.observe(el)
-    return () => observer.disconnect()
+    return () => { clearTimeout(timeout); observer.disconnect() }
   }, [])
 
   const { arcsData, pointsData } = useMemo(() => {
@@ -54,7 +58,7 @@ export default function GlobePanel({ flights }: Props) {
   }, [flights])
 
   return (
-    <div ref={containerRef} className="w-full flex justify-center bg-gray-950 overflow-hidden">
+    <div ref={containerRef} className="w-full flex justify-center bg-gray-950 overflow-hidden" aria-hidden="true">
       {dimensions ? (
         <Suspense
           fallback={

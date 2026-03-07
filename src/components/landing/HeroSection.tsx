@@ -16,12 +16,16 @@ export default function HeroSection({ onError, onDemoClick }: HeroSectionProps) 
   useEffect(() => {
     const el = containerRef.current
     if (!el) return
+    let timeout: ReturnType<typeof setTimeout>
     const obs = new ResizeObserver(([entry]) => {
-      const s = Math.min(entry.contentRect.width, entry.contentRect.height, 900)
-      setSize({ width: s, height: s })
+      clearTimeout(timeout)
+      timeout = setTimeout(() => {
+        const s = Math.min(entry.contentRect.width, entry.contentRect.height, 900)
+        setSize({ width: s, height: s })
+      }, 150)
     })
     obs.observe(el)
-    return () => obs.disconnect()
+    return () => { clearTimeout(timeout); obs.disconnect() }
   }, [])
 
   const scrollToPreview = () => {

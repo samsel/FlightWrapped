@@ -1,4 +1,5 @@
-import type { WorkerInMessage, WorkerOutMessage, Flight, NormalizedEmail, ParseProgress } from '@/lib/types'
+import type { WorkerInMessage, WorkerOutMessage, Flight, NormalizedEmail, RawEmail, ParseProgress } from '@/lib/types'
+import { normalizeEmails } from '@/lib/email-normalizer'
 import { extractFlightsFromEmail } from './extract'
 import { deduplicateFlights } from './dedup'
 import { initLlm, isLlmReady } from './extractors/llm'
@@ -29,6 +30,26 @@ async function ensureLlmReady(): Promise<void> {
       total: 100,
       flightsFound: 0,
       message: progress.text,
+    })
+  })
+}
+
+async function normalizeRawEmails(rawEmails: RawEmail[]): Promise<NormalizedEmail[]> {
+  reportProgress({
+    phase: 'scanning',
+    current: 0,
+    total: rawEmails.length,
+    flightsFound: 0,
+    message: 'Normalizing emails...',
+  })
+
+  return normalizeEmails(rawEmails, (current, total) => {
+    reportProgress({
+      phase: 'scanning',
+      current,
+      total,
+      flightsFound: 0,
+      message: `Normalizing email ${current} of ${total}...`,
     })
   })
 }
@@ -95,6 +116,19 @@ self.onmessage = async (e: MessageEvent<WorkerInMessage>) => {
         postMsg({
           type: 'error',
           data: { message: err instanceof Error ? err.message : 'Failed to load AI model' },
+        })
+      }
+      break
+
+    case 'parse-raw-emails':
+      try {
+        const normalized = await normalizeRawEmails(msg.data)
+        const flights = await processEmails(normalized)
+        postMsg({ type: 'result', data: flights })
+      } catch (err) {
+        postMsg({
+          type: 'error',
+          data: { message: err instanceof Error ? err.message : 'Unknown error' },
         })
       }
       break

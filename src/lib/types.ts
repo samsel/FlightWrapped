@@ -50,6 +50,7 @@ export interface ParseProgress {
 export type WorkerInMessage =
   | { type: 'init-llm' }
   | { type: 'parse-emails'; data: NormalizedEmail[] }
+  | { type: 'parse-raw-emails'; data: RawEmail[] }
   | { type: 'ping' }
 
 export type WorkerOutMessage =

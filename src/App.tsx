@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback, useRef, useMemo, type MutableRefObjec
 import InputScreen from '@/components/InputScreen'
 import ParsingProgress from '@/components/ParsingProgress'
 import { getCallbackCode, clearCallbackParams, handleCallback, searchFlightEmails, batchFetchMessages, configureGmail, type RateLimitInfo } from '@/lib/gmail'
-import { normalizeEmails } from '@/lib/email-normalizer'
 import { calculateStats } from '@/lib/stats'
 import { calculateFunStats } from '@/lib/funStats'
 import { generateInsights } from '@/lib/insights'
@@ -10,7 +9,7 @@ import { determineArchetype } from '@/lib/archetypes'
 import Dashboard from '@/components/dashboard/Dashboard'
 import ErrorBoundary from '@/components/ErrorBoundary'
 import { DEMO_FLIGHTS } from '@/components/landing/demoFlights'
-import type { Flight, ParseProgress, WorkerOutMessage, RawEmail } from '@/lib/types'
+import type { Flight, ParseProgress, WorkerOutMessage } from '@/lib/types'
 
 type AppState = 'landing' | 'parsing' | 'results'
 
@@ -45,6 +44,8 @@ function App() {
       type: 'module',
     })
     workerRef.current = worker
+    // Pre-warm LLM model so download starts while emails are being fetched
+    worker.postMessage({ type: 'init-llm' })
     const gen = generationRef.current
 
     worker.onmessage = (e: MessageEvent<WorkerOutMessage>) => {
@@ -116,20 +117,16 @@ function App() {
         setProgress({ phase: 'scanning', current: fetched, total, flightsFound: 0, message: `Fetching email ${fetched.toLocaleString()} of ${total.toLocaleString()}...` })
       }, handleRateLimit)
 
-      await sendToWorker(rawEmails)
+      // Send raw emails to worker — normalization + extraction happen off main thread
+      const buffers = rawEmails.map((e) => e.raw).filter((r): r is ArrayBuffer => r instanceof ArrayBuffer)
+      workerRef.current?.postMessage(
+        { type: 'parse-raw-emails', data: rawEmails },
+        buffers, // transfer ArrayBuffers for zero-copy
+      )
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Gmail auth failed')
       setAppState('landing')
     }
-  }
-
-  const sendToWorker = async (rawEmails: RawEmail[]) => {
-    setProgress({ phase: 'extracting', current: 0, total: rawEmails.length, flightsFound: 0, message: 'Normalizing emails...' })
-    const normalized = await normalizeEmails(rawEmails, (current, total) => {
-      setProgress({ phase: 'extracting', current, total, flightsFound: 0, message: `Normalizing email ${current} of ${total}...` })
-    })
-
-    workerRef.current?.postMessage({ type: 'parse-emails', data: normalized })
   }
 
   const handleDemoClick = useCallback(() => {

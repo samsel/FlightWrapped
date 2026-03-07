@@ -32,6 +32,18 @@ export default function GlobeInner({ width, height, arcsData, pointsData }: Prop
     }
   }, [])
 
+  // Clean up WebGL resources on unmount to prevent GPU memory leaks
+  useEffect(() => {
+    return () => {
+      const globe = globeRef.current
+      if (globe) {
+        const renderer = globe.renderer()
+        renderer.dispose()
+        renderer.forceContextLoss()
+      }
+    }
+  }, [])
+
   return (
     <Globe
       ref={globeRef}
