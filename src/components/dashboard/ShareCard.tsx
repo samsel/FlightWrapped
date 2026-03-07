@@ -1,5 +1,6 @@
 import { forwardRef } from 'react'
 import type { FlightStats, FunStats, Archetype, Flight } from '@/lib/types'
+import { getIcon } from '@/lib/icons'
 
 interface Props {
   stats: FlightStats
@@ -75,7 +76,7 @@ const ShareCard = forwardRef<HTMLDivElement, Props>(
               marginBottom: '36px',
             }}
           >
-            {archetype.icon} {archetype.name}
+            {getIcon(archetype.icon)} {archetype.name}
           </div>
 
           {/* Stats grid */}

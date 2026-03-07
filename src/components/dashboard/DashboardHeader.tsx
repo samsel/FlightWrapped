@@ -1,4 +1,5 @@
 import type { FlightStats, FunStats, Archetype, Flight } from '@/lib/types'
+import { getIcon } from '@/lib/icons'
 import ShareButton from './ShareButton'
 
 interface Props {
@@ -16,7 +17,7 @@ export default function DashboardHeader({ stats, funStats, archetype, flights, o
         <span className="text-lg font-bold tracking-tight">MyFlights</span>
 
         <span className="bg-blue-500/20 text-blue-300 rounded-full px-4 py-1 text-sm font-medium order-3 sm:order-none truncate max-w-[200px] sm:max-w-none">
-          {archetype.icon} {archetype.name}
+          {getIcon(archetype.icon)} {archetype.name}
         </span>
 
         <div className="flex items-center gap-4">
