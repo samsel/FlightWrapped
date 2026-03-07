@@ -35,7 +35,7 @@ export default function AirlineDonut({ stats }: Props) {
   const circumference = 2 * Math.PI * radius
 
   return (
-    <div className="bg-gray-900 border border-gray-800 p-4">
+    <div className="glass-surface p-4">
       <h3 className="text-sm font-semibold text-gray-400 mb-3">Airlines</h3>
       <div className="flex flex-col items-center gap-4">
         <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>

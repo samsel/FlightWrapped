@@ -30,7 +30,7 @@ export default function TimelineChart({ flights }: Props) {
   const bottomPad = 40
 
   return (
-    <div className="bg-gray-900 border border-gray-800 p-4">
+    <div className="glass-surface p-4">
       <h3 className="text-sm font-semibold text-gray-400 mb-3">Flights Over Time</h3>
       <div className="overflow-x-auto">
         <svg

@@ -44,8 +44,8 @@ export default function HeroSection({ onError, onDemoClick }: HeroSectionProps) 
         </Suspense>
       </div>
 
-      {/* Overlay */}
-      <div className="absolute inset-0 bg-gray-950/80 pointer-events-none" />
+      {/* Frosted overlay — globe bleeds through */}
+      <div className="absolute inset-0 bg-gray-950/70 backdrop-blur-sm pointer-events-none" />
 
       {/* Content */}
       <div className="relative z-10 max-w-4xl mx-auto px-6 py-24 text-center w-full">

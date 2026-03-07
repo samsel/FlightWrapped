@@ -69,7 +69,7 @@ export default function GlobePanel({ flights }: Props) {
   }, [flights])
 
   return (
-    <div ref={containerRef} className="w-full flex justify-center bg-gray-950 overflow-hidden" aria-hidden="true">
+    <div ref={containerRef} className="w-full flex justify-center overflow-hidden" aria-hidden="true">
       {dimensions ? (
         <Suspense
           fallback={

@@ -12,7 +12,7 @@ interface Props {
 
 export default function DashboardHeader({ stats, funStats, archetype, flights, onReset }: Props) {
   return (
-    <header className="sticky top-0 z-20 bg-gray-950/90 backdrop-blur-sm border-b border-gray-800">
+    <header className="sticky top-0 z-20 glass-header">
       <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-4 flex-wrap sm:flex-nowrap">
         <span className="text-lg font-bold tracking-tight">MyFlights</span>
 

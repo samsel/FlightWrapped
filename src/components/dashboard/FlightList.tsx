@@ -57,9 +57,9 @@ export default function FlightList({ flights }: Props) {
   return (
     <div>
       <h2 className="text-lg font-semibold mb-3">All Flights</h2>
-      <div className="overflow-x-auto border border-gray-800">
+      <div className="overflow-x-auto glass-surface">
         <table className="w-full text-sm">
-          <thead className="bg-gray-900">
+          <thead className="bg-white/[0.03]">
             <tr>
               <th className={headerClass} onClick={() => toggleSort('date')}>Date{arrow('date')}</th>
               <th className={headerClass} onClick={() => toggleSort('origin')}>Origin{arrow('origin')}</th>

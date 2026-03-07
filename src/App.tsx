@@ -194,7 +194,7 @@ function App() {
 
   if (appState === 'parsing') {
     return (
-      <div className="min-h-screen bg-gray-950 text-white flex flex-col items-center justify-center px-4 animate-fade-in">
+      <div className="min-h-screen glass-bg text-white flex flex-col items-center justify-center px-4 animate-fade-in">
         <h1 className="text-3xl font-bold mb-8">MyFlights</h1>
         <ParsingProgress progress={progress} onReset={resetToLanding} />
       </div>

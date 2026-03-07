@@ -66,7 +66,7 @@ export default function PreviewSection() {
             {SAMPLE_FUN_STATS.map((stat) => (
               <div
                 key={stat.label}
-                className="flex-1 p-4 bg-blue-500/5 border border-blue-500/10"
+                className="flex-1 p-4 glass-card"
               >
                 <p className="text-xs text-gray-500 uppercase tracking-wide">{stat.label}</p>
                 <p className="text-xl font-bold text-blue-300 mt-1">{stat.value}</p>
@@ -76,7 +76,7 @@ export default function PreviewSection() {
 
           {/* Archetype badge */}
           <div className="flex justify-center">
-            <div className="inline-flex items-center gap-2.5 bg-blue-500/10 border border-blue-500/20 px-6 py-2.5 text-sm font-medium text-blue-200">
+            <div className="inline-flex items-center gap-2.5 glass-card px-6 py-2.5 text-sm font-medium text-blue-200">
               Your archetype: <span className="text-white font-semibold">The Explorer</span>
             </div>
           </div>

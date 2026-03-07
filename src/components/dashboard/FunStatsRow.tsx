@@ -20,7 +20,7 @@ export default function FunStatsRow({ funStats }: Props) {
         {pills.map((pill) => (
           <div
             key={pill.label}
-            className="flex-1 bg-blue-500/10 border border-blue-500/20 p-4"
+            className="flex-1 glass-card p-4"
           >
             <p className="text-xs text-gray-500 uppercase tracking-wide">{pill.label}</p>
             <p className="text-xl font-bold text-blue-300 mt-1">{pill.value}</p>

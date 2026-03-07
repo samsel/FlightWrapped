@@ -14,7 +14,7 @@ export default function InsightsRow({ insights }: Props) {
           {insights.map((insight) => (
             <div
               key={insight.id}
-              className="flex-shrink-0 w-64 bg-gray-900 border border-gray-800 p-4 snap-start"
+              className="flex-shrink-0 w-64 glass-card p-4 snap-start"
             >
               <p className="font-medium">{insight.title}</p>
               <p className="text-sm text-gray-400 mt-1">{insight.description}</p>
@@ -22,7 +22,7 @@ export default function InsightsRow({ insights }: Props) {
           ))}
         </div>
         {insights.length > 3 && (
-          <div className="absolute right-0 top-0 bottom-2 w-12 bg-gray-950/80 pointer-events-none" />
+          <div className="absolute right-0 top-0 bottom-2 w-12 pointer-events-none" style={{ background: 'linear-gradient(to left, rgba(3,7,18,0.9), transparent)' }} />
         )}
       </div>
     </div>

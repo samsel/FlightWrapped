@@ -45,7 +45,7 @@ export default function FinalCTA({ onError, onDemoClick }: FinalCTAProps) {
 
       {/* Footer */}
       <footer className="relative max-w-xl mx-auto text-center mt-24">
-        <div className="w-12 h-px bg-gray-800 mx-auto mb-6" />
+        <div className="w-12 h-px bg-white/[0.06] mx-auto mb-6" />
         <p className="text-xs text-gray-600">
           Built with React, WebLLM & globe.gl
         </p>

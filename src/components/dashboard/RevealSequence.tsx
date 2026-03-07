@@ -128,7 +128,7 @@ export default function RevealSequence({ stats, funStats, archetype, onComplete 
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-gray-950 flex flex-col items-center justify-center px-4 cursor-pointer select-none"
+      className="fixed inset-0 z-50 glass-bg flex flex-col items-center justify-center px-4 cursor-pointer select-none"
       onClick={handleClick}
       onKeyDown={handleKeyDown}
       role="button"

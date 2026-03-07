@@ -59,7 +59,7 @@ export default function Dashboard({ flights, stats, funStats, insights, archetyp
   }, [selectedYear, filteredFlights, filteredStats, insights])
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
+    <div className="min-h-screen glass-bg text-white">
       <DashboardHeader
         stats={stats}
         funStats={funStats}

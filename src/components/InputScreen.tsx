@@ -12,14 +12,14 @@ interface InputScreenProps {
 function SectionDivider() {
   return (
     <div className="flex justify-center">
-      <div className="w-24 h-px bg-gray-800" />
+      <div className="w-24 h-px bg-white/[0.06]" />
     </div>
   )
 }
 
 export default function InputScreen({ onError, onDemoClick }: InputScreenProps) {
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
+    <div className="min-h-screen glass-bg text-white">
       <HeroSection onError={onError} onDemoClick={onDemoClick} />
       <SectionDivider />
       <PreviewSection />

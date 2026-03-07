@@ -84,11 +84,11 @@ export default function ShareButton({ stats, funStats, archetype, flights }: Pro
       {/* Modal */}
       {(status === 'ready' || status === 'error') && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md p-4"
           onClick={close}
         >
           <div
-            className="bg-gray-900 border border-gray-700 max-w-2xl w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto"
+            className="glass-surface max-w-2xl w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between">
