@@ -32,6 +32,11 @@ function App() {
   const [error, setError] = useState<string | null>(null)
   const workerRef = useRef<Worker | null>(null)
 
+  // Request durable storage so the browser won't evict the cached LLM model
+  useEffect(() => {
+    navigator.storage?.persist?.()
+  }, [])
+
   // Initialize worker
   useEffect(() => {
     const worker = new Worker(new URL('./worker/parser.worker.ts', import.meta.url), {
