@@ -102,7 +102,7 @@ We deliberately chose **no backend-for-frontend (BFF)**. The entire app runs cli
 
 Flight data is extracted entirely by a local LLM running in the browser — no regex heuristics, no JSON-LD scraping, no server-side AI. This is a deliberate architectural choice:
 
-- **Privacy-first:** Email content never leaves the device. The model runs via WebGPU/WASM using WebLLM (Phi-3.5-mini-instruct-q4f16_1-MLC, ~2GB, cached in IndexedDB after first download).
+- **Privacy-first:** Email content never leaves the device. The model runs via WebGPU/WASM using WebLLM (Phi-3.5-mini-instruct-q4f16_1-MLC, ~2GB, cached in IndexedDB after first download). The app requests durable storage via `navigator.storage.persist()` to protect the cached model from browser eviction.
 - **Simpler architecture:** One extraction path instead of a cascading multi-tier pipeline. Easier to reason about, test, and maintain.
 - **Stronger portfolio story:** Demonstrates real on-device AI inference, not just string matching dressed up as "AI-powered."
 - **Better generalization:** An LLM handles the long tail of airline email formats naturally, whereas regex/JSON-LD only covers known patterns.
@@ -235,7 +235,7 @@ All stat calculations run on the main thread (memoized with `useMemo`) after the
 ```
 src/
 ├── main.tsx                          # React 19 entry point
-├── App.tsx                           # State machine: landing → parsing → results
+├── App.tsx                           # State machine: landing → parsing → results + durable storage
 ├── index.css                         # Tailwind + custom animations
 ├── worker/
 │   ├── parser.worker.ts              # Web Worker orchestrator
@@ -261,6 +261,7 @@ src/
 │   ├── InputScreen.tsx               # Landing page orchestrator
 │   ├── GmailConnect.tsx              # Google OAuth button (PKCE)
 │   ├── ParsingProgress.tsx           # Progress UI during extraction
+│   ├── ErrorBoundary.tsx             # React error boundary around dashboard
 │   ├── landing/
 │   │   ├── HeroSection.tsx           # Hero: globe bg, headline, CTAs
 │   │   ├── HeroGlobe.tsx            # Decorative 3D globe (lazy-loaded)
@@ -273,7 +274,7 @@ src/
 │   │   ├── useInView.ts            # IntersectionObserver hook
 │   │   └── useCountUp.ts           # Number counter animation hook
 │   └── dashboard/
-│       ├── Dashboard.tsx             # Dashboard layout orchestrator
+│       ├── Dashboard.tsx             # Dashboard layout with skeleton loading
 │       ├── DashboardHeader.tsx       # Sticky header: logo, archetype, share
 │       ├── GlobePanel.tsx           # Globe container (ResizeObserver + lazy)
 │       ├── GlobeInner.tsx           # react-globe.gl with arcs + airport dots
@@ -311,21 +312,30 @@ The landing page is a full-scroll, multi-section experience:
 - **Cards:** Glassmorphic (`backdrop-blur + translucent bg`) or gradient-bordered (`::before` mask technique)
 - **Text:** White headlines with gradient (`from-white to-gray-400`), `gray-400` body, `gray-500` captions
 - **Accents:** Blue (`#3b82f6`) primary, purple secondary, emerald for privacy section
-- **Animations:** CSS keyframes only (no animation library) — `heroEntrance`, `shimmer`, `glow-pulse`, `float`
+- **Animations:** CSS keyframes only (no animation library) — `heroEntrance`, `shimmer`, `glow-pulse`, `float`. Dashboard uses skeleton shimmer placeholders during initial render, then staggered fade-in.
 - **Scroll animations:** `IntersectionObserver` via `useInView` hook, fires once per element
 - **Accessibility:** `prefers-reduced-motion` disables all animations
 
 ## Testing
 
-63 tests across 6 test files, run with Vitest:
+196 tests across 15 test files, run with Vitest. A pre-commit git hook runs the full suite + TypeScript type-check on every commit.
 
 | Test file | Tests | Coverage |
 |-----------|-------|----------|
+| `llm-parsing.test.ts` | 32 | JSON extraction, date parsing, HTML stripping |
 | `stats.test.ts` | 31 | Stats calculation, fun stats, insights, archetypes |
-| `extraction.test.ts` | 11 | Deduplication logic, eval framework (precision/recall) |
+| `stats-edge-cases.test.ts` | 22 | Empty dates, zero miles, archetype thresholds |
+| `dedup.test.ts` | 17 | Flight number normalization, merge, edge cases |
+| `eval.test.ts` | 16 | Precision/recall, matching, field accuracy |
+| `demoFlights.test.ts` | 16 | IATA validation, data integrity, pipeline smoke |
+| `extraction.test.ts` | 11 | Extraction pipeline + dedup integration |
+| `types.test.ts` | 11 | Type contract compliance |
 | `airports.test.ts` | 11 | Airport lookups, IATA validation, Haversine distance |
+| `email-normalizer-edge.test.ts` | 9 | ArrayBuffer input, batch processing, missing headers |
+| `gmail.test.ts` | 8 | Domain relevance, OAuth error handling |
 | `domains.test.ts` | 6 | Domain whitelist coverage, case sensitivity |
-| `email-normalizer.test.ts` | 3 | MIME parsing, multipart emails, edge cases |
+| `email-normalizer.test.ts` | 3 | MIME parsing, multipart emails |
+| `icons.test.ts` | 2 | Icon mapping |
 | `worker.test.ts` | 1 | Worker message type shape |
 
 ## Build & Deployment

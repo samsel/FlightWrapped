@@ -12,7 +12,7 @@ You can also click **"Try with sample data"** to explore the full dashboard with
 
 ## Privacy
 
-Everything runs entirely in your browser. There is no backend — no server, no database, no analytics. Your Gmail token lives only in memory and is discarded when you close the tab. Email content is processed locally via Web Workers and a local LLM (WebLLM). The only external calls are to the Gmail API (from your browser, using your token) and a CDN for the globe texture.
+Everything runs entirely in your browser. There is no backend — no server, no database, no analytics. Your Gmail token lives only in memory and is discarded when you close the tab. Email content is processed locally via Web Workers and a local LLM (WebLLM). Globe textures are bundled with the app. The only external call is to the Gmail API (from your browser, using your token).
 
 ## Tech Stack
 
@@ -40,7 +40,7 @@ npm run dev
 | `npm run dev` | Start Vite dev server |
 | `npm run build` | Type-check + production build |
 | `npm run lint` | ESLint |
-| `npm test` | Run tests (Vitest, 63 tests) |
+| `npm test` | Run tests (Vitest, 196 tests) |
 | `npm run preview` | Preview production build |
 
 ## Gmail Setup
