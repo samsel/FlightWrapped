@@ -8,13 +8,12 @@ interface Props {
 }
 
 interface StatCard {
-  emoji: string
   value: number
   displayValue?: string
   label: string
   subtitle?: string
   suffix?: string
-  accent: string // tailwind border color class
+  accent: string
 }
 
 function AnimatedStat({ card, started }: { card: StatCard; started: boolean }) {
@@ -22,11 +21,10 @@ function AnimatedStat({ card, started }: { card: StatCard; started: boolean }) {
 
   return (
     <div className={`bg-gray-900 border border-gray-800 p-4 border-l-2 ${card.accent}`}>
-      <span className="text-lg">{card.emoji}</span>
+      <p className="text-xs text-gray-500 uppercase tracking-wide">{card.label}</p>
       <p className="text-2xl sm:text-3xl font-bold mt-1">
         {card.displayValue ?? (started ? count.toLocaleString() : '0')}{card.suffix ?? ''}
       </p>
-      <p className="text-sm text-gray-400">{card.label}</p>
       {card.subtitle && <p className="text-xs text-gray-500 mt-1 truncate">{card.subtitle}</p>}
     </div>
   )
@@ -63,15 +61,14 @@ export default function StatsGrid({ stats }: Props) {
     : undefined
 
   const cards: StatCard[] = [
-    { emoji: '✈️', value: stats.totalFlights, label: 'Total Flights', accent: 'border-l-blue-500' },
-    { emoji: '🌍', value: stats.totalMiles, label: 'Miles Flown', accent: 'border-l-purple-500' },
-    { emoji: '📍', value: stats.uniqueAirports, label: 'Airports', accent: 'border-l-amber-500' },
-    { emoji: '🏳️', value: stats.uniqueCountries, label: 'Countries', accent: 'border-l-emerald-500' },
-    { emoji: '🏢', value: stats.uniqueAirlines, label: 'Airlines', accent: 'border-l-pink-500' },
-    { emoji: '🕐', value: Math.round(stats.estimatedHours), label: 'Hours in Air', accent: 'border-l-cyan-500' },
-    { emoji: '🍃', value: 0, displayValue: stats.co2Tons.toFixed(1), label: 'CO₂ Tonnes', accent: 'border-l-green-500' },
+    { value: stats.totalFlights, label: 'Total Flights', accent: 'border-l-blue-500' },
+    { value: stats.totalMiles, label: 'Miles Flown', accent: 'border-l-purple-500' },
+    { value: stats.uniqueAirports, label: 'Airports', accent: 'border-l-amber-500' },
+    { value: stats.uniqueCountries, label: 'Countries', accent: 'border-l-emerald-500' },
+    { value: stats.uniqueAirlines, label: 'Airlines', accent: 'border-l-pink-500' },
+    { value: Math.round(stats.estimatedHours), label: 'Hours in Air', accent: 'border-l-cyan-500' },
+    { value: 0, displayValue: stats.co2Tons.toFixed(1), label: 'CO₂ Tonnes', accent: 'border-l-green-500' },
     {
-      emoji: '🛫',
       value: stats.longestRoute?.miles ?? 0,
       label: 'Longest Route',
       suffix: stats.longestRoute ? ' mi' : '',
@@ -79,7 +76,6 @@ export default function StatsGrid({ stats }: Props) {
       accent: 'border-l-indigo-500',
     },
     ...(stats.mostFlownRoute ? [{
-      emoji: '🔁',
       value: stats.mostFlownRoute.count,
       label: 'Most Flown Route',
       suffix: '×',
@@ -87,7 +83,6 @@ export default function StatsGrid({ stats }: Props) {
       accent: 'border-l-orange-500',
     }] : []),
     ...(stats.mostVisitedAirport ? [{
-      emoji: '🏠',
       value: stats.mostVisitedAirport.count,
       label: 'Most Visited Airport',
       suffix: ' visits',

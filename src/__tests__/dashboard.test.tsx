@@ -65,7 +65,7 @@ describe('DashboardHeader', () => {
     vi.useFakeTimers()
   })
 
-  it('renders archetype name with emoji icon', async () => {
+  it('renders archetype name', async () => {
     const { default: DashboardHeader } = await import('@/components/dashboard/DashboardHeader')
     render(
       <DashboardHeader
@@ -76,7 +76,7 @@ describe('DashboardHeader', () => {
         onReset={() => {}}
       />,
     )
-    // getIcon('compass') returns '🧭' — ShareCard also renders it (off-screen)
+    // DashboardHeader + ShareCard (off-screen) both render the name
     expect(screen.getAllByText(/The Explorer/)).toHaveLength(2)
   })
 

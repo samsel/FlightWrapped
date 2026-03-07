@@ -1,5 +1,4 @@
 import type { FlightStats, FunStats, Archetype, Flight } from '@/lib/types'
-import { getIcon } from '@/lib/icons'
 import { getArchetypeColors } from '@/lib/archetypeColors'
 import ShareButton from './ShareButton'
 
@@ -18,7 +17,7 @@ export default function DashboardHeader({ stats, funStats, archetype, flights, o
         <span className="text-lg font-bold tracking-tight">MyFlights</span>
 
         <span className={`${getArchetypeColors(archetype.id).bg} ${getArchetypeColors(archetype.id).text} px-4 py-1 text-sm font-medium order-3 sm:order-none truncate max-w-[200px] sm:max-w-none`}>
-          {getIcon(archetype.icon)} {archetype.name}
+          {archetype.name}
         </span>
 
         <div className="flex items-center gap-3">

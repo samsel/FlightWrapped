@@ -1,6 +1,5 @@
 import { forwardRef } from 'react'
 import type { FlightStats, FunStats, Archetype, Flight } from '@/lib/types'
-import { getIcon } from '@/lib/icons'
 
 // Inline color map for share card (can't use Tailwind classes in inline styles)
 const ARCHETYPE_ACCENT: Record<string, { gradient: string; pill: string; pillText: string }> = {
@@ -97,7 +96,7 @@ const ShareCard = forwardRef<HTMLDivElement, Props>(
               position: 'relative',
             }}
           >
-            {getIcon(archetype.icon)} {archetype.name}
+            {archetype.name}
           </div>
 
           {/* Stats grid */}

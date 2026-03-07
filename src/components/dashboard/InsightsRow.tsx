@@ -1,6 +1,4 @@
 import type { Insight } from '@/lib/types'
-import { getIcon } from '@/lib/icons'
-
 interface Props {
   insights: Insight[]
 }
@@ -18,8 +16,7 @@ export default function InsightsRow({ insights }: Props) {
               key={insight.id}
               className="flex-shrink-0 w-64 bg-gray-900 border border-gray-800 p-4 snap-start"
             >
-              <span className="text-2xl">{getIcon(insight.icon)}</span>
-              <p className="font-medium mt-2">{insight.title}</p>
+              <p className="font-medium">{insight.title}</p>
               <p className="text-sm text-gray-400 mt-1">{insight.description}</p>
             </div>
           ))}

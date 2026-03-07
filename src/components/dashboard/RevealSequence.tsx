@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
 import type { FlightStats, FunStats, Archetype } from '@/lib/types'
-import { getIcon } from '@/lib/icons'
 import { getArchetypeColors } from '@/lib/archetypeColors'
 import { useCountUp } from '@/hooks/useCountUp'
 
@@ -80,11 +79,11 @@ export default function RevealSequence({ stats, funStats, archetype, onComplete 
       duration: 4000,
       render: () => (
         <div className="reveal-slide">
-          <span style={{ fontSize: 'clamp(3rem, 10vw, 5rem)' }}>{getIcon(archetype.icon)}</span>
-          <p className={`text-2xl sm:text-4xl font-bold mt-4 ${colors.text}`}>
+          <p className="reveal-label">you are</p>
+          <p className={`text-3xl sm:text-5xl font-bold mt-2 ${colors.text}`}>
             {archetype.name}
           </p>
-          <p className="reveal-sublabel max-w-md">{archetype.description}</p>
+          <p className="reveal-sublabel max-w-md mt-4">{archetype.description}</p>
         </div>
       ),
     },
