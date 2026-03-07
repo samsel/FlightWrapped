@@ -75,7 +75,7 @@ export default function ParsingProgress({ progress, onReset }: ParsingProgressPr
         <div className="text-center mt-6">
           <button
             onClick={onReset}
-            className="text-sm bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white px-4 py-2 rounded-lg transition-colors"
+            className="text-sm bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white px-5 py-3 rounded-lg transition-colors"
           >
             Try Again
           </button>

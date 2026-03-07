@@ -18,7 +18,7 @@ export default function GlobePanel({ flights }: Props) {
 
     const observer = new ResizeObserver(([entry]) => {
       const { width } = entry.contentRect
-      setDimensions({ width, height: Math.min(width * 0.65, 600) })
+      setDimensions({ width, height: Math.min(width < 640 ? width * 0.85 : width * 0.65, 600) })
     })
 
     observer.observe(el)

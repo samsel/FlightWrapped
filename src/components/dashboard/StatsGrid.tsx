@@ -45,7 +45,7 @@ export default function StatsGrid({ stats }: Props) {
       {cards.map((card) => (
         <div key={card.label} className="bg-gray-900 rounded-xl border border-gray-800 p-4">
           <span className="text-lg">{card.emoji}</span>
-          <p className="text-3xl font-bold mt-1">{card.value}</p>
+          <p className="text-2xl sm:text-3xl font-bold mt-1">{card.value}</p>
           <p className="text-sm text-gray-400">{card.label}</p>
           {card.subtitle && <p className="text-xs text-gray-500 mt-1 truncate">{card.subtitle}</p>}
         </div>

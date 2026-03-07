@@ -28,7 +28,7 @@ export default function PrivacySection() {
   return (
     <section
       ref={ref as React.RefObject<HTMLDivElement>}
-      className="relative py-32 px-6 overflow-hidden"
+      className="relative py-20 md:py-32 px-6 overflow-hidden"
     >
       {/* Background glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-emerald-500/5 rounded-full blur-[120px] pointer-events-none" />
@@ -49,7 +49,7 @@ export default function PrivacySection() {
         }`} style={{ '--tw-gradient-from': 'rgba(16, 185, 129, 0.3)', '--tw-gradient-to': 'rgba(6, 182, 212, 0.3)' } as React.CSSProperties}>
           <div className="p-8 md:p-10">
             {/* Architecture diagram */}
-            <div className={`flex items-center justify-center gap-3 mb-10 transition-all duration-700 delay-500 ${
+            <div className={`flex items-center justify-center gap-3 mb-10 flex-wrap transition-all duration-700 delay-500 ${
               inView ? 'opacity-100' : 'opacity-0'
             }`}>
               <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-sm font-medium">

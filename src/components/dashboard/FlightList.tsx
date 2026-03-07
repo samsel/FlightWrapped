@@ -51,7 +51,7 @@ export default function FlightList({ flights }: Props) {
     }
   }
 
-  const headerClass = 'text-left text-xs text-gray-400 font-medium px-3 py-2 cursor-pointer hover:text-gray-200 select-none'
+  const headerClass = 'text-left text-xs text-gray-400 font-medium px-3 py-3 cursor-pointer hover:text-gray-200 select-none'
   const arrow = (key: SortKey) => (sortKey === key ? (sortDir === 'asc' ? ' ↑' : ' ↓') : '')
 
   return (
@@ -65,7 +65,7 @@ export default function FlightList({ flights }: Props) {
               <th className={headerClass} onClick={() => toggleSort('origin')}>Origin{arrow('origin')}</th>
               <th className={headerClass} onClick={() => toggleSort('destination')}>Destination{arrow('destination')}</th>
               <th className={headerClass} onClick={() => toggleSort('airline')}>Airline{arrow('airline')}</th>
-              <th className="text-left text-xs text-gray-400 font-medium px-3 py-2">Confidence</th>
+              <th className="text-left text-xs text-gray-400 font-medium px-3 py-3">Confidence</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-800">
@@ -86,7 +86,7 @@ export default function FlightList({ flights }: Props) {
         <div className="text-center mt-3">
           <button
             onClick={() => setShowCount((c) => c + 50)}
-            className="text-sm text-blue-400 hover:text-blue-300"
+            className="text-sm text-blue-400 hover:text-blue-300 px-4 py-2"
           >
             Show more ({sorted.length - showCount} remaining)
           </button>

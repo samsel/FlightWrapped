@@ -75,7 +75,7 @@ export default function TimelineChart({ flights }: Props) {
                   x={x + barWidth / 2}
                   y={topPad + chartHeight + 16}
                   textAnchor="middle"
-                  fontSize={9}
+                  fontSize={10}
                   fill="#6b7280"
                   transform={`rotate(45, ${x + barWidth / 2}, ${topPad + chartHeight + 16})`}
                 >

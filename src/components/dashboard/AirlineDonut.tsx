@@ -65,7 +65,7 @@ export default function AirlineDonut({ stats }: Props) {
           </text>
         </svg>
 
-        <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm w-full">
           {segments.map(([name, count], i) => (
             <div key={name} className="flex items-center gap-2">
               <span

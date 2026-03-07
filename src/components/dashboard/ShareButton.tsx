@@ -51,7 +51,7 @@ export default function ShareButton({ stats, funStats, archetype, flights }: Pro
       <button
         onClick={generate}
         disabled={status === 'generating'}
-        className="text-sm text-gray-400 hover:text-white transition-colors flex items-center gap-1.5 disabled:opacity-50"
+        className="text-sm text-gray-400 hover:text-white transition-colors flex items-center gap-1.5 disabled:opacity-50 px-3 py-2"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -76,7 +76,7 @@ export default function ShareButton({ stats, funStats, archetype, flights }: Pro
           >
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold">Your Flight Stats</h2>
-              <button onClick={close} className="text-gray-400 hover:text-white text-xl leading-none">
+              <button onClick={close} className="text-gray-400 hover:text-white text-xl leading-none p-2">
                 &times;
               </button>
             </div>
@@ -100,7 +100,7 @@ export default function ShareButton({ stats, funStats, archetype, flights }: Pro
                 <a
                   href={imageUrl}
                   download="myflights.png"
-                  className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+                  className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium px-5 py-3 rounded-lg transition-colors"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"

@@ -65,7 +65,7 @@ export default function HeroSection({ onError, onDemoClick }: HeroSectionProps) 
 
         {/* Headline */}
         <h1
-          className="hero-stagger text-6xl sm:text-7xl md:text-8xl font-bold tracking-tight leading-[0.95] mb-8"
+          className="hero-stagger text-5xl sm:text-6xl md:text-8xl font-bold tracking-tight leading-[0.95] mb-8"
           style={{ animationDelay: '0.25s' }}
         >
           <span className="gradient-text-animated">
@@ -108,7 +108,7 @@ export default function HeroSection({ onError, onDemoClick }: HeroSectionProps) 
 
         {/* Trust micro-copy */}
         <div
-          className="hero-stagger flex items-center justify-center gap-3 text-xs text-gray-500"
+          className="hero-stagger flex items-center justify-center gap-3 text-xs text-gray-500 flex-wrap"
           style={{ animationDelay: '0.75s' }}
         >
           <span className="flex items-center gap-1.5">

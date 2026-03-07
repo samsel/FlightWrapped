@@ -141,7 +141,7 @@ function App() {
       <div className="animate-fade-in">
         <InputScreen onError={handleError} onDemoClick={handleDemoClick} />
         {error && (
-          <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-red-900/90 text-red-200 px-6 py-3 rounded-lg shadow-lg">
+          <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-red-900/90 text-red-200 px-6 py-3 rounded-lg shadow-lg max-w-[90vw] text-sm">
             {error}
             <button onClick={() => setError(null)} className="ml-4 text-red-400 hover:text-red-300">
               Dismiss

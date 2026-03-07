@@ -27,7 +27,7 @@ function CountingStat({ emoji, value, label, suffix, started }: {
   return (
     <div className="glass-card rounded-2xl p-5 transition-all duration-300 hover:scale-[1.02] group">
       <span className="text-xl block mb-1 transition-transform duration-300 group-hover:scale-110">{emoji}</span>
-      <p className="text-3xl md:text-4xl font-bold mt-1 bg-gradient-to-b from-white to-gray-400 bg-clip-text text-transparent">
+      <p className="text-2xl md:text-4xl font-bold mt-1 bg-gradient-to-b from-white to-gray-400 bg-clip-text text-transparent">
         {started ? count.toLocaleString() : '0'}{suffix}
       </p>
       <p className="text-sm text-gray-500 mt-1">{label}</p>
@@ -42,7 +42,7 @@ export default function PreviewSection() {
     <section
       id="preview"
       ref={ref as React.RefObject<HTMLDivElement>}
-      className="relative py-32 px-6 overflow-hidden"
+      className="relative py-20 md:py-32 px-6 overflow-hidden"
     >
       {/* Background accent */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-blue-500/5 rounded-full blur-[120px] pointer-events-none" />

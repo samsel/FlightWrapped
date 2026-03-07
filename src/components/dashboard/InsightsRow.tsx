@@ -11,11 +11,11 @@ export default function InsightsRow({ insights }: Props) {
   return (
     <div>
       <h2 className="text-lg font-semibold mb-3">Your Travel Insights</h2>
-      <div className="flex gap-3 overflow-x-auto pb-2">
+      <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory">
         {insights.map((insight) => (
           <div
             key={insight.id}
-            className="flex-shrink-0 w-64 bg-gray-900 rounded-xl border border-gray-800 p-4"
+            className="flex-shrink-0 w-64 bg-gray-900 rounded-xl border border-gray-800 p-4 snap-start"
           >
             <span className="text-2xl">{getIcon(insight.icon)}</span>
             <p className="font-medium mt-2">{insight.title}</p>

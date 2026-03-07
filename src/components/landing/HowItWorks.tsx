@@ -16,7 +16,7 @@ const STEPS = [
     number: '02',
     title: 'AI extracts flights',
     description:
-      'A 3-tier engine (structured data, regex, local AI) finds every flight confirmation. Runs entirely in your browser.',
+      'A local AI model finds every flight confirmation in your inbox. Runs entirely in your browser — nothing is sent anywhere.',
     Icon: SparklesIcon,
     color: 'from-purple-500/20 to-pink-500/20',
     iconColor: 'text-purple-400',
@@ -40,7 +40,7 @@ export default function HowItWorks() {
   return (
     <section
       ref={ref as React.RefObject<HTMLDivElement>}
-      className="relative py-32 px-6 overflow-hidden"
+      className="relative py-20 md:py-32 px-6 overflow-hidden"
     >
       {/* Background orb */}
       <div className="absolute top-1/2 right-0 -translate-y-1/2 w-[400px] h-[400px] bg-purple-500/5 rounded-full blur-[100px] pointer-events-none" />

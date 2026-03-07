@@ -12,7 +12,7 @@ export default function FinalCTA({ onError, onDemoClick }: FinalCTAProps) {
   return (
     <section
       ref={ref as React.RefObject<HTMLDivElement>}
-      className="relative py-40 px-6 overflow-hidden noise-overlay"
+      className="relative py-20 md:py-40 px-6 overflow-hidden noise-overlay"
     >
       {/* Dramatic background glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[400px] bg-blue-500/8 rounded-full blur-[120px] pointer-events-none" />
@@ -43,7 +43,7 @@ export default function FinalCTA({ onError, onDemoClick }: FinalCTAProps) {
           </button>
         </div>
 
-        <div className="flex items-center justify-center gap-3 text-xs text-gray-600 mt-6">
+        <div className="flex items-center justify-center gap-3 text-xs text-gray-600 mt-6 flex-wrap">
           <span>Read-only access</span>
           <span className="w-1 h-1 rounded-full bg-gray-700" />
           <span>Nothing stored</span>
