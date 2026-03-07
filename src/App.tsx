@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo, type MutableRefObject } from 'react'
 import InputScreen from '@/components/InputScreen'
 import ParsingProgress from '@/components/ParsingProgress'
 import { getCallbackCode, clearCallbackParams, handleCallback, searchFlightEmails, batchFetchMessages, configureGmail, type RateLimitInfo } from '@/lib/gmail'
@@ -31,6 +31,8 @@ function App() {
   const [flights, setFlights] = useState<Flight[]>([])
   const [error, setError] = useState<string | null>(null)
   const workerRef = useRef<Worker | null>(null)
+  const generationRef = useRef(0) as MutableRefObject<number>
+  const processingRef = useRef(false) as MutableRefObject<boolean>
 
   // Request durable storage so the browser won't evict the cached LLM model
   useEffect(() => {
@@ -43,8 +45,12 @@ function App() {
       type: 'module',
     })
     workerRef.current = worker
+    const gen = generationRef.current
 
     worker.onmessage = (e: MessageEvent<WorkerOutMessage>) => {
+      // Ignore messages from stale worker generations (e.g. after reset)
+      if (generationRef.current !== gen) return
+
       const msg = e.data
       switch (msg.type) {
         case 'progress':
@@ -62,6 +68,7 @@ function App() {
     }
 
     worker.onerror = (e) => {
+      if (generationRef.current !== gen) return
       setError(`Worker failed: ${e.message}`)
       setAppState('landing')
     }
@@ -71,20 +78,23 @@ function App() {
 
   // Handle Gmail OAuth callback
   useEffect(() => {
-    const code = getCallbackCode()
-    if (code) {
+    const result = getCallbackCode()
+    if (result) {
+      // Guard against double invocation (StrictMode, back button)
+      if (processingRef.current) return
+      processingRef.current = true
       clearCallbackParams()
-      handleGmailCallback(code)
+      handleGmailCallback(result.code, result.state)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const handleGmailCallback = async (code: string) => {
+  const handleGmailCallback = async (code: string, state: string | null) => {
     try {
       setAppState('parsing')
       setProgress({ phase: 'scanning', current: 0, total: 0, flightsFound: 0, message: 'Exchanging auth code...' })
 
-      const token = await handleCallback(code)
+      const token = await handleCallback(code, state)
 
       const handleRateLimit = (info: RateLimitInfo) => {
         setProgress((p) => ({ ...p, message: `Rate limited by Gmail — retrying in ${info.retryAfter}s...` }))
@@ -96,7 +106,8 @@ function App() {
       }, handleRateLimit)
 
       if (messageIds.length === 0) {
-        setProgress({ phase: 'done', current: 0, total: 0, flightsFound: 0, message: 'No flight emails found' })
+        setError('No flight-related emails found in your inbox.')
+        setAppState('landing')
         return
       }
 
@@ -136,6 +147,32 @@ function App() {
   const archetype = useMemo(() => determineArchetype(flights, stats), [flights, stats])
 
   const resetToLanding = useCallback(() => {
+    // Bump generation so in-flight worker messages are ignored
+    generationRef.current++
+    processingRef.current = false
+    // Terminate the running worker to stop any in-progress processing
+    workerRef.current?.terminate()
+    // Create a fresh worker
+    const worker = new Worker(new URL('./worker/parser.worker.ts', import.meta.url), {
+      type: 'module',
+    })
+    const gen = generationRef.current
+    worker.onmessage = (e: MessageEvent<WorkerOutMessage>) => {
+      if (generationRef.current !== gen) return
+      const msg = e.data
+      switch (msg.type) {
+        case 'progress': setProgress(msg.data); break
+        case 'result': setFlights(msg.data); setAppState('results'); break
+        case 'error': setError(msg.data.message); setProgress((p) => ({ ...p, phase: 'error', message: msg.data.message })); break
+      }
+    }
+    worker.onerror = (e) => {
+      if (generationRef.current !== gen) return
+      setError(`Worker failed: ${e.message}`)
+      setAppState('landing')
+    }
+    workerRef.current = worker
+
     setAppState('landing')
     setFlights([])
     setError(null)

@@ -23,9 +23,13 @@ const ShareCard = forwardRef<HTMLDivElement, Props>(
     const yearRange =
       flights.length > 0
         ? (() => {
-            const years = flights.map((f) => f.date.slice(0, 4))
-            const min = Math.min(...years.map(Number))
-            const max = Math.max(...years.map(Number))
+            const years = flights
+              .map((f) => f.date?.slice(0, 4))
+              .map(Number)
+              .filter((y) => y > 0 && !isNaN(y))
+            if (years.length === 0) return ''
+            const min = Math.min(...years)
+            const max = Math.max(...years)
             return min === max ? `${min}` : `${min}–${max}`
           })()
         : ''

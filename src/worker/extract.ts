@@ -16,21 +16,3 @@ export async function extractFlightsFromEmail(email: NormalizedEmail): Promise<F
 
   return extractFromLlm(email)
 }
-
-/**
- * Process a batch of emails through the extraction pipeline.
- */
-export async function extractFlightsFromEmails(
-  emails: NormalizedEmail[],
-  onProgress?: (current: number, total: number, flightsFound: number) => void,
-): Promise<Flight[]> {
-  const allFlights: Flight[] = []
-
-  for (let i = 0; i < emails.length; i++) {
-    const flights = await extractFlightsFromEmail(emails[i])
-    allFlights.push(...flights)
-    onProgress?.(i + 1, emails.length, allFlights.length)
-  }
-
-  return allFlights
-}

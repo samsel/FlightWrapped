@@ -1,11 +1,10 @@
 import type { RawEmail } from './types'
-import { AIRLINE_DOMAINS } from './domains'
 
 const GOOGLE_AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth'
 const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token'
 const GMAIL_API_BASE = 'https://gmail.googleapis.com/gmail/v1/users/me'
 const SCOPES = 'https://www.googleapis.com/auth/gmail.readonly'
-const BATCH_SIZE = 100
+const BATCH_SIZE = 20
 const MAX_RETRIES = 5
 
 // Populated from environment or config — set before calling initiateAuth
@@ -40,9 +39,11 @@ async function generateCodeChallenge(verifier: string): Promise<string> {
 export async function initiateAuth(): Promise<void> {
   const codeVerifier = generateCodeVerifier()
   const codeChallenge = await generateCodeChallenge(codeVerifier)
+  const state = generateCodeVerifier() // random string for CSRF protection
 
-  // Store verifier in sessionStorage for the callback
+  // Store verifier and state in sessionStorage for the callback
   sessionStorage.setItem('gmail_code_verifier', codeVerifier)
+  sessionStorage.setItem('gmail_oauth_state', state)
 
   const params = new URLSearchParams({
     client_id: clientId,
@@ -53,18 +54,29 @@ export async function initiateAuth(): Promise<void> {
     code_challenge_method: 'S256',
     access_type: 'online',
     prompt: 'consent',
+    state,
   })
 
   window.location.href = `${GOOGLE_AUTH_URL}?${params.toString()}`
 }
 
 /** Exchange authorization code for access token (PKCE, no client secret) */
-export async function handleCallback(code: string): Promise<string> {
+export async function handleCallback(code: string, urlState: string | null): Promise<string> {
   const codeVerifier = sessionStorage.getItem('gmail_code_verifier')
   if (!codeVerifier) {
-    throw new Error('Missing code verifier — OAuth flow was not properly initiated')
+    throw new Error('Session expired — please try connecting Gmail again')
   }
+
+  // Validate state parameter to prevent CSRF attacks
+  const savedState = sessionStorage.getItem('gmail_oauth_state')
+  if (!savedState || savedState !== urlState) {
+    sessionStorage.removeItem('gmail_code_verifier')
+    sessionStorage.removeItem('gmail_oauth_state')
+    throw new Error('OAuth state mismatch — possible CSRF attack. Please try again.')
+  }
+
   sessionStorage.removeItem('gmail_code_verifier')
+  sessionStorage.removeItem('gmail_oauth_state')
 
   const response = await fetch(GOOGLE_TOKEN_URL, {
     method: 'POST',
@@ -84,6 +96,9 @@ export async function handleCallback(code: string): Promise<string> {
   }
 
   const data = await response.json()
+  if (!data.access_token) {
+    throw new Error(data.error || 'No access token received')
+  }
   return data.access_token as string
 }
 
@@ -197,8 +212,10 @@ export async function batchFetchMessages(
       return { raw: bytes.buffer } as RawEmail
     })
 
-    const batchResults = await Promise.all(promises)
-    results.push(...batchResults)
+    const settled = await Promise.allSettled(promises)
+    for (const r of settled) {
+      if (r.status === 'fulfilled') results.push(r.value)
+    }
     onProgress?.(results.length, ids.length)
   }
 
@@ -221,7 +238,7 @@ async function fetchWithRetry(
     if (response.status === 429 || response.status >= 500) {
       const retryAfterHeader = response.headers.get('Retry-After')
       const backoff = retryAfterHeader
-        ? parseInt(retryAfterHeader, 10) * 1000
+        ? Math.min(parseInt(retryAfterHeader, 10), 60) * 1000
         : Math.pow(2, attempt) * 1000 + Math.random() * 3000
 
       if (response.status === 429) {
@@ -243,9 +260,11 @@ function sleep(ms: number): Promise<void> {
 }
 
 /** Check if there's an OAuth callback code in the current URL */
-export function getCallbackCode(): string | null {
+export function getCallbackCode(): { code: string; state: string | null } | null {
   const params = new URLSearchParams(window.location.search)
-  return params.get('code')
+  const code = params.get('code')
+  if (!code) return null
+  return { code, state: params.get('state') }
 }
 
 /** Clean up the URL after handling the callback */
@@ -256,9 +275,4 @@ export function clearCallbackParams(): void {
   url.searchParams.delete('state')
   url.searchParams.delete('error')
   window.history.replaceState({}, '', url.toString())
-}
-
-/** Check if the domain list contains this domain (used by extraction pipeline) */
-export function isDomainRelevant(domain: string): boolean {
-  return AIRLINE_DOMAINS.has(domain.toLowerCase())
 }

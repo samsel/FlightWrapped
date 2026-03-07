@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { configureGmail, isDomainRelevant } from '@/lib/gmail'
+import { configureGmail } from '@/lib/gmail'
+import { isAirlineDomain } from '@/lib/domains'
 
 describe('configureGmail', () => {
   it('does not throw', () => {
@@ -7,31 +8,31 @@ describe('configureGmail', () => {
   })
 })
 
-describe('isDomainRelevant', () => {
+describe('isAirlineDomain', () => {
   it('returns true for airline domains', () => {
-    expect(isDomainRelevant('united.com')).toBe(true)
-    expect(isDomainRelevant('delta.com')).toBe(true)
-    expect(isDomainRelevant('emirates.com')).toBe(true)
+    expect(isAirlineDomain('united.com')).toBe(true)
+    expect(isAirlineDomain('delta.com')).toBe(true)
+    expect(isAirlineDomain('emirates.com')).toBe(true)
   })
 
   it('returns true for booking platforms', () => {
-    expect(isDomainRelevant('expedia.com')).toBe(true)
-    expect(isDomainRelevant('kayak.com')).toBe(true)
+    expect(isAirlineDomain('expedia.com')).toBe(true)
+    expect(isAirlineDomain('kayak.com')).toBe(true)
   })
 
   it('is case-insensitive', () => {
-    expect(isDomainRelevant('UNITED.COM')).toBe(true)
-    expect(isDomainRelevant('Delta.Com')).toBe(true)
+    expect(isAirlineDomain('UNITED.COM')).toBe(true)
+    expect(isAirlineDomain('Delta.Com')).toBe(true)
   })
 
   it('returns false for non-airline domains', () => {
-    expect(isDomainRelevant('gmail.com')).toBe(false)
-    expect(isDomainRelevant('amazon.com')).toBe(false)
-    expect(isDomainRelevant('twitter.com')).toBe(false)
+    expect(isAirlineDomain('gmail.com')).toBe(false)
+    expect(isAirlineDomain('amazon.com')).toBe(false)
+    expect(isAirlineDomain('twitter.com')).toBe(false)
   })
 
   it('returns false for empty string', () => {
-    expect(isDomainRelevant('')).toBe(false)
+    expect(isAirlineDomain('')).toBe(false)
   })
 })
 
@@ -56,6 +57,6 @@ describe('handleCallback', () => {
   it('throws when code verifier is missing from sessionStorage', async () => {
     sessionStorage.clear()
     const { handleCallback } = await import('@/lib/gmail')
-    await expect(handleCallback('test-code')).rejects.toThrow('Missing code verifier')
+    await expect(handleCallback('test-code', null)).rejects.toThrow('Session expired')
   })
 })
