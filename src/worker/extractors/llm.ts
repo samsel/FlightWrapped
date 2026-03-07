@@ -103,7 +103,7 @@ ${truncated}`
   }
 }
 
-function parseLlmResponse(content: string, emailDate: string): Flight[] {
+export function parseLlmResponse(content: string, emailDate: string): Flight[] {
   // Try progressively larger matches to find valid JSON
   const openIdx = content.indexOf('{')
   if (openIdx === -1) return []
@@ -192,7 +192,7 @@ function parseFlightDate(dateStr: string, fallbackDate: string): string | null {
   return null
 }
 
-function stripToPlainText(email: NormalizedEmail): string {
+export function stripToPlainText(email: NormalizedEmail): string {
   if (email.textBody) return email.textBody
   if (!email.htmlBody) return ''
 
