@@ -54,7 +54,8 @@ export default function AirlineDonut({ stats }: Props) {
                 strokeDasharray={`${dash} ${circumference - dash}`}
                 strokeDashoffset={-offsets[i]}
                 transform={`rotate(-90, ${cx}, ${cy})`}
-                className="hover:opacity-80 transition-opacity cursor-default"
+                className="donut-animated hover:opacity-80 transition-opacity cursor-default"
+                style={{ animationDelay: `${i * 150}ms` }}
               >
                 <title>{name}: {count} flight{count !== 1 ? 's' : ''} ({Math.round((count / total) * 100)}%)</title>
               </circle>

@@ -32,7 +32,13 @@ export default function GlobePanel({ flights }: Props) {
   const { arcsData, pointsData } = useMemo(() => {
     const seenRoutes = new Set<string>()
     const seenAirports = new Set<string>()
-    const arcs: { startLat: number; startLng: number; endLat: number; endLng: number }[] = []
+    const routeCounts = new Map<string, number>()
+    for (const f of flights) {
+      const rk = [f.origin, f.destination].sort().join('-')
+      routeCounts.set(rk, (routeCounts.get(rk) ?? 0) + 1)
+    }
+
+    const arcs: { startLat: number; startLng: number; endLat: number; endLng: number; label: string }[] = []
     const points: { lat: number; lng: number; label: string }[] = []
 
     for (const f of flights) {
@@ -43,7 +49,12 @@ export default function GlobePanel({ flights }: Props) {
       const rk = [f.origin, f.destination].sort().join('-')
       if (!seenRoutes.has(rk)) {
         seenRoutes.add(rk)
-        arcs.push({ startLat: orig.lat, startLng: orig.lng, endLat: dest.lat, endLng: dest.lng })
+        const count = routeCounts.get(rk) ?? 1
+        arcs.push({
+          startLat: orig.lat, startLng: orig.lng,
+          endLat: dest.lat, endLng: dest.lng,
+          label: `${orig.city} (${f.origin}) \u2194 ${dest.city} (${f.destination}) \u00B7 ${count} flight${count !== 1 ? 's' : ''}`,
+        })
       }
 
       for (const ap of [orig, dest]) {

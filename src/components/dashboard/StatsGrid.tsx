@@ -14,13 +14,14 @@ interface StatCard {
   label: string
   subtitle?: string
   suffix?: string
+  accent: string // tailwind border color class
 }
 
 function AnimatedStat({ card, started }: { card: StatCard; started: boolean }) {
   const count = useCountUp(card.value, 1500, started)
 
   return (
-    <div className="bg-gray-900 rounded-xl border border-gray-800 p-4">
+    <div className={`bg-gray-900 rounded-xl border border-gray-800 p-4 border-l-2 ${card.accent}`}>
       <span className="text-lg">{card.emoji}</span>
       <p className="text-2xl sm:text-3xl font-bold mt-1">
         {card.displayValue ?? (started ? count.toLocaleString() : '0')}{card.suffix ?? ''}
@@ -62,19 +63,20 @@ export default function StatsGrid({ stats }: Props) {
     : undefined
 
   const cards: StatCard[] = [
-    { emoji: '✈️', value: stats.totalFlights, label: 'Total Flights' },
-    { emoji: '🌍', value: stats.totalMiles, label: 'Miles Flown' },
-    { emoji: '📍', value: stats.uniqueAirports, label: 'Airports' },
-    { emoji: '🏳️', value: stats.uniqueCountries, label: 'Countries' },
-    { emoji: '🏢', value: stats.uniqueAirlines, label: 'Airlines' },
-    { emoji: '🕐', value: Math.round(stats.estimatedHours), label: 'Hours in Air' },
-    { emoji: '🍃', value: 0, displayValue: stats.co2Tons.toFixed(1), label: 'CO₂ Tonnes' },
+    { emoji: '✈️', value: stats.totalFlights, label: 'Total Flights', accent: 'border-l-blue-500' },
+    { emoji: '🌍', value: stats.totalMiles, label: 'Miles Flown', accent: 'border-l-purple-500' },
+    { emoji: '📍', value: stats.uniqueAirports, label: 'Airports', accent: 'border-l-amber-500' },
+    { emoji: '🏳️', value: stats.uniqueCountries, label: 'Countries', accent: 'border-l-emerald-500' },
+    { emoji: '🏢', value: stats.uniqueAirlines, label: 'Airlines', accent: 'border-l-pink-500' },
+    { emoji: '🕐', value: Math.round(stats.estimatedHours), label: 'Hours in Air', accent: 'border-l-cyan-500' },
+    { emoji: '🍃', value: 0, displayValue: stats.co2Tons.toFixed(1), label: 'CO₂ Tonnes', accent: 'border-l-green-500' },
     {
       emoji: '🛫',
       value: stats.longestRoute?.miles ?? 0,
       label: 'Longest Route',
       suffix: stats.longestRoute ? ' mi' : '',
       subtitle: longestCities || longestLabel,
+      accent: 'border-l-indigo-500',
     },
     ...(stats.mostFlownRoute ? [{
       emoji: '🔁',
@@ -82,6 +84,7 @@ export default function StatsGrid({ stats }: Props) {
       label: 'Most Flown Route',
       suffix: '×',
       subtitle: mostFlownLabel,
+      accent: 'border-l-orange-500',
     }] : []),
     ...(stats.mostVisitedAirport ? [{
       emoji: '🏠',
@@ -89,6 +92,7 @@ export default function StatsGrid({ stats }: Props) {
       label: 'Most Visited Airport',
       suffix: ' visits',
       subtitle: mostVisitedLabel,
+      accent: 'border-l-rose-500',
     }] : []),
   ]
 

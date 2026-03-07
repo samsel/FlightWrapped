@@ -2,6 +2,18 @@ import { forwardRef } from 'react'
 import type { FlightStats, FunStats, Archetype, Flight } from '@/lib/types'
 import { getIcon } from '@/lib/icons'
 
+// Inline color map for share card (can't use Tailwind classes in inline styles)
+const ARCHETYPE_ACCENT: Record<string, { gradient: string; pill: string; pillText: string }> = {
+  'commuter':        { gradient: '#f59e0b', pill: 'rgba(245,158,11,0.2)', pillText: '#fcd34d' },
+  'explorer':        { gradient: '#10b981', pill: 'rgba(16,185,129,0.2)', pillText: '#6ee7b7' },
+  'road-warrior':    { gradient: '#ef4444', pill: 'rgba(239,68,68,0.2)',  pillText: '#fca5a5' },
+  'long-hauler':     { gradient: '#a855f7', pill: 'rgba(168,85,247,0.2)', pillText: '#d8b4fe' },
+  'weekender':       { gradient: '#06b6d4', pill: 'rgba(6,182,212,0.2)',  pillText: '#67e8f9' },
+  'occasional-flyer':{ gradient: '#3b82f6', pill: 'rgba(59,130,246,0.2)', pillText: '#93c5fd' },
+}
+
+const DEFAULT_ACCENT = { gradient: '#3b82f6', pill: 'rgba(59,130,246,0.2)', pillText: '#93c5fd' }
+
 interface Props {
   stats: FlightStats
   funStats: FunStats
@@ -11,13 +23,15 @@ interface Props {
 
 const ShareCard = forwardRef<HTMLDivElement, Props>(
   ({ stats, funStats, archetype, flights }, ref) => {
+    const accent = ARCHETYPE_ACCENT[archetype.id] ?? DEFAULT_ACCENT
+
     const statItems = [
       { label: 'Flights', value: stats.totalFlights.toLocaleString() },
       { label: 'Miles', value: stats.totalMiles.toLocaleString() },
       { label: 'Airports', value: stats.uniqueAirports.toLocaleString() },
       { label: 'Countries', value: stats.uniqueCountries.toLocaleString() },
       { label: 'Hours', value: Math.round(stats.estimatedHours).toLocaleString() },
-      { label: 'CO₂ Tons', value: stats.co2Tons.toFixed(1) },
+      { label: 'CO\u2082 Tons', value: stats.co2Tons.toFixed(1) },
     ]
 
     const yearRange =
@@ -30,7 +44,7 @@ const ShareCard = forwardRef<HTMLDivElement, Props>(
             if (years.length === 0) return ''
             const min = Math.min(...years)
             const max = Math.max(...years)
-            return min === max ? `${min}` : `${min}–${max}`
+            return min === max ? `${min}` : `${min}\u2013${max}`
           })()
         : ''
 
@@ -50,7 +64,7 @@ const ShareCard = forwardRef<HTMLDivElement, Props>(
           style={{
             width: '1200px',
             height: '630px',
-            background: 'linear-gradient(135deg, #030712 0%, #0f172a 50%, #030712 100%)',
+            background: `linear-gradient(135deg, #030712 0%, #0f172a 40%, ${accent.gradient}15 100%)`,
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
@@ -59,11 +73,39 @@ const ShareCard = forwardRef<HTMLDivElement, Props>(
             fontFamily: 'system-ui, -apple-system, sans-serif',
             color: '#fff',
             boxSizing: 'border-box',
+            position: 'relative',
+            overflow: 'hidden',
           }}
         >
+          {/* Decorative accent circle */}
+          <div
+            style={{
+              position: 'absolute',
+              right: '-120px',
+              top: '-120px',
+              width: '400px',
+              height: '400px',
+              borderRadius: '50%',
+              background: `radial-gradient(circle, ${accent.gradient}20, transparent)`,
+              filter: 'blur(60px)',
+            }}
+          />
+          <div
+            style={{
+              position: 'absolute',
+              left: '-80px',
+              bottom: '-80px',
+              width: '300px',
+              height: '300px',
+              borderRadius: '50%',
+              background: `radial-gradient(circle, ${accent.gradient}15, transparent)`,
+              filter: 'blur(40px)',
+            }}
+          />
+
           {/* Header */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '12px' }}>
-            <span style={{ fontSize: '36px', fontWeight: 800, letterSpacing: '-0.02em' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '12px', position: 'relative' }}>
+            <span style={{ fontSize: '40px', fontWeight: 800, letterSpacing: '-0.03em' }}>
               MyFlights
             </span>
           </div>
@@ -71,13 +113,14 @@ const ShareCard = forwardRef<HTMLDivElement, Props>(
           {/* Archetype pill */}
           <div
             style={{
-              background: 'rgba(59, 130, 246, 0.2)',
-              color: '#93c5fd',
+              background: accent.pill,
+              color: accent.pillText,
               borderRadius: '9999px',
-              padding: '8px 24px',
-              fontSize: '18px',
-              fontWeight: 500,
-              marginBottom: '36px',
+              padding: '10px 28px',
+              fontSize: '20px',
+              fontWeight: 600,
+              marginBottom: '40px',
+              position: 'relative',
             }}
           >
             {getIcon(archetype.icon)} {archetype.name}
@@ -88,27 +131,28 @@ const ShareCard = forwardRef<HTMLDivElement, Props>(
             style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '20px 48px',
-              marginBottom: '36px',
+              gap: '24px 56px',
+              marginBottom: '40px',
               width: '100%',
-              maxWidth: '720px',
+              maxWidth: '760px',
+              position: 'relative',
             }}
           >
             {statItems.map((item) => (
               <div key={item.label} style={{ textAlign: 'center' }}>
                 <div
                   style={{
-                    fontSize: '40px',
-                    fontWeight: 700,
-                    lineHeight: 1.2,
-                    background: 'linear-gradient(to right, #60a5fa, #a78bfa)',
+                    fontSize: '44px',
+                    fontWeight: 800,
+                    lineHeight: 1.1,
+                    background: `linear-gradient(135deg, #fff, ${accent.pillText})`,
                     WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent',
                   }}
                 >
                   {item.value}
                 </div>
-                <div style={{ fontSize: '14px', color: '#9ca3af', marginTop: '4px' }}>
+                <div style={{ fontSize: '14px', color: '#9ca3af', marginTop: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                   {item.label}
                 </div>
               </div>
@@ -120,8 +164,9 @@ const ShareCard = forwardRef<HTMLDivElement, Props>(
             style={{
               fontSize: '18px',
               color: '#d1d5db',
-              marginBottom: '24px',
+              marginBottom: '28px',
               fontStyle: 'italic',
+              position: 'relative',
             }}
           >
             {funStats.earthOrbits.toFixed(1)} Earth orbits &middot;{' '}
@@ -129,8 +174,8 @@ const ShareCard = forwardRef<HTMLDivElement, Props>(
           </div>
 
           {/* Footer */}
-          <div style={{ fontSize: '13px', color: '#6b7280' }}>
-            {stats.totalFlights} flights{yearRange ? ` · ${yearRange}` : ''} · myflights.app
+          <div style={{ fontSize: '13px', color: '#6b7280', position: 'relative' }}>
+            {stats.totalFlights} flights{yearRange ? ` \u00B7 ${yearRange}` : ''} \u00B7 myflights.app
           </div>
         </div>
       </div>

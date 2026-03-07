@@ -7,11 +7,12 @@ import { calculateFunStats } from '@/lib/funStats'
 import { generateInsights } from '@/lib/insights'
 import { determineArchetype } from '@/lib/archetypes'
 import Dashboard from '@/components/dashboard/Dashboard'
+import RevealSequence from '@/components/dashboard/RevealSequence'
 import ErrorBoundary from '@/components/ErrorBoundary'
 import { DEMO_FLIGHTS } from '@/components/landing/demoFlights'
 import type { Flight, ParseProgress, WorkerOutMessage } from '@/lib/types'
 
-type AppState = 'landing' | 'parsing' | 'results'
+type AppState = 'landing' | 'parsing' | 'reveal' | 'results'
 
 // Configure Gmail OAuth — replace with your own client ID for production
 const GMAIL_CLIENT_ID = import.meta.env.VITE_GMAIL_CLIENT_ID ?? ''
@@ -54,7 +55,7 @@ function App() {
           break
         case 'result':
           setFlights(msg.data)
-          setAppState('results')
+          setAppState(msg.data.length > 0 ? 'reveal' : 'results')
           break
         case 'error':
           setError(msg.data.message)
@@ -158,7 +159,7 @@ function App() {
       const msg = e.data
       switch (msg.type) {
         case 'progress': setProgress(msg.data); break
-        case 'result': setFlights(msg.data); setAppState('results'); break
+        case 'result': setFlights(msg.data); setAppState(msg.data.length > 0 ? 'reveal' : 'results'); break
         case 'error': setError(msg.data.message); setProgress((p) => ({ ...p, phase: 'error', message: msg.data.message })); break
       }
     }
@@ -197,6 +198,17 @@ function App() {
         <h1 className="text-3xl font-bold mb-8">MyFlights</h1>
         <ParsingProgress progress={progress} onReset={resetToLanding} />
       </div>
+    )
+  }
+
+  if (appState === 'reveal') {
+    return (
+      <RevealSequence
+        stats={stats}
+        funStats={funStats}
+        archetype={archetype}
+        onComplete={() => setAppState('results')}
+      />
     )
   }
 

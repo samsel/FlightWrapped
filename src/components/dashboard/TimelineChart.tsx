@@ -57,7 +57,17 @@ export default function TimelineChart({ flights }: Props) {
             return (
               <g key={month}>
                 {/* Bar */}
-                <rect x={x} y={y} width={barWidth} height={barHeight} rx={4} ry={4} fill="#3b82f6" className="hover:opacity-80 transition-opacity cursor-default">
+                <rect
+                  x={x}
+                  y={y}
+                  width={barWidth}
+                  height={barHeight}
+                  rx={4}
+                  ry={4}
+                  fill="#3b82f6"
+                  className="bar-animated hover:opacity-80 transition-opacity cursor-default"
+                  style={{ animationDelay: `${i * 60}ms` }}
+                >
                   <title>{month}: {count} flight{count !== 1 ? 's' : ''}</title>
                 </rect>
 
