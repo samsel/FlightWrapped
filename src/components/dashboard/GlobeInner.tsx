@@ -25,11 +25,22 @@ export default function GlobeInner({ width, height, arcsData, pointsData }: Prop
   const globeRef = useRef<GlobeMethods | undefined>(undefined)
 
   useEffect(() => {
-    const controls = globeRef.current?.controls()
+    const globe = globeRef.current
+    if (!globe) return
+    const controls = globe.controls()
     if (controls) {
       controls.autoRotate = true
       controls.autoRotateSpeed = 0.6
     }
+    // Auto-fly to the center of all points on mount
+    if (pointsData.length > 0) {
+      const avgLat = pointsData.reduce((s, p) => s + p.lat, 0) / pointsData.length
+      const avgLng = pointsData.reduce((s, p) => s + p.lng, 0) / pointsData.length
+      setTimeout(() => {
+        globe.pointOfView({ lat: avgLat, lng: avgLng, altitude: 1.8 }, 1500)
+      }, 500)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // Clean up WebGL resources on unmount to prevent GPU memory leaks
