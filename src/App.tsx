@@ -8,6 +8,7 @@ import { calculateFunStats } from '@/lib/funStats'
 import { generateInsights } from '@/lib/insights'
 import { determineArchetype } from '@/lib/archetypes'
 import Dashboard from '@/components/dashboard/Dashboard'
+import ErrorBoundary from '@/components/ErrorBoundary'
 import { DEMO_FLIGHTS } from '@/components/landing/demoFlights'
 import type { Flight, ParseProgress, WorkerOutMessage, RawEmail } from '@/lib/types'
 
@@ -162,16 +163,18 @@ function App() {
   }
 
   return (
-    <div className="animate-fade-in">
-      <Dashboard
-        flights={flights}
-        stats={stats}
-        funStats={funStats}
-        insights={insights}
-        archetype={archetype}
-        onReset={resetToLanding}
-      />
-    </div>
+    <ErrorBoundary onReset={resetToLanding}>
+      <div className="animate-fade-in">
+        <Dashboard
+          flights={flights}
+          stats={stats}
+          funStats={funStats}
+          insights={insights}
+          archetype={archetype}
+          onReset={resetToLanding}
+        />
+      </div>
+    </ErrorBoundary>
   )
 }
 
