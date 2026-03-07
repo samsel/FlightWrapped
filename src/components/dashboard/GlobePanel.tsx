@@ -74,7 +74,7 @@ export default function GlobePanel({ flights }: Props) {
         <Suspense
           fallback={
             <div
-              className="bg-gray-900 animate-pulse rounded-full"
+              className="bg-gray-900 animate-pulse"
               style={{ width: dimensions.height, height: dimensions.height }}
             />
           }
@@ -87,7 +87,7 @@ export default function GlobePanel({ flights }: Props) {
           />
         </Suspense>
       ) : (
-        <div className="bg-gray-900 animate-pulse rounded-full" style={{ width: 300, height: 300 }} />
+        <div className="bg-gray-900 animate-pulse" style={{ width: 300, height: 300 }} />
       )}
     </div>
   )

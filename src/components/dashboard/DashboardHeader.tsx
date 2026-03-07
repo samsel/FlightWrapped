@@ -17,7 +17,7 @@ export default function DashboardHeader({ stats, funStats, archetype, flights, o
       <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-4 flex-wrap sm:flex-nowrap">
         <span className="text-lg font-bold tracking-tight">MyFlights</span>
 
-        <span className={`${getArchetypeColors(archetype.id).bg} ${getArchetypeColors(archetype.id).text} rounded-full px-4 py-1 text-sm font-medium order-3 sm:order-none truncate max-w-[200px] sm:max-w-none`}>
+        <span className={`${getArchetypeColors(archetype.id).bg} ${getArchetypeColors(archetype.id).text} px-4 py-1 text-sm font-medium order-3 sm:order-none truncate max-w-[200px] sm:max-w-none`}>
           {getIcon(archetype.icon)} {archetype.name}
         </span>
 

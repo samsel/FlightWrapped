@@ -21,7 +21,7 @@ interface Props {
 }
 
 function Skeleton({ className = '' }: { className?: string }) {
-  return <div className={`bg-gray-800/50 rounded-xl animate-pulse ${className}`} />
+  return <div className={`bg-gray-800/50 animate-pulse ${className}`} />
 }
 
 export default function Dashboard({ flights, stats, funStats, insights, archetype, onReset }: Props) {
@@ -96,7 +96,7 @@ export default function Dashboard({ flights, stats, funStats, insights, archetyp
                 <span className="text-sm text-gray-400">Filter:</span>
                 <button
                   onClick={() => setSelectedYear('all')}
-                  className={`text-sm px-3 py-1 rounded-full transition-colors ${
+                  className={`text-sm px-3 py-1 transition-colors ${
                     selectedYear === 'all'
                       ? 'bg-blue-600 text-white'
                       : 'bg-gray-800 text-gray-400 hover:text-white'
@@ -108,7 +108,7 @@ export default function Dashboard({ flights, stats, funStats, insights, archetyp
                   <button
                     key={year}
                     onClick={() => setSelectedYear(year)}
-                    className={`text-sm px-3 py-1 rounded-full transition-colors ${
+                    className={`text-sm px-3 py-1 transition-colors ${
                       selectedYear === year
                         ? 'bg-blue-600 text-white'
                         : 'bg-gray-800 text-gray-400 hover:text-white'

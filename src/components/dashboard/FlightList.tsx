@@ -16,12 +16,12 @@ function airportLabel(code: string): string {
 
 function confidenceBadge(confidence: number) {
   if (confidence >= 0.8) {
-    return <span className="rounded-full text-xs px-2 py-0.5 bg-emerald-500/20 text-emerald-400">High</span>
+    return <span className="text-xs px-2 py-0.5 bg-emerald-500/20 text-emerald-400">High</span>
   }
   if (confidence >= 0.5) {
-    return <span className="rounded-full text-xs px-2 py-0.5 bg-amber-500/20 text-amber-400">Medium</span>
+    return <span className="text-xs px-2 py-0.5 bg-amber-500/20 text-amber-400">Medium</span>
   }
-  return <span className="rounded-full text-xs px-2 py-0.5 bg-red-500/20 text-red-400">Low</span>
+  return <span className="text-xs px-2 py-0.5 bg-red-500/20 text-red-400">Low</span>
 }
 
 export default function FlightList({ flights }: Props) {
@@ -57,7 +57,7 @@ export default function FlightList({ flights }: Props) {
   return (
     <div>
       <h2 className="text-lg font-semibold mb-3">All Flights</h2>
-      <div className="overflow-x-auto rounded-xl border border-gray-800">
+      <div className="overflow-x-auto border border-gray-800">
         <table className="w-full text-sm">
           <thead className="bg-gray-900">
             <tr>

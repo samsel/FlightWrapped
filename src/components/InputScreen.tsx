@@ -12,7 +12,7 @@ interface InputScreenProps {
 function SectionDivider() {
   return (
     <div className="flex justify-center">
-      <div className="w-24 h-px bg-gradient-to-r from-transparent via-gray-800 to-transparent" />
+      <div className="w-24 h-px bg-gray-800" />
     </div>
   )
 }

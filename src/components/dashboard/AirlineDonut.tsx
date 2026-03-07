@@ -35,7 +35,7 @@ export default function AirlineDonut({ stats }: Props) {
   const circumference = 2 * Math.PI * radius
 
   return (
-    <div className="bg-gray-900 rounded-xl border border-gray-800 p-4">
+    <div className="bg-gray-900 border border-gray-800 p-4">
       <h3 className="text-sm font-semibold text-gray-400 mb-3">Airlines</h3>
       <div className="flex flex-col items-center gap-4">
         <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
@@ -73,7 +73,7 @@ export default function AirlineDonut({ stats }: Props) {
           {segments.map(([name, count], i) => (
             <div key={name} className="flex items-center gap-2">
               <span
-                className="w-3 h-3 rounded-sm flex-shrink-0"
+                className="w-3 h-3 flex-shrink-0"
                 style={{ backgroundColor: COLORS[i % COLORS.length] }}
               />
               <span className="text-gray-400 truncate">{name}</span>

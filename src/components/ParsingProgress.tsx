@@ -56,12 +56,12 @@ export default function ParsingProgress({ progress, onReset }: ParsingProgressPr
         </p>
       </div>
 
-      <div className="w-full bg-gray-800 rounded-full h-2 overflow-hidden">
+      <div className="w-full bg-gray-800 h-2 overflow-hidden">
         {isIndeterminate ? (
-          <div className="h-full w-full bg-blue-500 rounded-full animate-pulse-bar" />
+          <div className="h-full w-full bg-blue-500 animate-pulse-bar" />
         ) : (
           <div
-            className="h-full bg-blue-500 rounded-full transition-all duration-300"
+            className="h-full bg-blue-500 transition-all duration-300"
             style={{ width: `${percent}%` }}
           />
         )}
@@ -75,7 +75,7 @@ export default function ParsingProgress({ progress, onReset }: ParsingProgressPr
         <div className="text-center mt-6">
           <button
             onClick={onReset}
-            className="text-sm bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white px-5 py-3 rounded-lg transition-colors"
+            className="text-sm bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white px-5 py-3 transition-colors"
           >
             Try Again
           </button>

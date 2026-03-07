@@ -64,7 +64,7 @@ const ShareCard = forwardRef<HTMLDivElement, Props>(
           style={{
             width: '1200px',
             height: '630px',
-            background: `linear-gradient(135deg, #030712 0%, #0f172a 40%, ${accent.gradient}15 100%)`,
+            background: '#0f172a',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
@@ -77,32 +77,6 @@ const ShareCard = forwardRef<HTMLDivElement, Props>(
             overflow: 'hidden',
           }}
         >
-          {/* Decorative accent circle */}
-          <div
-            style={{
-              position: 'absolute',
-              right: '-120px',
-              top: '-120px',
-              width: '400px',
-              height: '400px',
-              borderRadius: '50%',
-              background: `radial-gradient(circle, ${accent.gradient}20, transparent)`,
-              filter: 'blur(60px)',
-            }}
-          />
-          <div
-            style={{
-              position: 'absolute',
-              left: '-80px',
-              bottom: '-80px',
-              width: '300px',
-              height: '300px',
-              borderRadius: '50%',
-              background: `radial-gradient(circle, ${accent.gradient}15, transparent)`,
-              filter: 'blur(40px)',
-            }}
-          />
-
           {/* Header */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '12px', position: 'relative' }}>
             <span style={{ fontSize: '40px', fontWeight: 800, letterSpacing: '-0.03em' }}>
@@ -145,9 +119,7 @@ const ShareCard = forwardRef<HTMLDivElement, Props>(
                     fontSize: '44px',
                     fontWeight: 800,
                     lineHeight: 1.1,
-                    background: `linear-gradient(135deg, #fff, ${accent.pillText})`,
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
+                    color: accent.pillText,
                   }}
                 >
                   {item.value}

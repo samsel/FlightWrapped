@@ -30,7 +30,7 @@ export default function TimelineChart({ flights }: Props) {
   const bottomPad = 40
 
   return (
-    <div className="bg-gray-900 rounded-xl border border-gray-800 p-4">
+    <div className="bg-gray-900 border border-gray-800 p-4">
       <h3 className="text-sm font-semibold text-gray-400 mb-3">Flights Over Time</h3>
       <div className="overflow-x-auto">
         <svg
@@ -62,8 +62,8 @@ export default function TimelineChart({ flights }: Props) {
                   y={y}
                   width={barWidth}
                   height={barHeight}
-                  rx={4}
-                  ry={4}
+                  rx={0}
+                  ry={0}
                   fill="#3b82f6"
                   className="bar-animated hover:opacity-80 transition-opacity cursor-default"
                   style={{ animationDelay: `${i * 60}ms` }}

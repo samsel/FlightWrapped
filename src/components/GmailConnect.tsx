@@ -23,7 +23,7 @@ export default function GmailConnect({ onError }: GmailConnectProps) {
     <button
       onClick={handleConnect}
       disabled={loading}
-      className="flex items-center gap-3 px-6 py-4 bg-white text-gray-800 rounded-xl font-semibold text-lg hover:bg-gray-100 transition-colors shadow-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+      className="flex items-center gap-3 px-6 py-4 bg-white text-gray-800 font-semibold text-lg hover:bg-gray-100 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
     >
       <svg className="w-6 h-6" viewBox="0 0 24 24">
         <path

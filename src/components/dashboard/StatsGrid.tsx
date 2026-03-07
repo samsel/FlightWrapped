@@ -21,7 +21,7 @@ function AnimatedStat({ card, started }: { card: StatCard; started: boolean }) {
   const count = useCountUp(card.value, 1500, started)
 
   return (
-    <div className={`bg-gray-900 rounded-xl border border-gray-800 p-4 border-l-2 ${card.accent}`}>
+    <div className={`bg-gray-900 border border-gray-800 p-4 border-l-2 ${card.accent}`}>
       <span className="text-lg">{card.emoji}</span>
       <p className="text-2xl sm:text-3xl font-bold mt-1">
         {card.displayValue ?? (started ? count.toLocaleString() : '0')}{card.suffix ?? ''}

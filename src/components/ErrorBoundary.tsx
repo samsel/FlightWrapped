@@ -33,13 +33,13 @@ export default class ErrorBoundary extends Component<Props, State> {
             An unexpected error occurred while rendering the dashboard.
           </p>
           {this.state.error && (
-            <pre className="text-xs text-red-400/80 bg-red-950/30 border border-red-900/30 rounded-lg p-4 mb-6 text-left overflow-x-auto max-h-32">
+            <pre className="text-xs text-red-400/80 bg-red-950/30 border border-red-900/30 p-4 mb-6 text-left overflow-x-auto max-h-32">
               {this.state.error.message}
             </pre>
           )}
           <button
             onClick={this.handleReset}
-            className="bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium px-6 py-3 rounded-lg transition-colors"
+            className="bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium px-6 py-3 transition-colors"
           >
             Start Over
           </button>

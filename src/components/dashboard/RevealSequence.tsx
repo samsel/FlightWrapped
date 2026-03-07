@@ -135,19 +135,6 @@ export default function RevealSequence({ stats, funStats, archetype, onComplete 
       role="button"
       tabIndex={0}
     >
-      {/* Decorative orb */}
-      <div
-        className="orb"
-        style={{
-          width: '400px',
-          height: '400px',
-          left: '50%',
-          top: '50%',
-          transform: 'translate(-50%, -50%)',
-          background: `radial-gradient(circle, ${archetype.id === 'explorer' ? '#10b98130' : archetype.id === 'commuter' ? '#f59e0b30' : archetype.id === 'road-warrior' ? '#ef444430' : archetype.id === 'long-hauler' ? '#a855f730' : '#3b82f630'}, transparent)`,
-        }}
-      />
-
       {/* Slide content */}
       <div className={`reveal-content ${active && !exiting ? 'reveal-enter' : ''} ${exiting ? 'reveal-exit' : ''}`}>
         {slides[slideIndex].render(active)}
@@ -158,8 +145,8 @@ export default function RevealSequence({ stats, funStats, archetype, onComplete 
         {slides.map((s, i) => (
           <div
             key={s.key}
-            className={`w-2 h-2 rounded-full transition-all duration-300 ${
-              i === slideIndex ? 'bg-white w-6' : i < slideIndex ? 'bg-gray-500' : 'bg-gray-700'
+            className={`h-1 transition-all duration-300 ${
+              i === slideIndex ? 'bg-white w-6' : i < slideIndex ? 'bg-gray-500 w-2' : 'bg-gray-700 w-2'
             }`}
           />
         ))}

@@ -68,7 +68,7 @@ export default function ShareButton({ stats, funStats, archetype, flights }: Pro
       <button
         onClick={generate}
         disabled={status === 'generating'}
-        className="text-sm bg-blue-600 hover:bg-blue-500 text-white font-medium transition-colors flex items-center gap-1.5 disabled:opacity-50 px-4 py-2 rounded-lg"
+        className="text-sm bg-blue-600 hover:bg-blue-500 text-white font-medium transition-colors flex items-center gap-1.5 disabled:opacity-50 px-4 py-2"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -88,7 +88,7 @@ export default function ShareButton({ stats, funStats, archetype, flights }: Pro
           onClick={close}
         >
           <div
-            className="bg-gray-900 rounded-xl border border-gray-700 max-w-2xl w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto"
+            className="bg-gray-900 border border-gray-700 max-w-2xl w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between">
@@ -112,12 +112,12 @@ export default function ShareButton({ stats, funStats, archetype, flights }: Pro
                 <img
                   src={imageUrl}
                   alt="MyFlights stats card"
-                  className="w-full rounded-lg border border-gray-700"
+                  className="w-full border border-gray-700"
                 />
                 <a
                   href={imageUrl}
                   download="myflights.png"
-                  className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium px-5 py-3 rounded-lg transition-colors"
+                  className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium px-5 py-3 transition-colors"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
