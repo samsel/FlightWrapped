@@ -46,10 +46,22 @@ export function deduplicateFlights(flights: Flight[]): Flight[] {
     }
   }
 
-  // Sort by date
-  result.sort((a, b) => a.date.localeCompare(b.date))
+  // Merge potential codeshares: same route+date, different flight numbers
+  const byRouteDate = new Map<string, Flight>()
+  for (const f of result) {
+    const rdk = `${[f.origin, f.destination].sort().join('-')}-${f.date}`
+    const existing = byRouteDate.get(rdk)
+    if (existing) {
+      byRouteDate.set(rdk, mergeFlight(existing, f))
+    } else {
+      byRouteDate.set(rdk, f)
+    }
+  }
 
-  return result
+  const final = [...byRouteDate.values()]
+  final.sort((a, b) => a.date.localeCompare(b.date))
+
+  return final
 }
 
 /**

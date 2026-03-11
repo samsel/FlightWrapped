@@ -13,7 +13,11 @@ function parseDateToIso(str: string): string | null {
   if (isoMatch) {
     const [, year, month, day] = isoMatch
     const y = parseInt(year, 10)
-    if (y >= 1990 && y <= 2100) return `${year}-${month}-${day}`
+    const m = parseInt(month, 10)
+    const d = parseInt(day, 10)
+    if (y >= 1990 && y <= 2100 && m >= 1 && m <= 12 && d >= 1 && d <= 31) {
+      return `${year}-${month}-${day}`
+    }
   }
   try {
     const d = new Date(str)
@@ -97,7 +101,7 @@ describe('parseDateToIso', () => {
   })
 
   it('preserves exact date regardless of local timezone', () => {
-    // This is the critical timezone bug fix — YYYY-MM-DD must not shift
+    // Critical timezone bug fix - YYYY-MM-DD must not shift
     const result = parseDateToIso('2024-01-15')
     expect(result).toBe('2024-01-15')
   })
@@ -115,6 +119,13 @@ describe('parseDateToIso', () => {
   it('handles date at year boundary', () => {
     expect(parseDateToIso('2024-12-31')).toBe('2024-12-31')
     expect(parseDateToIso('2024-01-01')).toBe('2024-01-01')
+  })
+
+  it('rejects invalid month or day', () => {
+    expect(parseDateToIso('2024-13-01')).toBeNull()
+    expect(parseDateToIso('2024-00-15')).toBeNull()
+    expect(parseDateToIso('2024-01-32')).toBeNull()
+    expect(parseDateToIso('2024-01-00')).toBeNull()
   })
 })
 
@@ -171,7 +182,7 @@ describe('extractJson (LLM response parsing)', () => {
   })
 
   it('handles JSON followed by trailing text with braces', () => {
-    // The greedy regex fix — should still find valid JSON
+    // Greedy regex fix - should still find valid JSON
     const content = '{"flights":[]} Some note about {formatting}'
     const result = extractJson(content)
     // Should parse something valid

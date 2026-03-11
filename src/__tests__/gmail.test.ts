@@ -1,12 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { configureGmail } from '@/lib/gmail'
+import { describe, it, expect } from 'vitest'
 import { isAirlineDomain } from '@/lib/domains'
-
-describe('configureGmail', () => {
-  it('does not throw', () => {
-    expect(() => configureGmail({ clientId: 'test-id', redirectUri: 'http://localhost' })).not.toThrow()
-  })
-})
 
 describe('isAirlineDomain', () => {
   it('returns true for airline domains', () => {
@@ -33,30 +26,5 @@ describe('isAirlineDomain', () => {
 
   it('returns false for empty string', () => {
     expect(isAirlineDomain('')).toBe(false)
-  })
-})
-
-describe('clearCallbackParams', () => {
-  beforeEach(() => {
-    // Reset URL
-    vi.stubGlobal('location', new URL('http://localhost'))
-  })
-
-  it('getCallbackCode returns null when no code in URL', async () => {
-    // We need to set window.location.search
-    Object.defineProperty(window, 'location', {
-      value: new URL('http://localhost/'),
-      writable: true,
-    })
-    const { getCallbackCode } = await import('@/lib/gmail')
-    expect(getCallbackCode()).toBeNull()
-  })
-})
-
-describe('handleCallback', () => {
-  it('throws when code verifier is missing from sessionStorage', async () => {
-    sessionStorage.clear()
-    const { handleCallback } = await import('@/lib/gmail')
-    await expect(handleCallback('test-code', null)).rejects.toThrow('Session expired')
   })
 })

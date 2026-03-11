@@ -49,6 +49,8 @@ export interface ParseProgress {
 
 export type WorkerInMessage =
   | { type: 'init-llm' }
+  | { type: 'parse-mbox'; data: ArrayBuffer }
+  | { type: 'parse-mbox-files'; data: File[] }
   | { type: 'parse-emails'; data: NormalizedEmail[] }
   | { type: 'parse-raw-emails'; data: RawEmail[] }
   | { type: 'ping' }
@@ -70,7 +72,7 @@ export interface NormalizedEmail {
 }
 
 export interface RawEmail {
-  raw: string | ArrayBuffer // raw MIME content (ArrayBuffer from Gmail API)
+  raw: string | ArrayBuffer // raw MIME content
 }
 
 export interface FunStats {

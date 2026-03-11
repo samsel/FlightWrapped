@@ -56,10 +56,13 @@ export default function FlightList({ flights }: Props) {
 
   return (
     <div>
-      <h2 className="text-lg font-semibold mb-3">All Flights</h2>
-      <div className="overflow-x-auto glass-surface">
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-lg font-semibold">All Flights</h2>
+        <span className="text-xs text-gray-500">{sorted.length} total</span>
+      </div>
+      <div className="overflow-x-auto border border-gray-800">
         <table className="w-full text-sm">
-          <thead className="bg-white/[0.03]">
+          <thead className="bg-gray-900/80">
             <tr>
               <th className={headerClass} onClick={() => toggleSort('date')}>Date{arrow('date')}</th>
               <th className={headerClass} onClick={() => toggleSort('origin')}>Origin{arrow('origin')}</th>
@@ -68,7 +71,7 @@ export default function FlightList({ flights }: Props) {
               <th className="text-left text-xs text-gray-400 font-medium px-3 py-3">Confidence</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-800">
+          <tbody className="divide-y divide-gray-800/60">
             {visible.length === 0 && (
               <tr>
                 <td colSpan={5} className="px-3 py-8 text-center text-gray-500">
@@ -77,12 +80,12 @@ export default function FlightList({ flights }: Props) {
               </tr>
             )}
             {visible.map((f, i) => (
-              <tr key={`${f.flightNumber}-${f.date}-${i}`} className="hover:bg-gray-900/50">
-                <td className="px-3 py-2 whitespace-nowrap">{f.date}</td>
-                <td className="px-3 py-2 whitespace-nowrap">{airportLabel(f.origin)}</td>
-                <td className="px-3 py-2 whitespace-nowrap">{airportLabel(f.destination)}</td>
-                <td className="px-3 py-2 whitespace-nowrap text-gray-400">{f.airline || '—'}</td>
-                <td className="px-3 py-2">{confidenceBadge(f.confidence)}</td>
+              <tr key={`${f.flightNumber}-${f.date}-${i}`} className="hover:bg-gray-800/30 transition-colors">
+                <td className="px-3 py-2.5 whitespace-nowrap font-medium tabular-nums">{f.date}</td>
+                <td className="px-3 py-2.5 whitespace-nowrap">{airportLabel(f.origin)}</td>
+                <td className="px-3 py-2.5 whitespace-nowrap">{airportLabel(f.destination)}</td>
+                <td className="px-3 py-2.5 whitespace-nowrap text-gray-400">{f.airline || '-'}</td>
+                <td className="px-3 py-2.5">{confidenceBadge(f.confidence)}</td>
               </tr>
             ))}
           </tbody>
@@ -90,10 +93,10 @@ export default function FlightList({ flights }: Props) {
       </div>
 
       {showCount < sorted.length && (
-        <div className="text-center mt-3">
+        <div className="text-center mt-4">
           <button
             onClick={() => setShowCount((c) => c + 50)}
-            className="text-sm text-blue-400 hover:text-blue-300 px-4 py-2"
+            className="text-sm text-blue-400 hover:text-blue-300 px-5 py-2 border border-blue-500/20 hover:border-blue-500/40 hover:bg-blue-500/5 transition-all"
           >
             Show more ({sorted.length - showCount} remaining)
           </button>

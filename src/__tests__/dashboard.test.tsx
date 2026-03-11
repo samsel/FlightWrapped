@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import '@testing-library/jest-dom'
-import type { FlightStats, FunStats, Archetype, Insight, Flight } from '@/lib/types'
+import type { FunStats, Archetype, Insight, Flight } from '@/lib/types'
 
 // Mock modules that require browser APIs not available in jsdom
 vi.mock('@/lib/airports', () => ({
@@ -14,28 +14,6 @@ vi.mock('react-globe.gl', () => ({
   default: vi.fn().mockReturnValue(null),
   __esModule: true,
 }))
-
-const mockStats: FlightStats = {
-  totalFlights: 10,
-  totalMiles: 25000,
-  uniqueAirports: 5,
-  uniqueCities: 5,
-  uniqueCountries: 3,
-  uniqueAirlines: 4,
-  airlineBreakdown: { United: 5, Delta: 3, AA: 2 },
-  mostFlownRoute: { origin: 'JFK', destination: 'LAX', count: 3 },
-  mostVisitedAirport: { iata: 'JFK', count: 8 },
-  busiestMonth: { month: '2024-03', count: 4 },
-  firstFlight: { origin: 'JFK', destination: 'LAX', date: '2023-01-15', airline: 'United', flightNumber: 'UA 100', confidence: 0.9 },
-  lastFlight: { origin: 'SFO', destination: 'ORD', date: '2024-06-01', airline: 'Delta', flightNumber: 'DL 200', confidence: 0.85 },
-  longestRoute: { origin: 'JFK', destination: 'NRT', miles: 6740 },
-  shortestRoute: { origin: 'JFK', destination: 'BOS', miles: 190 },
-  domesticRatio: 0.6,
-  flightsByYear: { '2023': 4, '2024': 6 },
-  estimatedHours: 50,
-  co2Tons: 6.375,
-  flightsByMonth: { '2023-06': 2, '2024-03': 4 },
-}
 
 const mockFunStats: FunStats = {
   earthOrbits: 1.0,
@@ -69,26 +47,21 @@ describe('DashboardHeader', () => {
     const { default: DashboardHeader } = await import('@/components/dashboard/DashboardHeader')
     render(
       <DashboardHeader
-        stats={mockStats}
-        funStats={mockFunStats}
         archetype={mockArchetype}
-        flights={mockFlights}
         onReset={() => {}}
+        lastSyncAt={null}
       />,
     )
-    // DashboardHeader + ShareCard (off-screen) both render the name
-    expect(screen.getAllByText(/The Explorer/)).toHaveLength(2)
+    expect(screen.getByText(/The Explorer/)).toBeInTheDocument()
   })
 
   it('renders Start Over button', async () => {
     const { default: DashboardHeader } = await import('@/components/dashboard/DashboardHeader')
     render(
       <DashboardHeader
-        stats={mockStats}
-        funStats={mockFunStats}
         archetype={mockArchetype}
-        flights={mockFlights}
         onReset={() => {}}
+        lastSyncAt={null}
       />,
     )
     expect(screen.getByText('Start Over')).toBeInTheDocument()

@@ -5,7 +5,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 import path from 'path'
 
 export default defineConfig({
-  base: process.env.GITHUB_PAGES ? '/myflights/' : '/',
+  base: process.env.GITHUB_PAGES ? '/FlightWrapped/' : '/',
   plugins: [
     react(),
     tailwindcss(),

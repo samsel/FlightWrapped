@@ -32,9 +32,18 @@ describe('Airline domain list', () => {
     expect(isAirlineDomain('Delta.Com')).toBe(true)
   })
 
+  it('matches subdomains of airline domains', () => {
+    expect(isAirlineDomain('email.united.com')).toBe(true)
+    expect(isAirlineDomain('t.delta.com')).toBe(true)
+    expect(isAirlineDomain('luv.southwest.com')).toBe(true)
+    expect(isAirlineDomain('notifications.booking.com')).toBe(true)
+    expect(isAirlineDomain('deep.nested.sub.emirates.com')).toBe(true)
+  })
+
   it('rejects non-airline domains', () => {
     expect(isAirlineDomain('gmail.com')).toBe(false)
     expect(isAirlineDomain('amazon.com')).toBe(false)
     expect(isAirlineDomain('facebook.com')).toBe(false)
+    expect(isAirlineDomain('notunited.com')).toBe(false)
   })
 })

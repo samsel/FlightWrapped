@@ -6,7 +6,7 @@ export function determineArchetype(flights: Flight[], stats: FlightStats): Arche
     return {
       id: 'occasional-flyer',
       name: 'The Occasional Flyer',
-      description: 'No flights yet — your journey is just beginning!',
+      description: 'No flights yet. Your journey is just beginning!',
       icon: 'seedling',
     }
   }
@@ -27,7 +27,7 @@ export function determineArchetype(flights: Flight[], stats: FlightStats): Arche
     return {
       id: 'explorer',
       name: 'The Explorer',
-      description: `${stats.uniqueAirports} airports and counting — you never visit the same place twice!`,
+      description: `${stats.uniqueAirports} airports and counting. You never visit the same place twice!`,
       icon: 'compass',
     }
   }
@@ -37,7 +37,7 @@ export function determineArchetype(flights: Flight[], stats: FlightStats): Arche
     return {
       id: 'road-warrior',
       name: 'The Road Warrior',
-      description: `${flights.length} flights and still going strong — the sky is your office.`,
+      description: `${flights.length} flights and still going strong. The sky is your office.`,
       icon: 'rocket',
     }
   }
@@ -50,21 +50,22 @@ export function determineArchetype(flights: Flight[], stats: FlightStats): Arche
     return {
       id: 'long-hauler',
       name: 'The Long Hauler',
-      description: `Your average flight is ${Math.round(avgDistance).toLocaleString()} miles — you don't do short trips.`,
+      description: `Your average flight is ${Math.round(avgDistance).toLocaleString()} miles. You don't do short trips.`,
       icon: 'globe',
     }
   }
 
   // The Weekender: >60% weekend flights, <15 total
-  const weekendCount = flights.filter((f) => {
+  const datedFlights = flights.filter((f) => f.date && f.date.length >= 10)
+  const weekendCount = datedFlights.filter((f) => {
     const day = new Date(f.date + 'T00:00:00').getDay()
     return day === 0 || day === 5 || day === 6
   }).length
-  if (weekendCount / flights.length > 0.6 && flights.length < 15) {
+  if (datedFlights.length > 0 && weekendCount / datedFlights.length > 0.6 && flights.length < 15) {
     return {
       id: 'weekender',
       name: 'The Weekender',
-      description: "You fly for fun on the weekends — that's the way to do it!",
+      description: "You fly for fun on the weekends. That's the way to do it!",
       icon: 'palmtree',
     }
   }
@@ -73,7 +74,7 @@ export function determineArchetype(flights: Flight[], stats: FlightStats): Arche
   return {
     id: 'occasional-flyer',
     name: 'The Occasional Flyer',
-    description: 'You fly when the occasion calls for it — every trip is special!',
+    description: 'You fly when the occasion calls for it. Every trip is special!',
     icon: 'plane',
   }
 }

@@ -156,12 +156,13 @@ describe('calculateStats', () => {
     expect(stats.flightsByYear).toEqual({ '2023': 2, '2024': 1 })
   })
 
-  it('estimates hours and CO2', () => {
+  it('estimates hours (cruise + per-flight overhead) and CO2', () => {
     const flights = [makeFlight()] // JFK-LAX ~2475 mi
     const stats = calculateStats(flights)
 
-    expect(stats.estimatedHours).toBeGreaterThan(4)
-    expect(stats.estimatedHours).toBeLessThan(6)
+    // ~2475/500 + 0.5 overhead ≈ 5.5
+    expect(stats.estimatedHours).toBeGreaterThan(4.5)
+    expect(stats.estimatedHours).toBeLessThan(6.5)
     expect(stats.co2Tons).toBeGreaterThan(0.5)
     expect(stats.co2Tons).toBeLessThan(0.8)
   })
@@ -398,7 +399,7 @@ describe('determineArchetype', () => {
   })
 
   it('falls back to Occasional Flyer', () => {
-    // Varied short routes, weekday, few flights — no archetype should match
+    // Varied short routes, weekday, few flights - no archetype should match
     const flights = [
       makeFlight({ origin: 'JFK', destination: 'BOS', date: '2024-01-15' }), // Tuesday, short
       makeFlight({ origin: 'ORD', destination: 'DFW', date: '2024-01-16' }), // Wednesday, short

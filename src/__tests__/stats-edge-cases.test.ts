@@ -43,6 +43,16 @@ function makeStats(overrides: Partial<FlightStats> = {}): FlightStats {
 }
 
 describe('calculateStats edge cases', () => {
+  it('returns null firstFlight/lastFlight when all flights have empty dates', () => {
+    const flights = [
+      makeFlight({ date: '' }),
+      makeFlight({ date: '' }),
+    ]
+    const stats = calculateStats(flights)
+    expect(stats.firstFlight).toBeNull()
+    expect(stats.lastFlight).toBeNull()
+  })
+
   it('handles flights with empty date string', () => {
     const flights = [
       makeFlight({ date: '' }),
@@ -236,7 +246,7 @@ describe('generateInsights edge cases', () => {
 
 describe('determineArchetype edge cases', () => {
   it('Explorer needs 10+ airports AND max route <=20%', () => {
-    // 10 airports but one route >20% — should not be Explorer
+    // 10 airports but one route >20% - should not be Explorer
     const flights = [
       ...Array.from({ length: 6 }, (_, i) =>
         makeFlight({ origin: 'JFK', destination: 'LAX', date: `2024-01-${String(i + 1).padStart(2, '0')}` }),
@@ -278,12 +288,12 @@ describe('determineArchetype edge cases', () => {
     })
     const stats = calculateStats(flights)
     const archetype = determineArchetype(flights, stats)
-    // 29 flights, not 30 — should not be road warrior
+    // 29 flights, not 30 - should not be road warrior
     expect(archetype.id).not.toBe('road-warrior')
   })
 
   it('Weekender requires >60% weekend AND <15 flights', () => {
-    // 16 flights all on weekends — too many to be weekender
+    // 16 flights all on weekends - too many to be weekender
     const flights = Array.from({ length: 16 }, (_, i) =>
       makeFlight({
         origin: i % 2 === 0 ? 'JFK' : 'LAX',
@@ -297,7 +307,7 @@ describe('determineArchetype edge cases', () => {
   })
 
   it('archetype priority: Commuter > Explorer > Road Warrior > Long Hauler > Weekender', () => {
-    // A flight set that could match multiple — should get highest priority
+    // A flight set that could match multiple - should get highest priority
     // 35 flights, >40% on one route → Commuter wins
     const flights = [
       ...Array.from({ length: 20 }, (_, i) =>

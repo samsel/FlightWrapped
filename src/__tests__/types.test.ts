@@ -16,7 +16,7 @@ import type {
 
 /**
  * Type-level tests to ensure the type definitions are correct and compatible.
- * These tests verify runtime shape compliance — if the types change in a
+ * These tests verify runtime shape compliance. If the types change in a
  * breaking way, these tests will fail at compile time or at runtime.
  */
 
@@ -79,8 +79,9 @@ describe('Type contracts', () => {
       { type: 'ping' },
       { type: 'init-llm' },
       { type: 'parse-emails', data: [] },
+      { type: 'parse-mbox-files', data: [] },
     ]
-    expect(msgs).toHaveLength(3)
+    expect(msgs).toHaveLength(4)
   })
 
   it('WorkerOutMessage covers all message types', () => {

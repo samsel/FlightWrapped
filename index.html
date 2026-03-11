@@ -2,22 +2,23 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✈️</text></svg>" />
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <link rel="icon" type="image/svg+xml" href="logo.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="referrer" content="no-referrer" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://accounts.google.com https://oauth2.googleapis.com https://gmail.googleapis.com https://huggingface.co https://raw.githubusercontent.com; worker-src 'self' blob:; font-src 'self';" />
-    <meta name="description" content="Connect your Gmail to visualize your flight history. Privacy-first — everything runs in your browser." />
-    <meta property="og:title" content="MyFlights — Your Flight Stats, Visualized" />
-    <meta property="og:description" content="Beautiful flight analytics from your email confirmations. 100% private, runs entirely in your browser." />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://huggingface.co https://raw.githubusercontent.com; worker-src 'self' blob:; font-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';" />
+    <meta name="description" content="Turn flight confirmation emails into beautiful travel analytics. Distances, airlines, routes, and more. 100% private, runs entirely in your browser." />
+    <meta property="og:title" content="FlightWrapped | Visualize Your Flight History" />
+    <meta property="og:description" content="Beautiful travel analytics from your flight confirmation emails. Distances, airlines, routes. 100% private, in your browser." />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://opengraph.githubassets.com/1/sams/myflights" />
+    <meta property="og:image" content="https://opengraph.githubassets.com/1/samsel/FlightWrapped" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="MyFlights — Your Flight Stats, Visualized" />
-    <meta name="twitter:description" content="Beautiful flight analytics from your email confirmations. 100% private, runs entirely in your browser." />
+    <meta name="twitter:title" content="FlightWrapped | Visualize Your Flight History" />
+    <meta name="twitter:description" content="Beautiful travel analytics from your flight confirmation emails. Distances, airlines, routes. 100% private, in your browser." />
     <meta name="theme-color" content="#030712" />
     <link rel="manifest" href="manifest.webmanifest" />
-    <link rel="apple-touch-icon" href="icons/icon-192.png" />
-    <title>MyFlights — Your Flight Stats, Visualized</title>
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+    <title>FlightWrapped | Visualize Your Flight History from Email</title>
   </head>
   <body>
     <div id="root"></div>

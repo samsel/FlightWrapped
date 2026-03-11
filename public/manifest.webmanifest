@@ -1,6 +1,6 @@
 {
-  "name": "MyFlights — Your Flight Stats, Visualized",
-  "short_name": "MyFlights",
+  "name": "FlightWrapped — Your Flights, Visualized",
+  "short_name": "FlightWrapped",
   "description": "Connect your Gmail to visualize your flight history. Privacy-first — everything runs in your browser.",
   "start_url": "./",
   "display": "standalone",

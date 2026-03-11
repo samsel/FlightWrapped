@@ -2,7 +2,7 @@ import type { Flight, NormalizedEmail } from '@/lib/types'
 import { isValidIATA } from '@/lib/airports'
 
 /**
- * Local LLM flight extraction — the sole extraction method.
+ * Local LLM flight extraction. The sole extraction method.
  * Runs a small model (Phi-3.5-mini) entirely in the browser via WebGPU/WASM.
  * No data leaves the device. Model is cached in IndexedDB after first download.
  */
@@ -35,10 +35,17 @@ export async function initLlm(
     try {
       // Check available storage before attempting ~2GB model download
       if (navigator.storage?.estimate) {
-        const { quota = 0, usage = 0 } = await navigator.storage.estimate()
-        const availableMB = Math.round((quota - usage) / 1024 / 1024)
-        if (availableMB < 2048) {
-          console.warn(`Low storage: ~${availableMB}MB available, model needs ~2GB`)
+        try {
+          const { quota = 0, usage = 0 } = await navigator.storage.estimate()
+          const availableGB = (quota - usage) / (1024 * 1024 * 1024)
+          if (availableGB < 3) {
+            const availableMB = Math.round(availableGB * 1024)
+            const warningMsg = `Low storage: ~${availableMB}MB available. The AI model needs ~2GB. Download may fail.`
+            console.warn(warningMsg)
+            onProgress?.({ text: warningMsg, progress: 0 })
+          }
+        } catch {
+          // storage.estimate() can fail in some contexts; proceed anyway
         }
       }
       const { CreateMLCEngine } = await import('@mlc-ai/web-llm')
@@ -63,7 +70,7 @@ export function isLlmReady(): boolean {
 
 export async function extractFromLlm(email: NormalizedEmail): Promise<Flight[]> {
   if (!enginePromise) {
-    throw new Error('LLM not initialized — call initLlm() first')
+    throw new Error('LLM not initialized. Call initLlm() first')
   }
 
   const engine = await enginePromise
@@ -71,7 +78,7 @@ export async function extractFromLlm(email: NormalizedEmail): Promise<Flight[]> 
 
   if (!text || text.length < 20) return []
 
-  // Truncate to save tokens — flight info is usually near the top
+  // Truncate to save tokens; flight info is usually near the top
   const truncated = text.slice(0, 2000)
 
   const prompt = `Extract all flight information from this email. Return ONLY valid JSON, no other text.
@@ -127,22 +134,24 @@ export function parseLlmResponse(content: string, emailDate: string): Flight[] {
     const flights: Flight[] = []
 
     for (const item of items) {
-      const origin = (item.origin ?? item.from ?? '').toUpperCase().trim()
-      const destination = (item.destination ?? item.to ?? '').toUpperCase().trim()
+      if (!item || typeof item !== 'object') continue
+
+      const origin = String(item.origin ?? item.from ?? '').toUpperCase().trim()
+      const destination = String(item.destination ?? item.to ?? '').toUpperCase().trim()
 
       if (!origin || !destination) continue
       if (!isValidIATA(origin) || !isValidIATA(destination)) continue
       if (origin === destination) continue
 
-      const date = parseFlightDate(item.date ?? item.departure_date ?? '', emailDate)
+      const date = parseFlightDate(String(item.date ?? item.departure_date ?? ''), emailDate)
       if (!date) continue
 
       flights.push({
         origin,
         destination,
         date,
-        airline: (item.airline ?? item.carrier ?? '').trim(),
-        flightNumber: (item.flightNumber ?? item.flight_number ?? item.flight ?? '').trim(),
+        airline: String(item.airline ?? item.carrier ?? '').trim(),
+        flightNumber: String(item.flightNumber ?? item.flight_number ?? item.flight ?? '').trim(),
         confidence: 0.85,
       })
     }

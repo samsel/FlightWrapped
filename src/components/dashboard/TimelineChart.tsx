@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import type { Flight } from '@/lib/types'
 
 interface Props {
@@ -6,6 +6,8 @@ interface Props {
 }
 
 export default function TimelineChart({ flights }: Props) {
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
+
   const { months, maxCount } = useMemo(() => {
     const counts: Record<string, number> = {}
     for (const f of flights) {
@@ -15,9 +17,24 @@ export default function TimelineChart({ flights }: Props) {
       }
     }
 
-    const sorted = Object.entries(counts).sort(([a], [b]) => a.localeCompare(b))
-    const max = Math.max(...sorted.map(([, c]) => c), 1)
-    return { months: sorted, maxCount: max }
+    const keys = Object.keys(counts).sort()
+    if (keys.length === 0) return { months: [], maxCount: 0 }
+
+    // Fill in missing months between first and last
+    const allMonths: [string, number][] = []
+    const [startYear, startMonth] = keys[0].split('-').map(Number)
+    const [endYear, endMonth] = keys[keys.length - 1].split('-').map(Number)
+
+    let y = startYear, m = startMonth
+    while (y < endYear || (y === endYear && m <= endMonth)) {
+      const key = `${y}-${String(m).padStart(2, '0')}`
+      allMonths.push([key, counts[key] ?? 0])
+      m++
+      if (m > 12) { m = 1; y++ }
+    }
+
+    const max = Math.max(...allMonths.map(([, c]) => c), 1)
+    return { months: allMonths, maxCount: max }
   }, [flights])
 
   if (months.length === 0) return null
@@ -30,7 +47,7 @@ export default function TimelineChart({ flights }: Props) {
   const bottomPad = 40
 
   return (
-    <div className="glass-surface p-4">
+    <div className="bg-gray-900 border border-gray-800 p-4">
       <h3 className="text-sm font-semibold text-gray-400 mb-3">Flights Over Time</h3>
       <div className="overflow-x-auto">
         <svg
@@ -38,6 +55,7 @@ export default function TimelineChart({ flights }: Props) {
           width="100%"
           style={{ minWidth: chartWidth }}
           className="text-gray-300"
+          onMouseLeave={() => setHoveredIndex(null)}
         >
           {/* Baseline */}
           <line
@@ -53,20 +71,34 @@ export default function TimelineChart({ flights }: Props) {
             const x = i * (barWidth + gap) + gap / 2
             const barHeight = (count / maxCount) * chartHeight
             const y = topPad + chartHeight - barHeight
+            const isHovered = hoveredIndex === i
 
             return (
-              <g key={month}>
+              <g
+                key={month}
+                onMouseEnter={() => setHoveredIndex(i)}
+                style={{ cursor: 'default' }}
+              >
+                {/* Hover highlight background */}
+                {isHovered && (
+                  <rect
+                    x={x - 2}
+                    y={topPad}
+                    width={barWidth + 4}
+                    height={chartHeight}
+                    fill="rgba(59, 130, 246, 0.06)"
+                  />
+                )}
+
                 {/* Bar */}
                 <rect
                   x={x}
                   y={y}
                   width={barWidth}
                   height={barHeight}
-                  rx={0}
-                  ry={0}
-                  fill="#3b82f6"
-                  className="bar-animated hover:opacity-80 transition-opacity cursor-default"
-                  style={{ animationDelay: `${i * 60}ms` }}
+                  fill={isHovered ? '#60a5fa' : '#3b82f6'}
+                  className="bar-animated"
+                  style={{ animationDelay: `${i * 60}ms`, transition: 'fill 0.15s ease' }}
                 >
                   <title>{month}: {count} flight{count !== 1 ? 's' : ''}</title>
                 </rect>
@@ -76,8 +108,10 @@ export default function TimelineChart({ flights }: Props) {
                   x={x + barWidth / 2}
                   y={y - 6}
                   textAnchor="middle"
-                  fontSize={10}
-                  fill="#93c5fd"
+                  fontSize={isHovered ? 11 : 10}
+                  fill={isHovered ? '#bfdbfe' : '#93c5fd'}
+                  fontWeight={isHovered ? 600 : 400}
+                  style={{ transition: 'all 0.15s ease' }}
                 >
                   {count}
                 </text>
@@ -88,8 +122,9 @@ export default function TimelineChart({ flights }: Props) {
                   y={topPad + chartHeight + 16}
                   textAnchor="middle"
                   fontSize={10}
-                  fill="#6b7280"
+                  fill={isHovered ? '#9ca3af' : '#6b7280'}
                   transform={`rotate(45, ${x + barWidth / 2}, ${topPad + chartHeight + 16})`}
+                  style={{ transition: 'fill 0.15s ease' }}
                 >
                   {month}
                 </text>

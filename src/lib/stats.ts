@@ -43,8 +43,8 @@ export function calculateStats(flights: Flight[]): FlightStats {
   let domesticCount = 0
   let longestRoute: { origin: string; destination: string; miles: number } | null = null
   let shortestRoute: { origin: string; destination: string; miles: number } | null = null
-  let firstFlight: Flight = flights[0]
-  let lastFlight: Flight = flights[0]
+  let firstFlight: Flight | null = null
+  let lastFlight: Flight | null = null
 
   for (const flight of flights) {
     const { origin, destination, date, airline } = flight
@@ -106,8 +106,8 @@ export function calculateStats(flights: Flight[]): FlightStats {
 
     // First/last flight
     if (date) {
-      if (!firstFlight.date || date < firstFlight.date) firstFlight = flight
-      if (!lastFlight.date || date > lastFlight.date) lastFlight = flight
+      if (!firstFlight || date < firstFlight.date) firstFlight = flight
+      if (!lastFlight || date > lastFlight.date) lastFlight = flight
     }
   }
 

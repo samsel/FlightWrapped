@@ -180,16 +180,8 @@ export const AIRLINE_DOMAINS: Set<string> = new Set([
   'edreams.com',
   'opodo.com',
   'lastminute.com',
-  'flyertalk.com',
   'skiplagged.com',
-  'secretflying.com',
-  'scottscheapflights.com',
-  'going.com',
-  'farecompare.com',
-  'airfarewatchdog.com',
   'studentuniverse.com',
-  'flightaware.com',
-  'flightradar24.com',
 
   // --- Travel Agencies / Corporate ---
   'amexgbt.com',
@@ -219,5 +211,13 @@ export const AIRLINE_DOMAINS: Set<string> = new Set([
 ])
 
 export function isAirlineDomain(domain: string): boolean {
-  return AIRLINE_DOMAINS.has(domain.toLowerCase())
+  const d = domain.toLowerCase()
+  if (AIRLINE_DOMAINS.has(d)) return true
+  // Check parent domains to handle subdomains (e.g. email.united.com → united.com)
+  const parts = d.split('.')
+  for (let i = 1; i < parts.length - 1; i++) {
+    const parent = parts.slice(i).join('.')
+    if (AIRLINE_DOMAINS.has(parent)) return true
+  }
+  return false
 }

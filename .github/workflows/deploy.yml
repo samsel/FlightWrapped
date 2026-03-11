@@ -29,12 +29,10 @@ jobs:
           cache: npm
 
       - run: npm ci
-      - run: npm audit --audit-level=high
+      - run: npm audit --audit-level=high --omit=dev
       - run: npm run build
         env:
           GITHUB_PAGES: true
-          VITE_GMAIL_CLIENT_ID: ${{ secrets.VITE_GMAIL_CLIENT_ID }}
-          VITE_GMAIL_REDIRECT_URI: ${{ secrets.VITE_GMAIL_REDIRECT_URI }}
 
       - uses: actions/upload-pages-artifact@v3
         with:

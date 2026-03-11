@@ -1,8 +1,15 @@
-import airportData from '@/data/airports.json'
 import type { Airport } from './types'
 
+/**
+ * Airport database loaded via dynamic import for code splitting.
+ *
+ * The ~880KB airports.json is separated into its own chunk so it doesn't
+ * block initial page load. Top-level await ensures the data is ready
+ * before any synchronous lookup function is called.
+ */
 const airportMap = new Map<string, Airport>()
 
+const { default: airportData } = await import('@/data/airports.json')
 for (const a of airportData as Airport[]) {
   airportMap.set(a.iata, a)
 }

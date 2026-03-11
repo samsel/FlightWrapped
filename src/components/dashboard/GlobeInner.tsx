@@ -6,7 +6,6 @@ interface ArcDatum {
   startLng: number
   endLat: number
   endLng: number
-  label: string
 }
 
 interface PointDatum {
@@ -32,6 +31,7 @@ export default function GlobeInner({ width, height, arcsData, pointsData }: Prop
     if (controls) {
       controls.autoRotate = true
       controls.autoRotateSpeed = 0.6
+      controls.enableZoom = false
     }
     // Auto-fly to the center of all points on mount
     if (pointsData.length > 0) {
@@ -75,7 +75,6 @@ export default function GlobeInner({ width, height, arcsData, pointsData }: Prop
       arcDashGap={0.3}
       arcDashAnimateTime={2000}
       arcStroke={0.5}
-      arcLabel="label"
       pointsData={pointsData}
       pointLat="lat"
       pointLng="lng"

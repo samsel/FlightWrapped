@@ -149,6 +149,17 @@ describe('deduplicateFlights', () => {
       expect(result).toHaveLength(1)
     })
 
+    it('merges potential codeshares (same route+date, different flight numbers)', () => {
+      const flights = [
+        flight({ flightNumber: 'UA 1234', airline: 'United', confidence: 0.9 }),
+        flight({ flightNumber: 'LH 7890', airline: 'Lufthansa', confidence: 0.8 }),
+      ]
+      const result = deduplicateFlights(flights)
+      expect(result).toHaveLength(1)
+      expect(result[0].confidence).toBe(0.9)
+      expect(result[0].airline).toBe('United')
+    })
+
     it('same flight number on different dates are kept separate', () => {
       const flights = [
         flight({ date: '2024-01-15' }),

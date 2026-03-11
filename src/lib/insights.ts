@@ -7,15 +7,16 @@ export function generateInsights(flights: Flight[], stats: FlightStats): Insight
   if (flights.length === 0) return insights
 
   // Weekend Warrior: >50% flights on Fri/Sat/Sun
-  const weekendCount = flights.filter((f) => {
+  const datedFlights = flights.filter((f) => f.date && f.date.length >= 10)
+  const weekendCount = datedFlights.filter((f) => {
     const day = new Date(f.date + 'T00:00:00').getDay()
     return day === 0 || day === 5 || day === 6 // Sun, Fri, Sat
   }).length
-  if (weekendCount / flights.length > 0.5) {
+  if (datedFlights.length > 0 && weekendCount / datedFlights.length > 0.5) {
     insights.push({
       id: 'weekend-warrior',
       title: 'Weekend Warrior',
-      description: `${Math.round((weekendCount / flights.length) * 100)}% of your flights are on weekends — you make the most of your time off!`,
+      description: `${Math.round((weekendCount / datedFlights.length) * 100)}% of your flights are on weekends. You make the most of your time off!`,
       icon: 'calendar',
     })
   }
@@ -38,7 +39,7 @@ export function generateInsights(flights: Flight[], stats: FlightStats): Insight
     insights.push({
       id: 'globe-trotter',
       title: 'Globe Trotter',
-      description: `You've flown to ${stats.uniqueCountries} different countries — a true world traveler!`,
+      description: `You've flown to ${stats.uniqueCountries} different countries. A true world traveler!`,
       icon: 'globe',
     })
   }
@@ -58,7 +59,7 @@ export function generateInsights(flights: Flight[], stats: FlightStats): Insight
     insights.push({
       id: 'international-jet-setter',
       title: 'International Jet-Setter',
-      description: `${Math.round((1 - stats.domesticRatio) * 100)}% of your flights cross borders — you love going international!`,
+      description: `${Math.round((1 - stats.domesticRatio) * 100)}% of your flights cross borders. You love going international!`,
       icon: 'passport',
     })
   }
@@ -69,7 +70,7 @@ export function generateInsights(flights: Flight[], stats: FlightStats): Insight
       insights.push({
         id: 'frequent-flyer',
         title: 'Frequent Flyer',
-        description: `You took ${count} flights in ${year} — that's serious frequent flyer status!`,
+        description: `You took ${count} flights in ${year}. That's serious frequent flyer status!`,
         icon: 'zap',
       })
       break
@@ -90,7 +91,7 @@ export function generateInsights(flights: Flight[], stats: FlightStats): Insight
     insights.push({
       id: 'seasonal-traveler',
       title: 'Seasonal Traveler',
-      description: `${Math.round((topQuarter[1] / flights.length) * 100)}% of your flights are in ${topQuarter[0]} — you have a favorite travel season!`,
+      description: `${Math.round((topQuarter[1] / flights.length) * 100)}% of your flights are in ${topQuarter[0]}. You have a favorite travel season!`,
       icon: 'sun',
     })
   }
@@ -102,7 +103,7 @@ export function generateInsights(flights: Flight[], stats: FlightStats): Insight
     insights.push({
       id: 'hub-hugger',
       title: 'Hub Hugger',
-      description: `${name} is your home base — it appears in ${Math.round((stats.mostVisitedAirport.count / (flights.length * 2)) * 100)}% of your flights!`,
+      description: `${name} is your home base. It appears in ${Math.round((stats.mostVisitedAirport.count / (flights.length * 2)) * 100)}% of your flights!`,
       icon: 'hub',
     })
   }
@@ -117,7 +118,7 @@ export function generateInsights(flights: Flight[], stats: FlightStats): Insight
     insights.push({
       id: 'coast-to-coast',
       title: 'Coast to Coast',
-      description: "You've flown both coasts — from sea to shining sea!",
+      description: "You've flown both coasts. From sea to shining sea!",
       icon: 'map',
     })
   }

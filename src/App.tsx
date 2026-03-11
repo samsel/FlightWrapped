@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback, useRef, useMemo, type MutableRefObject } from 'react'
 import InputScreen from '@/components/InputScreen'
 import ParsingProgress from '@/components/ParsingProgress'
-import { getCallbackCode, clearCallbackParams, handleCallback, searchFlightEmails, batchFetchMessages, configureGmail, type RateLimitInfo } from '@/lib/gmail'
 import { calculateStats } from '@/lib/stats'
 import { calculateFunStats } from '@/lib/funStats'
 import { generateInsights } from '@/lib/insights'
 import { determineArchetype } from '@/lib/archetypes'
+import { loadCachedData, saveSyncData, clearAllData, type SyncData } from '@/lib/storage'
+import { deduplicateFlights } from '@/worker/dedup'
 import Dashboard from '@/components/dashboard/Dashboard'
 import RevealSequence from '@/components/dashboard/RevealSequence'
 import ErrorBoundary from '@/components/ErrorBoundary'
@@ -13,12 +14,6 @@ import { DEMO_FLIGHTS } from '@/components/landing/demoFlights'
 import type { Flight, ParseProgress, WorkerOutMessage } from '@/lib/types'
 
 type AppState = 'landing' | 'parsing' | 'reveal' | 'results'
-
-// Configure Gmail OAuth — replace with your own client ID for production
-const GMAIL_CLIENT_ID = import.meta.env.VITE_GMAIL_CLIENT_ID ?? ''
-const GMAIL_REDIRECT_URI = import.meta.env.VITE_GMAIL_REDIRECT_URI ?? window.location.origin
-
-configureGmail({ clientId: GMAIL_CLIENT_ID, redirectUri: GMAIL_REDIRECT_URI })
 
 function App() {
   const [appState, setAppState] = useState<AppState>('landing')
@@ -30,33 +25,44 @@ function App() {
   })
   const [flights, setFlights] = useState<Flight[]>([])
   const [error, setError] = useState<string | null>(null)
+  const [cachedData, setCachedData] = useState<SyncData | null>(null)
+  const [lastImportAt, setLastImportAt] = useState<string | null>(null)
   const workerRef = useRef<Worker | null>(null)
   const generationRef = useRef(0) as MutableRefObject<number>
-  const processingRef = useRef(false) as MutableRefObject<boolean>
+  // Existing flights for merging with new imports
+  const existingFlightsRef = useRef<Flight[]>([])
 
-  // Initialize worker
-  useEffect(() => {
+  // Create a worker and wire up its message handler
+  const createWorker = useCallback(() => {
     const worker = new Worker(new URL('./worker/parser.worker.ts', import.meta.url), {
       type: 'module',
     })
-    workerRef.current = worker
-    // Pre-warm LLM model so download starts while emails are being fetched
-    worker.postMessage({ type: 'init-llm' })
     const gen = generationRef.current
 
     worker.onmessage = (e: MessageEvent<WorkerOutMessage>) => {
-      // Ignore messages from stale worker generations (e.g. after reset)
       if (generationRef.current !== gen) return
-
       const msg = e.data
       switch (msg.type) {
         case 'progress':
           setProgress(msg.data)
           break
-        case 'result':
-          setFlights(msg.data)
-          setAppState(msg.data.length > 0 ? 'reveal' : 'results')
+        case 'result': {
+          // Merge new flights with any existing cached flights, then dedup
+          const merged = deduplicateFlights([
+            ...existingFlightsRef.current,
+            ...msg.data,
+          ])
+          setFlights(merged)
+          // Persist to IndexedDB
+          saveSyncData({
+            flights: merged,
+            lastImportAt: new Date().toISOString(),
+          }).then(() => {
+            setLastImportAt(new Date().toISOString())
+          })
+          setAppState(merged.length > 0 ? 'reveal' : 'results')
           break
+        }
         case 'error':
           setError(msg.data.message)
           setProgress((p) => ({ ...p, phase: 'error', message: msg.data.message }))
@@ -70,69 +76,55 @@ function App() {
       setAppState('landing')
     }
 
-    return () => worker.terminate()
+    workerRef.current = worker
+    worker.postMessage({ type: 'init-llm' })
+    return worker
   }, [])
 
-  // Handle Gmail OAuth callback
+  // Load cached data + initialize worker on mount
   useEffect(() => {
-    const result = getCallbackCode()
-    if (result) {
-      // Guard against double invocation (StrictMode, back button)
-      if (processingRef.current) return
-      processingRef.current = true
-      clearCallbackParams()
-      handleGmailCallback(result.code, result.state)
-    }
+    loadCachedData().then((cached) => {
+      if (cached && cached.flights.length > 0) {
+        setCachedData(cached)
+        setLastImportAt(cached.lastImportAt)
+      }
+    })
+    createWorker()
+    return () => workerRef.current?.terminate()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const handleGmailCallback = async (code: string, state: string | null) => {
-    try {
-      setAppState('parsing')
-      // Request durable storage now that user has initiated the flow
-      navigator.storage?.persist?.().then((granted) => {
-        if (!granted) console.warn('Durable storage not granted — model cache may be evicted')
-      })
-      setProgress({ phase: 'scanning', current: 0, total: 0, flightsFound: 0, message: 'Exchanging auth code...' })
+  const handleFileUpload = useCallback((files: File[]) => {
+    setAppState('parsing')
+    setError(null)
+    setProgress({ phase: 'scanning', current: 0, total: 0, flightsFound: 0, message: 'Preparing files...' })
 
-      const token = await handleCallback(code, state)
-
-      const handleRateLimit = (info: RateLimitInfo) => {
-        setProgress((p) => ({ ...p, message: `Rate limited by Gmail — retrying in ${info.retryAfter}s...` }))
-      }
-
-      setProgress({ phase: 'scanning', current: 0, total: 0, flightsFound: 0, message: 'Searching for flight emails...' })
-      const messageIds = await searchFlightEmails(token, (fetched) => {
-        setProgress((p) => ({ ...p, current: fetched, message: `Found ${fetched} potential flight emails...` }))
-      }, handleRateLimit)
-
-      if (messageIds.length === 0) {
-        setError('No flight-related emails found in your inbox.')
-        setAppState('landing')
-        return
-      }
-
-      setProgress({ phase: 'scanning', current: 0, total: messageIds.length, flightsFound: 0, message: 'Fetching emails...' })
-      const rawEmails = await batchFetchMessages(messageIds, token, (fetched, total) => {
-        setProgress({ phase: 'scanning', current: fetched, total, flightsFound: 0, message: `Fetching email ${fetched.toLocaleString()} of ${total.toLocaleString()}...` })
-      }, handleRateLimit)
-
-      // Send raw emails to worker — normalization + extraction happen off main thread
-      const buffers = rawEmails.map((e) => e.raw).filter((r): r is ArrayBuffer => r instanceof ArrayBuffer)
-      workerRef.current?.postMessage(
-        { type: 'parse-raw-emails', data: rawEmails },
-        buffers, // transfer ArrayBuffers for zero-copy
-      )
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Gmail auth failed')
-      setAppState('landing')
+    // Preserve existing flights for merge
+    if (cachedData) {
+      existingFlightsRef.current = cachedData.flights
     }
-  }
+
+    navigator.storage?.persist?.().then((granted) => {
+      if (!granted) console.warn('Durable storage not granted. Model cache may be evicted')
+    })
+
+    // Send File objects directly to worker (structured-cloneable)
+    // No FileReader needed -- the worker streams them with File.stream()
+    workerRef.current?.postMessage({ type: 'parse-mbox-files', data: files })
+  }, [cachedData])
 
   const handleDemoClick = useCallback(() => {
     setFlights(DEMO_FLIGHTS)
     setAppState('results')
   }, [])
+
+  const handleViewCached = useCallback(() => {
+    if (cachedData) {
+      setFlights(cachedData.flights)
+      setLastImportAt(cachedData.lastImportAt)
+      setAppState('results')
+    }
+  }, [cachedData])
 
   const handleError = useCallback((message: string) => {
     setError(message)
@@ -143,45 +135,32 @@ function App() {
   const insights = useMemo(() => generateInsights(flights, stats), [flights, stats])
   const archetype = useMemo(() => determineArchetype(flights, stats), [flights, stats])
 
-  const resetToLanding = useCallback(() => {
-    // Bump generation so in-flight worker messages are ignored
+  const resetToLanding = useCallback(async () => {
     generationRef.current++
-    processingRef.current = false
-    // Terminate the running worker to stop any in-progress processing
     workerRef.current?.terminate()
-    // Create a fresh worker
-    const worker = new Worker(new URL('./worker/parser.worker.ts', import.meta.url), {
-      type: 'module',
-    })
-    const gen = generationRef.current
-    worker.onmessage = (e: MessageEvent<WorkerOutMessage>) => {
-      if (generationRef.current !== gen) return
-      const msg = e.data
-      switch (msg.type) {
-        case 'progress': setProgress(msg.data); break
-        case 'result': setFlights(msg.data); setAppState(msg.data.length > 0 ? 'reveal' : 'results'); break
-        case 'error': setError(msg.data.message); setProgress((p) => ({ ...p, phase: 'error', message: msg.data.message })); break
-      }
-    }
-    worker.onerror = (e) => {
-      if (generationRef.current !== gen) return
-      setError(`Worker failed: ${e.message}`)
-      setAppState('landing')
-    }
-    workerRef.current = worker
-
+    createWorker()
+    await clearAllData()
+    setCachedData(null)
+    setLastImportAt(null)
     setAppState('landing')
     setFlights([])
     setError(null)
     setProgress({ phase: 'scanning', current: 0, total: 0, flightsFound: 0 })
-  }, [])
+    existingFlightsRef.current = []
+  }, [createWorker])
 
   if (appState === 'landing') {
     return (
       <div className="animate-fade-in">
-        <InputScreen onError={handleError} onDemoClick={handleDemoClick} />
+        <InputScreen
+          onError={handleError}
+          onDemoClick={handleDemoClick}
+          onFileUpload={handleFileUpload}
+          cachedData={cachedData}
+          onViewCached={handleViewCached}
+        />
         {error && (
-          <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-red-900/90 text-red-200 px-6 py-3 max-w-[90vw] text-sm">
+          <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-red-900/90 text-red-200 px-6 py-3 max-w-[90vw] text-sm z-50">
             {error}
             <button onClick={() => setError(null)} className="ml-4 text-red-400 hover:text-red-300">
               Dismiss
@@ -195,7 +174,7 @@ function App() {
   if (appState === 'parsing') {
     return (
       <div className="min-h-screen glass-bg text-white flex flex-col items-center justify-center px-4 animate-fade-in">
-        <h1 className="text-3xl font-bold mb-8">MyFlights</h1>
+        <h1 className="text-3xl font-bold mb-8">FlightWrapped</h1>
         <ParsingProgress progress={progress} onReset={resetToLanding} />
       </div>
     )
@@ -222,6 +201,8 @@ function App() {
           insights={insights}
           archetype={archetype}
           onReset={resetToLanding}
+          lastSyncAt={lastImportAt}
+          onFileUpload={handleFileUpload}
         />
       </div>
     </ErrorBoundary>

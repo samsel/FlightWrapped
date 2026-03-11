@@ -14,6 +14,9 @@ describe('Worker message protocol', () => {
     const initLlm: InMsg = { type: 'init-llm' }
     expect(initLlm.type).toBe('init-llm')
 
+    const parseMboxFiles: InMsg = { type: 'parse-mbox-files', data: [] }
+    expect(parseMboxFiles.type).toBe('parse-mbox-files')
+
     const pong: OutMsg = { type: 'pong' }
     expect(pong.type).toBe('pong')
 

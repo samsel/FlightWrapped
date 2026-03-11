@@ -2,7 +2,7 @@ import PostalMime from 'postal-mime'
 import type { NormalizedEmail, RawEmail } from './types'
 
 /**
- * Normalize a raw email (from Gmail API) into a
+ * Normalize a raw email (from .mbox file) into a
  * structured format suitable for the extraction pipeline.
  */
 export async function normalizeEmail(raw: RawEmail): Promise<NormalizedEmail> {
@@ -10,7 +10,9 @@ export async function normalizeEmail(raw: RawEmail): Promise<NormalizedEmail> {
   const parsed = await parser.parse(raw.raw)
 
   const fromAddress = parsed.from?.address ?? ''
-  const domain = fromAddress.includes('@') ? fromAddress.split('@')[1].toLowerCase() : ''
+  // Extract domain from the last '@' to handle malformed addresses like "user@sub@domain.com"
+  const atIdx = fromAddress.lastIndexOf('@')
+  const domain = atIdx >= 0 ? fromAddress.slice(atIdx + 1).toLowerCase().trim() : ''
 
   return {
     senderAddress: fromAddress,

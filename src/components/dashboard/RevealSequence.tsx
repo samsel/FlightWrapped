@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import type { FlightStats, FunStats, Archetype } from '@/lib/types'
 import { getArchetypeColors } from '@/lib/archetypeColors'
 import { useCountUp } from '@/hooks/useCountUp'
@@ -32,7 +32,7 @@ export default function RevealSequence({ stats, funStats, archetype, onComplete 
 
   const colors = getArchetypeColors(archetype.id)
 
-  const slides: Slide[] = [
+  const slides: Slide[] = useMemo(() => [
     {
       key: 'flights',
       duration: 3200,
@@ -87,7 +87,7 @@ export default function RevealSequence({ stats, funStats, archetype, onComplete 
         </div>
       ),
     },
-  ]
+  ], [stats, funStats, archetype, colors])
 
   const advance = useCallback(() => {
     setExiting(true)
