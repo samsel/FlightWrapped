@@ -5,6 +5,15 @@ import { parseMbox, parseMboxStream } from '@/lib/mbox-parser'
 import { extractFlightsFromEmail } from './extract'
 import { deduplicateFlights } from './dedup'
 import { initLlm, isLlmReady } from './extractors/llm'
+import {
+  createMboxProfiler,
+  createEmailProfiler,
+  buildProfilerReport,
+  type MboxProfiler,
+  type EmailProfiler,
+} from '@/lib/profiler'
+
+let profilerEnabled = false
 
 function postMsg(msg: WorkerOutMessage) {
   postMessage(msg)
@@ -14,7 +23,7 @@ function reportProgress(progress: ParseProgress) {
   postMsg({ type: 'progress', data: progress })
 }
 
-async function ensureLlmReady(): Promise<void> {
+async function ensureLlmReady(mboxProfiler?: MboxProfiler): Promise<void> {
   if (isLlmReady()) return
 
   reportProgress({
@@ -25,6 +34,8 @@ async function ensureLlmReady(): Promise<void> {
     message: 'Loading AI model...',
   })
 
+  mboxProfiler?.start('model-load')
+
   await initLlm((progress) => {
     reportProgress({
       phase: 'loading-model',
@@ -34,9 +45,14 @@ async function ensureLlmReady(): Promise<void> {
       message: progress.text,
     })
   })
+
+  mboxProfiler?.end('model-load')
 }
 
-async function normalizeRawEmails(rawEmails: RawEmail[]): Promise<NormalizedEmail[]> {
+async function normalizeRawEmails(
+  rawEmails: RawEmail[],
+  mboxProfiler?: MboxProfiler,
+): Promise<NormalizedEmail[]> {
   reportProgress({
     phase: 'scanning',
     current: 0,
@@ -45,7 +61,9 @@ async function normalizeRawEmails(rawEmails: RawEmail[]): Promise<NormalizedEmai
     message: 'Normalizing emails...',
   })
 
-  return normalizeEmails(rawEmails, (current, total) => {
+  mboxProfiler?.start('normalize-all')
+
+  const result = await normalizeEmails(rawEmails, (current, total) => {
     reportProgress({
       phase: 'scanning',
       current,
@@ -54,16 +72,29 @@ async function normalizeRawEmails(rawEmails: RawEmail[]): Promise<NormalizedEmai
       message: `Normalizing email ${current} of ${total}...`,
     })
   })
+
+  mboxProfiler?.end('normalize-all')
+  return result
 }
 
-async function processEmails(emails: NormalizedEmail[]): Promise<Flight[]> {
-  await ensureLlmReady()
+async function processEmails(
+  emails: NormalizedEmail[],
+  mboxProfiler?: MboxProfiler,
+  emailProfiler?: EmailProfiler,
+): Promise<Flight[]> {
+  await ensureLlmReady(mboxProfiler)
 
   const allFlights: Flight[] = []
 
+  mboxProfiler?.start('extract-all')
+
   for (let i = 0; i < emails.length; i++) {
-    const flights = await extractFlightsFromEmail(emails[i])
+    emailProfiler?.startEmail(i, emails[i].subject, emails[i].senderDomain)
+
+    const flights = await extractFlightsFromEmail(emails[i], emailProfiler)
     allFlights.push(...flights)
+
+    emailProfiler?.endEmail()
 
     reportProgress({
       phase: 'extracting',
@@ -73,6 +104,8 @@ async function processEmails(emails: NormalizedEmail[]): Promise<Flight[]> {
     })
   }
 
+  mboxProfiler?.end('extract-all')
+
   reportProgress({
     phase: 'deduplicating',
     current: emails.length,
@@ -80,7 +113,9 @@ async function processEmails(emails: NormalizedEmail[]): Promise<Flight[]> {
     flightsFound: allFlights.length,
   })
 
+  mboxProfiler?.start('dedup')
   const deduplicated = deduplicateFlights(allFlights)
+  mboxProfiler?.end('dedup')
 
   reportProgress({
     phase: 'done',
@@ -92,6 +127,13 @@ async function processEmails(emails: NormalizedEmail[]): Promise<Flight[]> {
   return deduplicated
 }
 
+/** Send profiler report if profiling is enabled */
+function emitProfilerReport(mboxProfiler?: MboxProfiler, emailProfiler?: EmailProfiler) {
+  if (!profilerEnabled || !mboxProfiler || !emailProfiler) return
+  const report = buildProfilerReport(mboxProfiler.report(), emailProfiler.report())
+  postMsg({ type: 'profiler-report', data: report })
+}
+
 // ─── Message handler ───
 
 self.onmessage = async (e: MessageEvent<WorkerInMessage>) => {
@@ -100,6 +142,10 @@ self.onmessage = async (e: MessageEvent<WorkerInMessage>) => {
   switch (msg.type) {
     case 'ping':
       postMsg({ type: 'pong' })
+      break
+
+    case 'set-profiler':
+      profilerEnabled = msg.data
       break
 
     case 'init-llm':
@@ -116,6 +162,9 @@ self.onmessage = async (e: MessageEvent<WorkerInMessage>) => {
 
     case 'parse-mbox':
       try {
+        const mp = profilerEnabled ? createMboxProfiler() : undefined
+        const ep = profilerEnabled ? createEmailProfiler() : undefined
+
         reportProgress({
           phase: 'scanning',
           current: 0,
@@ -124,7 +173,9 @@ self.onmessage = async (e: MessageEvent<WorkerInMessage>) => {
           message: 'Parsing .mbox file...',
         })
 
+        mp?.start('mbox-parse')
         const rawEmails = parseMbox(msg.data)
+        mp?.end('mbox-parse')
 
         reportProgress({
           phase: 'scanning',
@@ -135,8 +186,10 @@ self.onmessage = async (e: MessageEvent<WorkerInMessage>) => {
         })
 
         const asRaw: RawEmail[] = rawEmails.map((buf) => ({ raw: buf }))
-        const normalized = await normalizeRawEmails(asRaw)
-        const flights = await processEmails(normalized)
+        const normalized = await normalizeRawEmails(asRaw, mp)
+        const flights = await processEmails(normalized, mp, ep)
+
+        emitProfilerReport(mp, ep)
         postMsg({ type: 'result', data: flights })
       } catch (err) {
         postMsg({
@@ -148,8 +201,13 @@ self.onmessage = async (e: MessageEvent<WorkerInMessage>) => {
 
     case 'parse-raw-emails':
       try {
-        const normalized = await normalizeRawEmails(msg.data)
-        const flights = await processEmails(normalized)
+        const mp = profilerEnabled ? createMboxProfiler() : undefined
+        const ep = profilerEnabled ? createEmailProfiler() : undefined
+
+        const normalized = await normalizeRawEmails(msg.data, mp)
+        const flights = await processEmails(normalized, mp, ep)
+
+        emitProfilerReport(mp, ep)
         postMsg({ type: 'result', data: flights })
       } catch (err) {
         postMsg({
@@ -161,6 +219,9 @@ self.onmessage = async (e: MessageEvent<WorkerInMessage>) => {
 
     case 'parse-mbox-files':
       try {
+        const mp = profilerEnabled ? createMboxProfiler() : undefined
+        const ep = profilerEnabled ? createEmailProfiler() : undefined
+
         const files = msg.data
 
         // ── Phase 1: Fast scan ──
@@ -173,7 +234,10 @@ self.onmessage = async (e: MessageEvent<WorkerInMessage>) => {
 
         // Start loading the LLM in parallel with the scan phase so it's
         // ready (or nearly ready) by the time we need it for extraction.
-        const llmLoadPromise = ensureLlmReady()
+        const llmLoadPromise = ensureLlmReady(mp)
+
+        mp?.start('pipeline-total')
+        mp?.start('fast-scan')
 
         for (let fileIdx = 0; fileIdx < files.length; fileIdx++) {
           const file = files[fileIdx]
@@ -189,14 +253,27 @@ self.onmessage = async (e: MessageEvent<WorkerInMessage>) => {
             message: `Scanning ${fileLabel}...`,
           })
 
+          mp?.start(`file-${fileIdx}-stream`)
+
           await parseMboxStream(file.stream(), async (rawBuffer: ArrayBuffer) => {
+            const emailIdx = emailsScanned
             emailsScanned++
+
+            ep?.startEmail(emailIdx, '', '')
 
             // Fast domain pre-filter: extract From header cheaply (~100x faster
             // than a full MIME parse) and check against the airline domain set.
+            ep?.startSegment('domain-filter')
             const domain = extractSenderDomainFast(rawBuffer)
-            if (!domain || !isAirlineDomain(domain)) {
+            const isAirline = domain !== '' && isAirlineDomain(domain)
+            ep?.endSegment('domain-filter')
+
+            ep?.updateEmail('', domain)
+
+            if (!isAirline) {
               emailsSkipped++
+              ep?.markFiltered()
+              ep?.endEmail()
               // Report progress periodically during scan
               if (emailsScanned % 500 === 0) {
                 reportProgress({
@@ -212,6 +289,7 @@ self.onmessage = async (e: MessageEvent<WorkerInMessage>) => {
 
             // This email is from an airline/booking domain — keep it for phase 2
             airlineRawEmails.push(rawBuffer)
+            ep?.endEmail()
 
             reportProgress({
               phase: 'scanning',
@@ -221,7 +299,11 @@ self.onmessage = async (e: MessageEvent<WorkerInMessage>) => {
               message: `${fileLabel} — ${emailsScanned.toLocaleString()} emails scanned, ${airlineRawEmails.length} from airlines`,
             })
           })
+
+          mp?.end(`file-${fileIdx}-stream`)
         }
+
+        mp?.end('fast-scan')
 
         reportProgress({
           phase: 'scanning',
@@ -237,19 +319,34 @@ self.onmessage = async (e: MessageEvent<WorkerInMessage>) => {
 
         const allFlights: Flight[] = []
 
+        mp?.start('extract-all')
+
         for (let i = 0; i < airlineRawEmails.length; i++) {
           // Now do the full MIME parse — but only for the small set of airline emails
           let normalized: NormalizedEmail
+
+          // Profiler: track this airline email through normalize + extract
+          ep?.startEmail(emailsScanned + i, '', '')
+
           try {
+            ep?.startSegment('normalize')
             normalized = await normalizeEmail({ raw: airlineRawEmails[i] })
+            ep?.endSegment('normalize')
+            ep?.updateEmail(normalized.subject, normalized.senderDomain)
           } catch {
+            ep?.endEmail()
             continue // skip unparseable emails
           }
 
+          ep?.startSegment('llm-extract')
           const flights = await extractFlightsFromEmail(normalized)
+          ep?.endSegment('llm-extract')
+
           if (flights.length > 0) {
             allFlights.push(...flights)
           }
+          ep?.markFlights(flights.length)
+          ep?.endEmail()
 
           reportProgress({
             phase: 'extracting',
@@ -260,6 +357,8 @@ self.onmessage = async (e: MessageEvent<WorkerInMessage>) => {
           })
         }
 
+        mp?.end('extract-all')
+
         reportProgress({
           phase: 'deduplicating',
           current: airlineRawEmails.length,
@@ -267,7 +366,11 @@ self.onmessage = async (e: MessageEvent<WorkerInMessage>) => {
           flightsFound: allFlights.length,
         })
 
+        mp?.start('dedup')
         const deduplicated = deduplicateFlights(allFlights)
+        mp?.end('dedup')
+
+        mp?.end('pipeline-total')
 
         reportProgress({
           phase: 'done',
@@ -276,6 +379,7 @@ self.onmessage = async (e: MessageEvent<WorkerInMessage>) => {
           flightsFound: deduplicated.length,
         })
 
+        emitProfilerReport(mp, ep)
         postMsg({ type: 'result', data: deduplicated })
       } catch (err) {
         postMsg({
@@ -287,7 +391,12 @@ self.onmessage = async (e: MessageEvent<WorkerInMessage>) => {
 
     case 'parse-emails':
       try {
-        const flights = await processEmails(msg.data)
+        const mp = profilerEnabled ? createMboxProfiler() : undefined
+        const ep = profilerEnabled ? createEmailProfiler() : undefined
+
+        const flights = await processEmails(msg.data, mp, ep)
+
+        emitProfilerReport(mp, ep)
         postMsg({ type: 'result', data: flights })
       } catch (err) {
         postMsg({

@@ -53,11 +53,13 @@ export type WorkerInMessage =
   | { type: 'parse-mbox-files'; data: File[] }
   | { type: 'parse-emails'; data: NormalizedEmail[] }
   | { type: 'parse-raw-emails'; data: RawEmail[] }
+  | { type: 'set-profiler'; data: boolean }
   | { type: 'ping' }
 
 export type WorkerOutMessage =
   | { type: 'progress'; data: ParseProgress }
   | { type: 'result'; data: Flight[] }
+  | { type: 'profiler-report'; data: import('@/lib/profiler').ProfilerReport }
   | { type: 'error'; data: { message: string } }
   | { type: 'llm-ready' }
   | { type: 'pong' }
