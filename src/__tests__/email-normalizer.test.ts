@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, it, expect } from 'vitest'
-import { normalizeEmail } from '@/lib/email-normalizer'
+import { normalizeEmail, extractSenderDomainFast } from '@/lib/email-normalizer'
 import type { RawEmail } from '@/lib/types'
 
 describe('email normalizer', () => {
@@ -56,6 +56,40 @@ describe('email normalizer', () => {
     expect(result.senderDomain).toBe('delta.com')
     expect(result.textBody).toContain('Plain text version')
     expect(result.htmlBody).toContain('DL 456')
+  })
+
+  describe('extractSenderDomainFast', () => {
+    it('extracts domain from angle-bracket From header', () => {
+      const raw = 'From: John Doe <bookings@united.com>\r\nSubject: Test\r\n\r\nBody'
+      expect(extractSenderDomainFast(raw)).toBe('united.com')
+    })
+
+    it('extracts domain from bare From header', () => {
+      const raw = 'From: noreply@delta.com\r\nSubject: Test\r\n\r\nBody'
+      expect(extractSenderDomainFast(raw)).toBe('delta.com')
+    })
+
+    it('handles ArrayBuffer input', () => {
+      const raw = new TextEncoder().encode(
+        'From: bookings@emirates.com\r\nSubject: Test\r\n\r\nBody',
+      ).buffer
+      expect(extractSenderDomainFast(raw)).toBe('emirates.com')
+    })
+
+    it('returns empty string for emails without From header', () => {
+      const raw = 'Subject: No sender\r\nDate: Mon, 1 Jan 2024\r\n\r\nBody'
+      expect(extractSenderDomainFast(raw)).toBe('')
+    })
+
+    it('handles subdomain From addresses', () => {
+      const raw = 'From: noreply@email.united.com\r\nSubject: Test\r\n\r\nBody'
+      expect(extractSenderDomainFast(raw)).toBe('email.united.com')
+    })
+
+    it('is case insensitive for the From header name', () => {
+      const raw = 'from: test@AA.COM\r\nSubject: Test\r\n\r\nBody'
+      expect(extractSenderDomainFast(raw)).toBe('aa.com')
+    })
   })
 
   it('handles email with no sender gracefully', async () => {
