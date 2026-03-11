@@ -27,6 +27,7 @@ FlightWrapped was originally built with Gmail OAuth PKCE (direct API access). I 
 
 - **Privacy-first** -- Zero servers, zero databases, zero analytics. Everything runs entirely in your browser. No API access to your email -- you export and upload the file yourself.
 - **Local AI extraction** -- Phi-3.5-mini runs on-device via WebLLM (WebGPU/WASM). Email content is processed locally through Web Workers.
+- **Handles large exports** -- Streaming mbox parser uses constant memory. A fast domain pre-filter (cheap From: header scan) skips 99%+ of non-airline emails before any expensive MIME parsing or LLM inference, making 6GB+ files practical.
 - **Persistent** -- Flight data is cached in IndexedDB. Return visits skip re-parsing. Re-import merges and deduplicates with existing data.
 - **3D globe visualization** -- Interactive globe (react-globe.gl / Three.js) showing flight arcs and airport markers.
 - **Year filtering** -- Filter your dashboard by year to see stats for any individual year or all time.
@@ -45,7 +46,7 @@ FlightWrapped was originally built with Gmail OAuth PKCE (direct API access). I 
 | Styling | Tailwind CSS v4 |
 | 3D Globe | react-globe.gl (Three.js) |
 | Email Parsing | postal-mime |
-| Mbox Parsing | Custom parser (splits on "From " lines, handles escaping) |
+| Mbox Parsing | Custom streaming parser (constant memory, handles 6GB+ files) |
 | Local LLM | WebLLM -- Phi-3.5-mini-instruct (~2 GB, cached in IndexedDB) |
 | Persistence | IndexedDB via idb (flights, import timestamp) |
 | Charts | Custom SVG (no charting library) |
@@ -68,7 +69,7 @@ No environment variables or API keys are required. FlightWrapped runs entirely i
 | `npm run dev` | Start Vite dev server |
 | `npm run build` | Type-check + production build |
 | `npm run lint` | ESLint |
-| `npm test` | Run tests (Vitest, 235 tests across 20 files) |
+| `npm test` | Run tests (Vitest, 250 tests across 21 files) |
 | `npm run preview` | Preview production build |
 
 ## Deployment
@@ -84,7 +85,7 @@ No secrets or environment variables need to be configured.
 
 ## Testing
 
-244 tests across 21 test files, run with Vitest. A pre-commit git hook runs the full test suite + TypeScript type-check on every commit.
+250 tests across 21 test files, run with Vitest. A pre-commit git hook runs the full test suite + TypeScript type-check on every commit.
 
 ## Architecture
 
