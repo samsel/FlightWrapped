@@ -2,6 +2,51 @@ import PostalMime from 'postal-mime'
 import type { NormalizedEmail, RawEmail } from './types'
 
 /**
+ * Cheaply extract the sender domain from raw email bytes by scanning for the
+ * "From:" header line. This avoids a full MIME parse (postal-mime) and is
+ * ~100x faster, making it suitable for pre-filtering large mbox files where
+ * 99%+ of emails can be skipped.
+ *
+ * Returns the lowercase domain, or '' if not found.
+ */
+export function extractSenderDomainFast(raw: ArrayBuffer | string): string {
+  // Decode only the first 16KB — the From header is always near the top.
+  // This avoids decoding multi-MB emails with large attachments.
+  const text =
+    typeof raw === 'string'
+      ? raw.slice(0, 16384)
+      : new TextDecoder().decode(
+          raw instanceof ArrayBuffer
+            ? new Uint8Array(raw, 0, Math.min(raw.byteLength, 16384))
+            : raw,
+        )
+
+  // Match "From:" header (case-insensitive), which may span continuation lines.
+  // We look for an email address pattern: something@domain
+  const fromMatch = text.match(/^From:\s*(.+)/im)
+  if (!fromMatch) return ''
+
+  // The header value may contain "Display Name <addr@domain>" or just "addr@domain"
+  const headerValue = fromMatch[1]
+
+  // Extract email address — prefer angle-bracket form, then bare address
+  const angleMatch = headerValue.match(/<([^>]+)>/)
+  const addrStr = angleMatch ? angleMatch[1] : headerValue.trim()
+
+  const atIdx = addrStr.lastIndexOf('@')
+  if (atIdx < 0) return ''
+
+  // Extract domain, stripping any trailing ">" or whitespace
+  const domain = addrStr
+    .slice(atIdx + 1)
+    .replace(/[>\s].*/g, '')
+    .toLowerCase()
+    .trim()
+
+  return domain
+}
+
+/**
  * Normalize a raw email (from .mbox file) into a
  * structured format suitable for the extraction pipeline.
  */

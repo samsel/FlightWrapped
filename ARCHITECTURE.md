@@ -16,81 +16,95 @@ FlightWrapped was originally designed with Gmail OAuth PKCE for direct API acces
 ## Data Flow
 
 ```
-+------------------------------------------------------------------+
-|                        USER'S BROWSER                            |
-|                                                                  |
-|  +---------+     +----------+     +--------------------------+   |
-|  |  React   |--> | FileReader|--> |      Web Worker          |   |
-|  |  App     |    | (.mbox)  |     |                          |   |
-|  |          |    +----------+     |  +--------------------+  |   |
-|  |          |         |           |  |  Mbox Parser       |  |   |
-|  |          |         |           |  |  (split on "From ")|  |   |
-|  |          |         |           |  +--------+-----------+  |   |
-|  |          |         |           |           |              |   |
-|  |          |    ArrayBuffer      |  +--------v-----------+  |   |
-|  |          |    (transferable)   |  |  Email Normalizer  |  |   |
-|  |          |         |           |  |  (postal-mime)     |  |   |
-|  |          |         |           |  +--------+-----------+  |   |
-|  |          |         |           |           |              |   |
-|  |          |         |           |  +--------v-----------+  |   |
-|  |          |         |           |  |  Domain Filter     |  |   |
-|  |          |         |           |  |  (~190 domains)    |  |   |
-|  |          |         |           |  +--------+-----------+  |   |
-|  |          |         |           |           |              |   |
-|  |          |         |           |  +--------v-----------+  |   |
-|  |          |         +---------->|  |  Local LLM         |  |   |
-|  |          |                     |  |  Phi-3.5-mini      |  |   |
-|  |          |                     |  |  via WebLLM        |  |   |
-|  |          |                     |  +--------+-----------+  |   |
-|  |          |                     |           |              |   |
-|  |          |                     |  +--------v-----------+  |   |
-|  |          |                     |  |  IATA Validation   |  |   |
-|  |          |                     |  |  (5,500+ airports) |  |   |
-|  |          |                     |  +--------+-----------+  |   |
-|  |          |                     |           |              |   |
-|  |          |                     |  +--------v-----------+  |   |
-|  |          |                     |  |  Deduplication     |  |   |
-|  |          |                     |  +--------+-----------+  |   |
-|  |          |<--- Flight[] ------+           |              |   |
-|  |          |                     |           v              |   |
-|  |          |                     |    Deduplicated          |   |
-|  |          |                     |    Flight[]              |   |
-|  |          |                     +--------------------------+   |
-|  |          |                                                    |
-|  |          +-------> +--------------------+                     |
-|  |          |         |  IndexedDB (idb)   |                     |
-|  |          |<------- |  flights, import   |                     |
-|  |          |         |  timestamp         |                     |
-|  |          |         +--------------------+                     |
-|  |          |                                                    |
-|  |          v                                                    |
-|  |  +----------------------------------------+                  |
-|  |  |  Stats Engine (main thread, memoized)  |                  |
-|  |  |                                        |                  |
-|  |  |  calculateStats()    -> FlightStats    |                  |
-|  |  |  calculateFunStats() -> FunStats       |                  |
-|  |  |  generateInsights()  -> Insight[]      |                  |
-|  |  |  determineArchetype()-> Archetype      |                  |
-|  |  +----------------------------------------+                  |
-|  |          |                                                    |
-|  |          v                                                    |
-|  |  +----------------------------------------+                  |
-|  |  |  Dashboard                             |                  |
-|  |  |  3D Globe . Stats . Charts . Insights  |                  |
-|  |  |  Flight List                           |                  |
-|  |  +----------------------------------------+                  |
-|  +---------+                                                    |
-+------------------------------------------------------------------+
++-------------------------------------------------------------------+
+|                        USER'S BROWSER                             |
+|                                                                   |
+|  +---------+     +----------+     +---------------------------+   |
+|  |  React   |--> | File     |--> |      Web Worker            |   |
+|  |  App     |    | .stream()|     |                           |   |
+|  |          |    +----------+     |  Phase 1: Fast Scan        |   |
+|  |          |         |           |  +---------------------+   |   |
+|  |          |    ReadableStream   |  | Streaming Mbox      |   |   |
+|  |          |    (chunked)        |  | Parser               |   |   |
+|  |          |         |           |  +--------+------------+   |   |
+|  |          |         |           |           |                |   |
+|  |          |         |           |  +--------v------------+   |   |
+|  |          |         |           |  | Fast Domain Filter  |   |   |
+|  |          |         |           |  | (From: header scan, |   |   |
+|  |          |         |           |  |  first 16KB only,   |   |   |
+|  |          |         |           |  |  ~190 domains)      |   |   |
+|  |          |         |           |  +---+------------+----+   |   |
+|  |          |         |           |      |skip 99%    |match   |   |
+|  |          |         |           |      v            v        |   |
+|  |          |         |           |   (discard)  collect raw   |   |
+|  |          |         |           |              ArrayBuffer[] |   |
+|  |          |         |           |                            |   |
+|  |          |         |           |  Phase 2: Extract          |   |
+|  |          |         |           |  (only airline emails)     |   |
+|  |          |         |           |  +---------------------+   |   |
+|  |          |         +---------->|  | Email Normalizer    |   |   |
+|  |          |                     |  | (postal-mime)       |   |   |
+|  |          |                     |  +--------+------------+   |   |
+|  |          |                     |           |                |   |
+|  |          |                     |  +--------v------------+   |   |
+|  |          |                     |  | Local LLM           |   |   |
+|  |          |                     |  | Phi-3.5-mini         |   |   |
+|  |          |                     |  | (loaded in parallel  |   |   |
+|  |          |                     |  |  during Phase 1)     |   |   |
+|  |          |                     |  +--------+------------+   |   |
+|  |          |                     |           |                |   |
+|  |          |                     |  +--------v------------+   |   |
+|  |          |                     |  | IATA Validation     |   |   |
+|  |          |                     |  | (5,500+ airports)   |   |   |
+|  |          |                     |  +--------+------------+   |   |
+|  |          |                     |           |                |   |
+|  |          |                     |  +--------v------------+   |   |
+|  |          |                     |  | Deduplication       |   |   |
+|  |          |                     |  +--------+------------+   |   |
+|  |          |<--- Flight[] ------+           |                |   |
+|  |          |                     |           v                |   |
+|  |          |                     |    Deduplicated            |   |
+|  |          |                     |    Flight[]                |   |
+|  |          |                     +---------------------------+   |
+|  |          |                                                     |
+|  |          +-------> +--------------------+                      |
+|  |          |         |  IndexedDB (idb)   |                      |
+|  |          |<------- |  flights, import   |                      |
+|  |          |         |  timestamp         |                      |
+|  |          |         +--------------------+                      |
+|  |          |                                                     |
+|  |          v                                                     |
+|  |  +----------------------------------------+                   |
+|  |  |  Stats Engine (main thread, memoized)  |                   |
+|  |  |                                        |                   |
+|  |  |  calculateStats()    -> FlightStats    |                   |
+|  |  |  calculateFunStats() -> FunStats       |                   |
+|  |  |  generateInsights()  -> Insight[]      |                   |
+|  |  |  determineArchetype()-> Archetype      |                   |
+|  |  +----------------------------------------+                   |
+|  |          |                                                     |
+|  |          v                                                     |
+|  |  +----------------------------------------+                   |
+|  |  |  Dashboard                             |                   |
+|  |  |  3D Globe . Stats . Charts . Insights  |                   |
+|  |  |  Flight List                           |                   |
+|  |  +----------------------------------------+                   |
+|  +---------+                                                      |
++-------------------------------------------------------------------+
 ```
 
 ## Mbox Parsing
 
-The `.mbox` format (from Google Takeout) stores emails separated by `"From "` lines at the start of each message. The parser:
+The `.mbox` format (from Google Takeout) stores emails separated by `"From "` lines at the start of each message. Two parsers exist:
 
-1. Splits the file text on `^From ` (regex with multiline flag)
-2. Strips the envelope "From " header line from each part
-3. Un-escapes `">From "` -> `"From "` in email bodies (standard mbox escaping)
-4. Returns an array of `ArrayBuffer` per email for the normalization pipeline
+**Streaming parser (`parseMboxStream`)** -- the primary path for file uploads. Reads the file via `ReadableStream` in browser-sized chunks (~64KB), detects `"From "` boundaries line-by-line, and emits one email at a time via an async callback. Uses constant memory regardless of file size (handles 6GB+ files without issue). Implements backpressure by awaiting the callback before reading the next chunk.
+
+**Legacy parser (`parseMbox`)** -- loads the entire file into memory as a string, splits on `^From ` regex. Only used for the `parse-mbox` ArrayBuffer message type. Unsuitable for large files.
+
+Both parsers:
+1. Strip the envelope "From " header line from each message
+2. Un-escape `">From "` -> `"From "` in email bodies (standard mbox escaping)
+3. Return `ArrayBuffer` per email for the normalization pipeline
 
 ## Application State Machine
 
@@ -165,16 +179,22 @@ The tradeoff is speed -- LLM inference is slower per email than regex. We mitiga
 4. Extracted IATA codes are validated against the airport database (5,500+ airports) -- invalid codes are rejected to catch hallucinations
 5. All extracted flights receive a confidence score of 0.85
 
-### Domain Pre-filtering
+### Domain Pre-filtering (Two-Phase Architecture)
 
-Before any LLM inference, emails are filtered by sender domain against a curated list of ~190 domains covering:
+Processing large mbox files (e.g., 6GB Gmail exports with 200k+ emails) efficiently requires avoiding expensive operations on the vast majority of non-airline emails. The pipeline uses a two-phase approach:
+
+**Phase 1: Fast scan.** As each email is streamed from the mbox, `extractSenderDomainFast()` performs a cheap string scan of the first 16KB of raw bytes to find the `From:` header and extract the sender domain. This is ~100x faster than a full MIME parse (postal-mime) because it skips attachment decoding, multipart handling, and character set conversion. The domain is checked against the curated airline domain set. Non-matching emails (typically 99%+) are discarded immediately. The LLM model loads in parallel during this phase.
+
+**Phase 2: Full extraction.** Only the small set of airline-domain emails (typically a few hundred out of hundreds of thousands) undergo the expensive processing: full MIME parse via postal-mime, text extraction, and LLM inference.
+
+The curated domain list (~190 domains) covers:
 
 - Major airlines (130+): United, Delta, AA, Southwest, BA, Lufthansa, Emirates, Singapore Airlines, etc.
 - Booking platforms (30+): Expedia, Kayak, Booking.com, Google Flights, Hopper, Kiwi, Trip.com, etc.
 - Travel agencies (10+): Concur, Navan, TravelPerk, Amadeus, etc.
 - Loyalty programs (6): MileagePlus, AAdvantage, SkyMiles, etc.
 
-This prevents running the LLM on irrelevant emails (newsletters, receipts, etc.) and dramatically reduces processing time. The tradeoff is that flights from airlines not in the domain list won't be captured.
+Subdomain matching is supported (e.g., `email.united.com` matches `united.com`). The tradeoff is that flights from airlines not in the domain list won't be captured.
 
 ### Deduplication Strategy
 
@@ -189,22 +209,28 @@ Flight number normalization strips spaces and uppercases: `"ua 1234"` -> `"UA123
 
 ### Web Worker Pipeline
 
-All mbox parsing, email normalization, and LLM extraction runs in a Web Worker to keep the UI responsive. The LLM model is pre-warmed on app mount (download begins immediately, not after the file is uploaded). The .mbox file ArrayBuffer is transferred to the worker as a zero-copy transferable. Communication uses a typed message protocol.
+All mbox parsing, email normalization, and LLM extraction runs in a Web Worker to keep the UI responsive. Communication uses a typed message protocol. For file uploads (`parse-mbox-files`), the file is streamed directly -- no ArrayBuffer transfer needed.
 
 ```
 Main Thread                          Worker
     |                                   |
-    +-- { type: 'init-llm' } ---------->|  (pre-warm on mount)
+    |  [User uploads .mbox file(s)]     |
+    +-- { type: 'parse-mbox-files',    |
+    |        data: File[] } ----------->|
     |                                   |
-    |  [User uploads .mbox file]        |
-    +-- { type: 'parse-mbox',          |
-    |        data: ArrayBuffer } ------>|
-    |                                   +-- split mbox into emails
-    |                                   +-- normalize each (postal-mime)
-    |                                   +-- filter by domain
-    |<-- { type: 'progress' } ---------+
+    |                                   +-- Phase 1: Fast Scan
+    |                                   |   (LLM loads in parallel)
+    |                                   +-- stream mbox chunks
+    |                                   +-- fast From: header scan
+    |                                   +-- domain pre-filter
+    |<-- { type: 'progress',           |   (skips 99%+ of emails)
+    |      phase: 'scanning' } --------+
+    |                                   |
+    |                                   +-- Phase 2: Extract
+    |                                   +-- normalize airline emails (postal-mime)
     |                                   +-- extract per email (LLM)
-    |<-- { type: 'progress' } ---------+
+    |<-- { type: 'progress',           |
+    |      phase: 'extracting' } ------+
     |                                   +-- deduplicate
     |<-- { type: 'result', Flight[] } -+
     |                                   |
@@ -296,7 +322,7 @@ src/
 |   +-- domains.ts                    # ~190 airline/booking domains
 |   +-- mbox-parser.ts               # .mbox file -> individual email ArrayBuffers
 |   +-- storage.ts                    # IndexedDB persistence (idb) -- flights, import timestamp
-|   +-- email-normalizer.ts           # Raw MIME -> NormalizedEmail (postal-mime)
+|   +-- email-normalizer.ts           # Raw MIME -> NormalizedEmail (postal-mime) + fast domain extractor
 |   +-- stats.ts                      # Flight statistics (18+ metrics)
 |   +-- funStats.ts                   # Fun comparisons (Earth orbits, Moon %)
 |   +-- insights.ts                   # 9 conditional personal insights
@@ -346,7 +372,7 @@ src/
     +-- extract-filter.test.ts        # Domain filter gating LLM extraction (5 tests)
     +-- archetypes.test.ts            # Archetype determination logic (4 tests)
     +-- funStats.test.ts              # Fun stat calculations (4 tests)
-    +-- email-normalizer.test.ts      # MIME parsing, multipart emails (3 tests)
+    +-- email-normalizer.test.ts      # MIME parsing, multipart emails, fast domain extractor (9 tests)
     +-- icons.test.ts                 # Icon mapping (2 tests)
     +-- worker.test.ts                # Worker message type shape (1 test)
 ```
@@ -377,7 +403,7 @@ A single full-screen hero section with a rotating 3D globe background (lazy-load
 
 ## Testing
 
-244 tests across 21 test files, run with Vitest. A pre-commit git hook runs the full suite + TypeScript type-check on every commit.
+250 tests across 21 test files, run with Vitest. A pre-commit git hook runs the full suite + TypeScript type-check on every commit.
 
 ## Build & Deployment
 

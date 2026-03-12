@@ -1,5 +1,6 @@
 import type { WorkerInMessage, WorkerOutMessage, Flight, NormalizedEmail, RawEmail, ParseProgress } from '@/lib/types'
-import { normalizeEmails, normalizeEmail } from '@/lib/email-normalizer'
+import { normalizeEmails, normalizeEmail, extractSenderDomainFast } from '@/lib/email-normalizer'
+import { isAirlineDomain } from '@/lib/domains'
 import { parseMbox, parseMboxStream } from '@/lib/mbox-parser'
 import { extractFlightsFromEmail } from './extract'
 import { deduplicateFlights } from './dedup'
@@ -160,11 +161,19 @@ self.onmessage = async (e: MessageEvent<WorkerInMessage>) => {
 
     case 'parse-mbox-files':
       try {
-        await ensureLlmReady()
-
         const files = msg.data
-        const allFlights: Flight[] = []
+
+        // ── Phase 1: Fast scan ──
+        // Stream through the mbox and use a cheap header scan to filter
+        // by airline/booking domain BEFORE doing any expensive MIME parsing.
+        // For a typical Gmail export, this skips 99%+ of emails instantly.
+        const airlineRawEmails: ArrayBuffer[] = []
         let emailsScanned = 0
+        let emailsSkipped = 0
+
+        // Start loading the LLM in parallel with the scan phase so it's
+        // ready (or nearly ready) by the time we need it for extraction.
+        const llmLoadPromise = ensureLlmReady()
 
         for (let fileIdx = 0; fileIdx < files.length; fileIdx++) {
           const file = files[fileIdx]
@@ -176,52 +185,85 @@ self.onmessage = async (e: MessageEvent<WorkerInMessage>) => {
             phase: 'scanning',
             current: 0,
             total: 0,
-            flightsFound: allFlights.length,
-            message: `Reading ${fileLabel}...`,
+            flightsFound: 0,
+            message: `Scanning ${fileLabel}...`,
           })
 
           await parseMboxStream(file.stream(), async (rawBuffer: ArrayBuffer) => {
             emailsScanned++
 
-            // Normalize the email
-            let normalized: NormalizedEmail
-            try {
-              normalized = await normalizeEmail({ raw: rawBuffer })
-            } catch {
-              return // skip unparseable emails
+            // Fast domain pre-filter: extract From header cheaply (~100x faster
+            // than a full MIME parse) and check against the airline domain set.
+            const domain = extractSenderDomainFast(rawBuffer)
+            if (!domain || !isAirlineDomain(domain)) {
+              emailsSkipped++
+              // Report progress periodically during scan
+              if (emailsScanned % 500 === 0) {
+                reportProgress({
+                  phase: 'scanning',
+                  current: emailsScanned,
+                  total: 0,
+                  flightsFound: airlineRawEmails.length,
+                  message: `${fileLabel} — ${emailsScanned.toLocaleString()} emails scanned, ${airlineRawEmails.length} from airlines`,
+                })
+              }
+              return // skip — not an airline email
             }
 
-            // Report scanning progress
-            if (emailsScanned % 50 === 0 || emailsScanned < 10) {
-              reportProgress({
-                phase: 'scanning',
-                current: emailsScanned,
-                total: 0,
-                flightsFound: allFlights.length,
-                message: `${fileLabel} - ${emailsScanned.toLocaleString()} emails scanned, ${allFlights.length} flights found`,
-              })
-            }
+            // This email is from an airline/booking domain — keep it for phase 2
+            airlineRawEmails.push(rawBuffer)
 
-            // Extract flights (domain filter + LLM)
-            const flights = await extractFlightsFromEmail(normalized)
-            if (flights.length > 0) {
-              allFlights.push(...flights)
-            }
+            reportProgress({
+              phase: 'scanning',
+              current: emailsScanned,
+              total: 0,
+              flightsFound: airlineRawEmails.length,
+              message: `${fileLabel} — ${emailsScanned.toLocaleString()} emails scanned, ${airlineRawEmails.length} from airlines`,
+            })
           })
         }
 
         reportProgress({
-          phase: 'extracting',
+          phase: 'scanning',
           current: emailsScanned,
           total: emailsScanned,
-          flightsFound: allFlights.length,
-          message: `Scanned ${emailsScanned.toLocaleString()} emails, found ${allFlights.length} flights`,
+          flightsFound: airlineRawEmails.length,
+          message: `Scan complete: ${emailsScanned.toLocaleString()} emails scanned, ${airlineRawEmails.length} airline emails found (${emailsSkipped.toLocaleString()} skipped)`,
         })
+
+        // ── Phase 2: Extract flights from airline emails only ──
+        // Wait for LLM to be ready (likely already loaded during scan)
+        await llmLoadPromise
+
+        const allFlights: Flight[] = []
+
+        for (let i = 0; i < airlineRawEmails.length; i++) {
+          // Now do the full MIME parse — but only for the small set of airline emails
+          let normalized: NormalizedEmail
+          try {
+            normalized = await normalizeEmail({ raw: airlineRawEmails[i] })
+          } catch {
+            continue // skip unparseable emails
+          }
+
+          const flights = await extractFlightsFromEmail(normalized)
+          if (flights.length > 0) {
+            allFlights.push(...flights)
+          }
+
+          reportProgress({
+            phase: 'extracting',
+            current: i + 1,
+            total: airlineRawEmails.length,
+            flightsFound: allFlights.length,
+            message: `Extracting flights: ${i + 1}/${airlineRawEmails.length} airline emails processed`,
+          })
+        }
 
         reportProgress({
           phase: 'deduplicating',
-          current: emailsScanned,
-          total: emailsScanned,
+          current: airlineRawEmails.length,
+          total: airlineRawEmails.length,
           flightsFound: allFlights.length,
         })
 
@@ -229,8 +271,8 @@ self.onmessage = async (e: MessageEvent<WorkerInMessage>) => {
 
         reportProgress({
           phase: 'done',
-          current: emailsScanned,
-          total: emailsScanned,
+          current: airlineRawEmails.length,
+          total: airlineRawEmails.length,
           flightsFound: deduplicated.length,
         })
 
