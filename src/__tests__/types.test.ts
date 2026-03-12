@@ -78,8 +78,8 @@ describe('Type contracts', () => {
     const msgs: WorkerInMessage[] = [
       { type: 'ping' },
       { type: 'init-llm' },
-      { type: 'parse-emails', data: [] },
       { type: 'parse-mbox-files', data: [] },
+      { type: 'set-profiler', data: true },
     ]
     expect(msgs).toHaveLength(4)
   })
