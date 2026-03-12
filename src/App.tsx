@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo, type MutableRefObject } from 'react'
 import InputScreen from '@/components/InputScreen'
 import ParsingProgress from '@/components/ParsingProgress'
+import ProfilerOverlay from '@/components/ProfilerOverlay'
 import { calculateStats } from '@/lib/stats'
 import { calculateFunStats } from '@/lib/funStats'
 import { generateInsights } from '@/lib/insights'
@@ -12,6 +13,7 @@ import RevealSequence from '@/components/dashboard/RevealSequence'
 import ErrorBoundary from '@/components/ErrorBoundary'
 import { DEMO_FLIGHTS } from '@/components/landing/demoFlights'
 import type { Flight, ParseProgress, WorkerOutMessage } from '@/lib/types'
+import type { ProfilerReport } from '@/lib/profiler'
 
 type AppState = 'landing' | 'parsing' | 'reveal' | 'results'
 
@@ -27,8 +29,11 @@ function App() {
   const [error, setError] = useState<string | null>(null)
   const [cachedData, setCachedData] = useState<SyncData | null>(null)
   const [lastImportAt, setLastImportAt] = useState<string | null>(null)
+  const [profilerEnabled, setProfilerEnabled] = useState(false)
+  const [profilerReport, setProfilerReport] = useState<ProfilerReport | null>(null)
   const workerRef = useRef<Worker | null>(null)
   const generationRef = useRef(0) as MutableRefObject<number>
+  const profilerEnabledRef = useRef(false)
   // Existing flights for merging with new imports
   const existingFlightsRef = useRef<Flight[]>([])
 
@@ -63,6 +68,9 @@ function App() {
           setAppState(merged.length > 0 ? 'reveal' : 'results')
           break
         }
+        case 'profiler-report':
+          setProfilerReport(msg.data)
+          break
         case 'error':
           setError(msg.data.message)
           setProgress((p) => ({ ...p, phase: 'error', message: msg.data.message }))
@@ -77,6 +85,7 @@ function App() {
     }
 
     workerRef.current = worker
+    worker.postMessage({ type: 'set-profiler', data: profilerEnabledRef.current })
     worker.postMessage({ type: 'init-llm' })
     return worker
   }, [])
@@ -94,9 +103,18 @@ function App() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  const handleProfilerToggle = useCallback(() => {
+    const next = !profilerEnabledRef.current
+    profilerEnabledRef.current = next
+    setProfilerEnabled(next)
+    if (!next) setProfilerReport(null)
+    workerRef.current?.postMessage({ type: 'set-profiler', data: next })
+  }, [])
+
   const handleFileUpload = useCallback((files: File[]) => {
     setAppState('parsing')
     setError(null)
+    setProfilerReport(null)
     setProgress({ phase: 'scanning', current: 0, total: 0, flightsFound: 0, message: 'Preparing files...' })
 
     // Preserve existing flights for merge
@@ -108,6 +126,8 @@ function App() {
       if (!granted) console.warn('Durable storage not granted. Model cache may be evicted')
     })
 
+    // Ensure worker has latest profiler state
+    workerRef.current?.postMessage({ type: 'set-profiler', data: profilerEnabledRef.current })
     // Send File objects directly to worker (structured-cloneable)
     // No FileReader needed -- the worker streams them with File.stream()
     workerRef.current?.postMessage({ type: 'parse-mbox-files', data: files })
@@ -149,6 +169,14 @@ function App() {
     existingFlightsRef.current = []
   }, [createWorker])
 
+  const profilerOverlay = (
+    <ProfilerOverlay
+      enabled={profilerEnabled}
+      onToggle={handleProfilerToggle}
+      report={profilerReport}
+    />
+  )
+
   if (appState === 'landing') {
     return (
       <div className="animate-fade-in">
@@ -167,6 +195,7 @@ function App() {
             </button>
           </div>
         )}
+        {profilerOverlay}
       </div>
     )
   }
@@ -176,18 +205,22 @@ function App() {
       <div className="min-h-screen glass-bg text-white flex flex-col items-center justify-center px-4 animate-fade-in">
         <h1 className="text-3xl font-bold mb-8">FlightWrapped</h1>
         <ParsingProgress progress={progress} onReset={resetToLanding} />
+        {profilerOverlay}
       </div>
     )
   }
 
   if (appState === 'reveal') {
     return (
-      <RevealSequence
-        stats={stats}
-        funStats={funStats}
-        archetype={archetype}
-        onComplete={() => setAppState('results')}
-      />
+      <>
+        <RevealSequence
+          stats={stats}
+          funStats={funStats}
+          archetype={archetype}
+          onComplete={() => setAppState('results')}
+        />
+        {profilerOverlay}
+      </>
     )
   }
 
@@ -205,6 +238,7 @@ function App() {
           onFileUpload={handleFileUpload}
         />
       </div>
+      {profilerOverlay}
     </ErrorBoundary>
   )
 }

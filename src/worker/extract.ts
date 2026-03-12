@@ -1,6 +1,7 @@
 import type { Flight, NormalizedEmail } from '@/lib/types'
 import { isAirlineDomain } from '@/lib/domains'
 import { extractFromLlm } from './extractors/llm'
+import type { EmailProfiler } from '@/lib/profiler'
 
 /**
  * Extraction orchestrator: filters by domain, then runs every matching
@@ -8,11 +9,24 @@ import { extractFromLlm } from './extractors/llm'
  *
  * All processing happens on-device. Nothing leaves the browser.
  */
-export async function extractFlightsFromEmail(email: NormalizedEmail): Promise<Flight[]> {
+export async function extractFlightsFromEmail(
+  email: NormalizedEmail,
+  profiler?: EmailProfiler,
+): Promise<Flight[]> {
   // Pre-filter: only process emails from airline/booking domains
-  if (!isAirlineDomain(email.senderDomain)) {
+  profiler?.startSegment('domain-filter')
+  const isAirline = isAirlineDomain(email.senderDomain)
+  profiler?.endSegment('domain-filter')
+
+  if (!isAirline) {
+    profiler?.markFiltered()
     return []
   }
 
-  return extractFromLlm(email)
+  profiler?.startSegment('llm-extract')
+  const flights = await extractFromLlm(email)
+  profiler?.endSegment('llm-extract')
+
+  profiler?.markFlights(flights.length)
+  return flights
 }
