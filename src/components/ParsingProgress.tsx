@@ -7,6 +7,13 @@ interface ParsingProgressProps {
 
 const PHASES = ['loading-model', 'scanning', 'extracting', 'deduplicating'] as const
 
+const STEP_LABELS: Record<typeof PHASES[number], string> = {
+  'loading-model': 'Load model',
+  scanning: 'Scan',
+  extracting: 'Extract',
+  deduplicating: 'Dedup',
+}
+
 const phaseLabels: Record<ParseProgress['phase'], string> = {
   'loading-model': 'Loading AI model',
   scanning: 'Scanning emails',
@@ -22,30 +29,41 @@ function StepIndicator({ phase }: { phase: ParseProgress['phase'] }) {
   const currentIndex = PHASES.indexOf(phase as typeof PHASES[number])
 
   return (
-    <div className="flex items-center justify-center gap-2 mb-6">
+    <div className="flex items-center justify-center gap-1 mb-6">
       {PHASES.map((p, i) => {
         const isActive = i === currentIndex
         const isComplete = i < currentIndex
 
         return (
-          <div key={p} className="flex items-center gap-2">
-            <div
-              className={`w-7 h-7 flex items-center justify-center text-xs font-bold transition-all duration-300 ${
-                isComplete
-                  ? 'bg-blue-500 text-white'
-                  : isActive
-                  ? 'bg-blue-500/20 text-blue-400 border-2 border-blue-500'
-                  : 'bg-gray-800 text-gray-600 border border-gray-700'
-              }`}
-            >
-              {isComplete ? (
-                <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
-              ) : (
-                i + 1
-              )}
+          <div key={p} className="flex items-center gap-1">
+            <div className="flex items-center gap-1.5">
+              <div
+                className={`w-5 h-5 flex items-center justify-center shrink-0 transition-all duration-300 ${
+                  isComplete
+                    ? 'bg-blue-500 text-white'
+                    : isActive
+                    ? 'bg-blue-500/20 text-blue-400 border-2 border-blue-500'
+                    : 'bg-gray-800 text-gray-600 border border-gray-700'
+                }`}
+              >
+                {isComplete && (
+                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
+                )}
+              </div>
+              <span
+                className={`text-xs font-medium transition-colors duration-300 ${
+                  isComplete
+                    ? 'text-blue-400'
+                    : isActive
+                    ? 'text-gray-200'
+                    : 'text-gray-600'
+                }`}
+              >
+                {STEP_LABELS[p]}
+              </span>
             </div>
             {i < PHASES.length - 1 && (
-              <div className={`w-6 h-px transition-colors duration-300 ${i < currentIndex ? 'bg-blue-500' : 'bg-gray-700'}`} />
+              <div className={`w-5 h-px mx-1 transition-colors duration-300 ${i < currentIndex ? 'bg-blue-500' : 'bg-gray-700'}`} />
             )}
           </div>
         )
