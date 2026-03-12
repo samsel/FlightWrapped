@@ -1,8 +1,7 @@
-import type { WorkerInMessage, WorkerOutMessage, Flight, NormalizedEmail, RawEmail, ParseProgress } from '@/lib/types'
-import { normalizeEmails, normalizeEmail, extractSenderDomainFast } from '@/lib/email-normalizer'
+import type { WorkerInMessage, WorkerOutMessage, Flight, NormalizedEmail, ParseProgress } from '@/lib/types'
+import { normalizeEmail, extractSenderDomainFast } from '@/lib/email-normalizer'
 import { isAirlineDomain } from '@/lib/domains'
-import { parseMbox, parseMboxStream } from '@/lib/mbox-parser'
-import { extractFlightsFromEmail } from './extract'
+import { parseMboxStream } from '@/lib/mbox-parser'
 import { extractFromLlm } from './extractors/llm'
 import { deduplicateFlights } from './dedup'
 import { initLlm, isLlmReady } from './extractors/llm'
@@ -50,84 +49,6 @@ async function ensureLlmReady(mboxProfiler?: MboxProfiler): Promise<void> {
   mboxProfiler?.end('model-load')
 }
 
-async function normalizeRawEmails(
-  rawEmails: RawEmail[],
-  mboxProfiler?: MboxProfiler,
-): Promise<NormalizedEmail[]> {
-  reportProgress({
-    phase: 'scanning',
-    current: 0,
-    total: rawEmails.length,
-    flightsFound: 0,
-    message: 'Normalizing emails...',
-  })
-
-  mboxProfiler?.start('normalize-all')
-
-  const result = await normalizeEmails(rawEmails, (current, total) => {
-    reportProgress({
-      phase: 'scanning',
-      current,
-      total,
-      flightsFound: 0,
-      message: `Normalizing email ${current} of ${total}...`,
-    })
-  })
-
-  mboxProfiler?.end('normalize-all')
-  return result
-}
-
-async function processEmails(
-  emails: NormalizedEmail[],
-  mboxProfiler?: MboxProfiler,
-  emailProfiler?: EmailProfiler,
-): Promise<Flight[]> {
-  await ensureLlmReady(mboxProfiler)
-
-  const allFlights: Flight[] = []
-
-  mboxProfiler?.start('extract-all')
-
-  for (let i = 0; i < emails.length; i++) {
-    emailProfiler?.startEmail(i, emails[i].subject, emails[i].senderDomain)
-
-    const flights = await extractFlightsFromEmail(emails[i], emailProfiler)
-    allFlights.push(...flights)
-
-    emailProfiler?.endEmail()
-
-    reportProgress({
-      phase: 'extracting',
-      current: i + 1,
-      total: emails.length,
-      flightsFound: allFlights.length,
-    })
-  }
-
-  mboxProfiler?.end('extract-all')
-
-  reportProgress({
-    phase: 'deduplicating',
-    current: emails.length,
-    total: emails.length,
-    flightsFound: allFlights.length,
-  })
-
-  mboxProfiler?.start('dedup')
-  const deduplicated = deduplicateFlights(allFlights)
-  mboxProfiler?.end('dedup')
-
-  reportProgress({
-    phase: 'done',
-    current: emails.length,
-    total: emails.length,
-    flightsFound: deduplicated.length,
-  })
-
-  return deduplicated
-}
-
 /** Send profiler report if profiling is enabled */
 function emitProfilerReport(mboxProfiler?: MboxProfiler, emailProfiler?: EmailProfiler) {
   if (!profilerEnabled || !mboxProfiler || !emailProfiler) return
@@ -157,63 +78,6 @@ self.onmessage = async (e: MessageEvent<WorkerInMessage>) => {
         postMsg({
           type: 'error',
           data: { message: err instanceof Error ? err.message : 'Failed to load AI model' },
-        })
-      }
-      break
-
-    case 'parse-mbox':
-      try {
-        const mp = profilerEnabled ? createMboxProfiler() : undefined
-        const ep = profilerEnabled ? createEmailProfiler() : undefined
-
-        reportProgress({
-          phase: 'scanning',
-          current: 0,
-          total: 0,
-          flightsFound: 0,
-          message: 'Parsing .mbox file...',
-        })
-
-        mp?.start('mbox-parse')
-        const rawEmails = parseMbox(msg.data)
-        mp?.end('mbox-parse')
-
-        reportProgress({
-          phase: 'scanning',
-          current: 0,
-          total: rawEmails.length,
-          flightsFound: 0,
-          message: `Found ${rawEmails.length} emails in .mbox file`,
-        })
-
-        const asRaw: RawEmail[] = rawEmails.map((buf) => ({ raw: buf }))
-        const normalized = await normalizeRawEmails(asRaw, mp)
-        const flights = await processEmails(normalized, mp, ep)
-
-        emitProfilerReport(mp, ep)
-        postMsg({ type: 'result', data: flights })
-      } catch (err) {
-        postMsg({
-          type: 'error',
-          data: { message: err instanceof Error ? err.message : 'Failed to parse .mbox file' },
-        })
-      }
-      break
-
-    case 'parse-raw-emails':
-      try {
-        const mp = profilerEnabled ? createMboxProfiler() : undefined
-        const ep = profilerEnabled ? createEmailProfiler() : undefined
-
-        const normalized = await normalizeRawEmails(msg.data, mp)
-        const flights = await processEmails(normalized, mp, ep)
-
-        emitProfilerReport(mp, ep)
-        postMsg({ type: 'result', data: flights })
-      } catch (err) {
-        postMsg({
-          type: 'error',
-          data: { message: err instanceof Error ? err.message : 'Unknown error' },
         })
       }
       break
@@ -387,23 +251,6 @@ self.onmessage = async (e: MessageEvent<WorkerInMessage>) => {
         postMsg({
           type: 'error',
           data: { message: err instanceof Error ? err.message : 'Failed to parse .mbox files' },
-        })
-      }
-      break
-
-    case 'parse-emails':
-      try {
-        const mp = profilerEnabled ? createMboxProfiler() : undefined
-        const ep = profilerEnabled ? createEmailProfiler() : undefined
-
-        const flights = await processEmails(msg.data, mp, ep)
-
-        emitProfilerReport(mp, ep)
-        postMsg({ type: 'result', data: flights })
-      } catch (err) {
-        postMsg({
-          type: 'error',
-          data: { message: err instanceof Error ? err.message : 'Unknown error' },
         })
       }
       break

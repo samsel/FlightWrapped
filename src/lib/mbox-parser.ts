@@ -1,40 +1,4 @@
 /**
- * Parse an .mbox file into individual raw email buffers.
- *
- * The mbox format separates emails with a line starting with "From "
- * (the "mboxrd" envelope sender line). Within email bodies, lines
- * starting with "From " are escaped as ">From ".
- */
-export function parseMbox(buffer: ArrayBuffer): ArrayBuffer[] {
-  const text = new TextDecoder().decode(buffer)
-  const encoder = new TextEncoder()
-  const emails: ArrayBuffer[] = []
-
-  // Split on mbox separator: "From " at start of line
-  // The first entry may be empty if the file starts with "From "
-  const parts = text.split(/^From /m)
-
-  for (const part of parts) {
-    if (!part.trim()) continue
-
-    // The first line is the envelope sender (e.g., "user@example.com Thu Jan 1 00:00:00 2000")
-    // The actual email content starts after the first newline
-    const firstNewline = part.indexOf('\n')
-    if (firstNewline === -1) continue
-
-    const emailContent = part.substring(firstNewline + 1)
-    if (!emailContent.trim()) continue
-
-    // Un-escape ">From " back to "From " in the body (mboxrd format)
-    const unescaped = emailContent.replace(/^>From /gm, 'From ')
-
-    emails.push(encoder.encode(unescaped).buffer)
-  }
-
-  return emails
-}
-
-/**
  * Extract the email body from a raw mbox segment string.
  * Strips the envelope "From " header line and un-escapes ">From ".
  */

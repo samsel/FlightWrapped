@@ -1,4 +1,12 @@
-/** Curated set of airline and booking platform sender domains for O(1) lookup */
+/** Curated set of airline and booking platform sender domains for O(1) lookup.
+ *
+ * Note: google.com is intentionally excluded. Google Flights confirmations come
+ * from noreply@google.com, which is indistinguishable from the many other Google
+ * service emails in a Takeout export. Including google.com would send thousands
+ * of irrelevant emails through expensive LLM extraction. Users who book via
+ * Google Flights will still have their flights captured from the airline's own
+ * confirmation email.
+ */
 export const AIRLINE_DOMAINS: Set<string> = new Set([
   // --- US Major Airlines ---
   'united.com',
@@ -162,7 +170,6 @@ export const AIRLINE_DOMAINS: Set<string> = new Set([
   'priceline.com',
   'skyscanner.com',
   'skyscanner.net',
-  'google.com',
   'orbitz.com',
   'travelocity.com',
   'cheapflights.com',

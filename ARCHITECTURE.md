@@ -32,7 +32,7 @@ FlightWrapped was originally designed with Gmail OAuth PKCE for direct API acces
 |  |          |         |           |  | Fast Domain Filter  |   |   |
 |  |          |         |           |  | (From: header scan, |   |   |
 |  |          |         |           |  |  first 16KB only,   |   |   |
-|  |          |         |           |  |  ~190 domains)      |   |   |
+|  |          |         |           |  |  ~185 domains)      |   |   |
 |  |          |         |           |  +---+------------+----+   |   |
 |  |          |         |           |      |skip 99%    |match   |   |
 |  |          |         |           |      v            v        |   |
@@ -95,16 +95,14 @@ FlightWrapped was originally designed with Gmail OAuth PKCE for direct API acces
 
 ## Mbox Parsing
 
-The `.mbox` format (from Google Takeout) stores emails separated by `"From "` lines at the start of each message. Two parsers exist:
+The `.mbox` format (from Google Takeout) stores emails separated by `"From "` lines at the start of each message.
 
-**Streaming parser (`parseMboxStream`)** -- the primary path for file uploads. Reads the file via `ReadableStream` in browser-sized chunks (~64KB), detects `"From "` boundaries line-by-line, and emits one email at a time via an async callback. Uses constant memory regardless of file size (handles 6GB+ files without issue). Implements backpressure by awaiting the callback before reading the next chunk.
+**Streaming parser (`parseMboxStream`)** -- reads the file via `ReadableStream` in browser-sized chunks (~64KB), detects `"From "` boundaries line-by-line, and emits one email at a time via an async callback. Uses constant memory regardless of file size (handles 6GB+ files without issue). Implements backpressure by awaiting the callback before reading the next chunk.
 
-**Legacy parser (`parseMbox`)** -- loads the entire file into memory as a string, splits on `^From ` regex. Only used for the `parse-mbox` ArrayBuffer message type. Unsuitable for large files.
-
-Both parsers:
-1. Strip the envelope "From " header line from each message
-2. Un-escape `">From "` -> `"From "` in email bodies (standard mbox escaping)
-3. Return `ArrayBuffer` per email for the normalization pipeline
+The parser:
+1. Strips the envelope "From " header line from each message
+2. Un-escapes `">From "` -> `"From "` in email bodies (standard mbox escaping)
+3. Returns `ArrayBuffer` per email for the normalization pipeline
 
 ## Application State Machine
 
@@ -142,8 +140,8 @@ IndexedDB: "flightwrapped" (v1)
 ### Re-import Flow
 
 1. User clicks "Import" (dashboard header) or uploads a file (landing page)
-2. The .mbox file is read via `FileReader` into an `ArrayBuffer`
-3. The buffer is transferred (zero-copy) to the Web Worker
+2. `File` objects are sent directly to the Web Worker (structured-cloneable, no `FileReader` needed)
+3. The worker streams each file via `File.stream()` through the two-phase pipeline (fast scan + LLM extraction)
 4. New flights are extracted, merged with existing cached flights, deduplicated, and persisted
 5. The merged result replaces the cached data
 
@@ -170,7 +168,7 @@ Flight data is extracted entirely by a local LLM running in the browser -- no re
 - **Stronger portfolio story:** Demonstrates real on-device AI inference, not just string matching dressed up as "AI-powered."
 - **Better generalization:** An LLM handles the long tail of airline email formats naturally, whereas regex/JSON-LD only covers known patterns.
 
-The tradeoff is speed -- LLM inference is slower per email than regex. We mitigate this by pre-filtering emails against a curated airline/booking domain list (~190 domains) so only relevant emails are sent to the model.
+The tradeoff is speed -- LLM inference is slower per email than regex. We mitigate this by pre-filtering emails against a curated airline/booking domain list (~185 domains) so only relevant emails are sent to the model.
 
 **Extraction details:**
 1. Email HTML/text is stripped to plain text and truncated to 2,000 characters (flight info is typically near the top)
@@ -187,10 +185,10 @@ Processing large mbox files (e.g., 6GB Gmail exports with 200k+ emails) efficien
 
 **Phase 2: Full extraction.** Only the small set of airline-domain emails (typically a few hundred out of hundreds of thousands) undergo the expensive processing: full MIME parse via postal-mime, text extraction, and LLM inference.
 
-The curated domain list (~190 domains) covers:
+The curated domain list (~185 domains) covers:
 
 - Major airlines (130+): United, Delta, AA, Southwest, BA, Lufthansa, Emirates, Singapore Airlines, etc.
-- Booking platforms (30+): Expedia, Kayak, Booking.com, Google Flights, Hopper, Kiwi, Trip.com, etc.
+- Booking platforms (30+): Expedia, Kayak, Booking.com, Hopper, Kiwi, Trip.com, etc.
 - Travel agencies (10+): Concur, Navan, TravelPerk, Amadeus, etc.
 - Loyalty programs (6): MileagePlus, AAdvantage, SkyMiles, etc.
 
@@ -209,7 +207,7 @@ Flight number normalization strips spaces and uppercases: `"ua 1234"` -> `"UA123
 
 ### Web Worker Pipeline
 
-All mbox parsing, email normalization, and LLM extraction runs in a Web Worker to keep the UI responsive. Communication uses a typed message protocol. For file uploads (`parse-mbox-files`), the file is streamed directly -- no ArrayBuffer transfer needed.
+All mbox parsing, email normalization, and LLM extraction runs in a Web Worker to keep the UI responsive. Communication uses a typed message protocol (`WorkerInMessage` / `WorkerOutMessage`). `File` objects are sent directly to the worker (structured-cloneable) and streamed via `File.stream()` -- no `FileReader` or `ArrayBuffer` transfer needed.
 
 ```
 Main Thread                          Worker
@@ -311,7 +309,7 @@ src/
 +-- hooks/
 |   +-- useCountUp.ts                 # Number counter animation hook
 +-- worker/
-|   +-- parser.worker.ts              # Web Worker orchestrator (mbox parse + normalize + extract + dedup)
+|   +-- parser.worker.ts              # Web Worker orchestrator (two-phase scan + extract + dedup)
 |   +-- extract.ts                    # Domain filter + LLM extraction entry
 |   +-- dedup.ts                      # Flight deduplication
 |   +-- extractors/
@@ -320,9 +318,10 @@ src/
 |   +-- types.ts                      # All TypeScript interfaces
 |   +-- airports.ts                   # Airport DB (5,500+), Haversine distance
 |   +-- domains.ts                    # ~190 airline/booking domains
-|   +-- mbox-parser.ts               # .mbox file -> individual email ArrayBuffers
+|   +-- mbox-parser.ts               # Streaming .mbox parser (constant memory)
 |   +-- storage.ts                    # IndexedDB persistence (idb) -- flights, import timestamp
 |   +-- email-normalizer.ts           # Raw MIME -> NormalizedEmail (postal-mime) + fast domain extractor
+|   +-- profiler.ts                   # Pipeline timing profiler (mbox-level + per-email segments)
 |   +-- stats.ts                      # Flight statistics (18+ metrics)
 |   +-- funStats.ts                   # Fun comparisons (Earth orbits, Moon %)
 |   +-- insights.ts                   # 9 conditional personal insights
@@ -336,6 +335,7 @@ src/
 |   +-- InputScreen.tsx               # Landing page orchestrator (cached data banner)
 |   +-- MboxUpload.tsx                # File upload component (drag-and-drop + click)
 |   +-- ParsingProgress.tsx           # Progress UI during extraction
+|   +-- ProfilerOverlay.tsx           # Dev profiler overlay (toggle, mbox pipeline, per-email timings)
 |   +-- ErrorBoundary.tsx             # React error boundary around dashboard
 |   +-- landing/
 |   |   +-- HeroSection.tsx           # Full-screen hero: globe bg, headline, CTAs, privacy + attribution badges

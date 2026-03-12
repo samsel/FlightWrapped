@@ -49,10 +49,7 @@ export interface ParseProgress {
 
 export type WorkerInMessage =
   | { type: 'init-llm' }
-  | { type: 'parse-mbox'; data: ArrayBuffer }
   | { type: 'parse-mbox-files'; data: File[] }
-  | { type: 'parse-emails'; data: NormalizedEmail[] }
-  | { type: 'parse-raw-emails'; data: RawEmail[] }
   | { type: 'set-profiler'; data: boolean }
   | { type: 'ping' }
 
