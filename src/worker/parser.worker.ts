@@ -2,9 +2,8 @@ import type { WorkerInMessage, WorkerOutMessage, Flight, NormalizedEmail, ParseP
 import { normalizeEmail, extractSenderDomainFast } from '@/lib/email-normalizer'
 import { isAirlineDomain } from '@/lib/domains'
 import { parseMboxStream } from '@/lib/mbox-parser'
-import { extractFromLlm, extractFromLlmBatch, EXTRACT_BATCH_SIZE } from './extractors/llm'
+import { extractFromLlmBatch, EXTRACT_BATCH_SIZE, initLlm, isLlmReady } from './extractors/llm'
 import { deduplicateFlights } from './dedup'
-import { initLlm, isLlmReady } from './extractors/llm'
 import {
   createMboxProfiler,
   createEmailProfiler,
