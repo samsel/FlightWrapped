@@ -3,6 +3,7 @@ import { normalizeEmails, normalizeEmail, extractSenderDomainFast } from '@/lib/
 import { isAirlineDomain } from '@/lib/domains'
 import { parseMbox, parseMboxStream } from '@/lib/mbox-parser'
 import { extractFlightsFromEmail } from './extract'
+import { extractFromLlm } from './extractors/llm'
 import { deduplicateFlights } from './dedup'
 import { initLlm, isLlmReady } from './extractors/llm'
 import {
@@ -232,11 +233,12 @@ self.onmessage = async (e: MessageEvent<WorkerInMessage>) => {
         let emailsScanned = 0
         let emailsSkipped = 0
 
+        mp?.start('pipeline-total')
+
         // Start loading the LLM in parallel with the scan phase so it's
         // ready (or nearly ready) by the time we need it for extraction.
         const llmLoadPromise = ensureLlmReady(mp)
 
-        mp?.start('pipeline-total')
         mp?.start('fast-scan')
 
         for (let fileIdx = 0; fileIdx < files.length; fileIdx++) {
@@ -256,24 +258,23 @@ self.onmessage = async (e: MessageEvent<WorkerInMessage>) => {
           mp?.start(`file-${fileIdx}-stream`)
 
           await parseMboxStream(file.stream(), async (rawBuffer: ArrayBuffer) => {
-            const emailIdx = emailsScanned
             emailsScanned++
-
-            ep?.startEmail(emailIdx, '', '')
 
             // Fast domain pre-filter: extract From header cheaply (~100x faster
             // than a full MIME parse) and check against the airline domain set.
-            ep?.startSegment('domain-filter')
             const domain = extractSenderDomainFast(rawBuffer)
             const isAirline = domain !== '' && isAirlineDomain(domain)
-            ep?.endSegment('domain-filter')
-
-            ep?.updateEmail('', domain)
 
             if (!isAirline) {
               emailsSkipped++
-              ep?.markFiltered()
-              ep?.endEmail()
+              // Record filtered-out emails in profiler
+              if (ep) {
+                ep.startEmail(emailsScanned - 1, '', domain)
+                ep.startSegment('domain-filter')
+                ep.endSegment('domain-filter')
+                ep.markFiltered()
+                ep.endEmail()
+              }
               // Report progress periodically during scan
               if (emailsScanned % 500 === 0) {
                 reportProgress({
@@ -289,7 +290,6 @@ self.onmessage = async (e: MessageEvent<WorkerInMessage>) => {
 
             // This email is from an airline/booking domain — keep it for phase 2
             airlineRawEmails.push(rawBuffer)
-            ep?.endEmail()
 
             reportProgress({
               phase: 'scanning',
@@ -338,8 +338,10 @@ self.onmessage = async (e: MessageEvent<WorkerInMessage>) => {
             continue // skip unparseable emails
           }
 
+          // Call extractFromLlm directly — domain was already verified in
+          // Phase 1 via extractSenderDomainFast, no need to re-check.
           ep?.startSegment('llm-extract')
-          const flights = await extractFlightsFromEmail(normalized)
+          const flights = await extractFromLlm(normalized)
           ep?.endSegment('llm-extract')
 
           if (flights.length > 0) {
