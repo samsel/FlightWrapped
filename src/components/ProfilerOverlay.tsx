@@ -5,6 +5,8 @@ interface Props {
   enabled: boolean
   onToggle: () => void
   report: ProfilerReport | null
+  panelOpen: boolean
+  onPanelToggle: () => void
 }
 
 function formatMs(ms: number): string {
@@ -75,8 +77,7 @@ function EmailRow({ email, expanded, onToggle }: { email: EmailTiming; expanded:
 type SortKey = 'index' | 'total' | 'llm' | 'normalize' | 'flights'
 type Tab = 'mbox' | 'emails'
 
-export default function ProfilerOverlay({ enabled, onToggle, report }: Props) {
-  const [panelOpen, setPanelOpen] = useState(false)
+export default function ProfilerOverlay({ enabled, onToggle, report, panelOpen, onPanelToggle }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>('mbox')
   const [expandedEmail, setExpandedEmail] = useState<number | null>(null)
   const [sortKey, setSortKey] = useState<SortKey>('index')
@@ -127,45 +128,30 @@ export default function ProfilerOverlay({ enabled, onToggle, report }: Props) {
     ? Math.max(...report.mboxSegments.map((s) => s.durationMs), 1)
     : 1
 
-  // Toggle button (always visible in bottom-right)
-  return (
-    <>
-      {/* Toggle button */}
-      <button
-        onClick={() => {
-          if (!enabled) {
-            onToggle()
-          } else {
-            setPanelOpen(!panelOpen)
-          }
-        }}
-        className={`fixed bottom-4 right-4 z-[9999] px-3 py-1.5 text-xs font-mono transition-all duration-200 shadow-lg ${
-          enabled
-            ? 'bg-green-900/90 text-green-300 border border-green-700/50 hover:bg-green-800/90'
-            : 'bg-gray-900/90 text-gray-500 border border-gray-700/50 hover:bg-gray-800/90 hover:text-gray-300'
-        }`}
-        title={enabled ? 'Toggle profiler panel' : 'Enable profiler'}
-      >
-        {enabled ? (report ? `Profiler ${formatMs(report.totalMs)}` : 'Profiler ON') : 'Profiler'}
-      </button>
+  if (!enabled || !panelOpen) return null
 
-      {/* Disable button when panel is open */}
-      {enabled && panelOpen && (
+  return (
+    <div className="fixed top-14 right-5 z-[9998] w-[600px] max-w-[90vw] max-h-[70vh] bg-gray-950/95 border border-gray-700/50 shadow-2xl flex flex-col backdrop-blur-sm">
+      {/* Panel header */}
+      <div className="flex items-center justify-between px-4 py-2 border-b border-gray-800 shrink-0">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-medium text-gray-300">Pipeline Profiler</span>
+          {report && (
+            <span className="text-[10px] font-mono text-gray-500">
+              {formatMs(report.totalMs)} total
+            </span>
+          )}
+        </div>
         <button
           onClick={() => {
             onToggle()
-            setPanelOpen(false)
+            onPanelToggle()
           }}
-          className="fixed bottom-4 right-44 z-[9999] px-2 py-1.5 text-xs font-mono bg-red-900/80 text-red-400 border border-red-700/50 hover:bg-red-800/90 transition-colors"
-          title="Disable profiler"
+          className="text-[10px] text-red-400 hover:text-red-300 font-medium transition-colors"
         >
           Disable
         </button>
-      )}
-
-      {/* Panel */}
-      {enabled && panelOpen && (
-        <div className="fixed bottom-12 right-4 z-[9998] w-[600px] max-w-[90vw] max-h-[70vh] bg-gray-950/95 border border-gray-700/50 shadow-2xl flex flex-col backdrop-blur-sm">
+      </div>
           {/* Tab bar */}
           <div className="flex border-b border-gray-800 shrink-0">
             <button
@@ -281,9 +267,7 @@ export default function ProfilerOverlay({ enabled, onToggle, report }: Props) {
               </div>
             </div>
           )}
-        </div>
-      )}
-    </>
+    </div>
   )
 }
 
