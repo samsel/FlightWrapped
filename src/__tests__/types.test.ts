@@ -80,8 +80,10 @@ describe('Type contracts', () => {
       { type: 'init-llm' },
       { type: 'parse-mbox-files', data: [] },
       { type: 'set-profiler', data: true },
+      { type: 'set-multi-worker', data: true },
+      { type: 'extract-emails', data: [new ArrayBuffer(0)] },
     ]
-    expect(msgs).toHaveLength(4)
+    expect(msgs).toHaveLength(6)
   })
 
   it('WorkerOutMessage covers all message types', () => {
@@ -91,8 +93,10 @@ describe('Type contracts', () => {
       { type: 'progress', data: { phase: 'scanning', current: 0, total: 0, flightsFound: 0 } },
       { type: 'result', data: [] },
       { type: 'error', data: { message: 'test' } },
+      { type: 'scan-complete', data: { airlineEmails: [], totalScanned: 0 } },
+      { type: 'extract-result', data: [] },
     ]
-    expect(msgs).toHaveLength(5)
+    expect(msgs).toHaveLength(7)
   })
 
   it('NormalizedEmail has all required fields', () => {

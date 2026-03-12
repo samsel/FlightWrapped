@@ -2,7 +2,7 @@ import type { WorkerInMessage, WorkerOutMessage, Flight, NormalizedEmail, ParseP
 import { normalizeEmail, extractSenderDomainFast } from '@/lib/email-normalizer'
 import { isAirlineDomain } from '@/lib/domains'
 import { parseMboxStream } from '@/lib/mbox-parser'
-import { extractFromLlm } from './extractors/llm'
+import { extractFromLlm, extractFromLlmBatch, EXTRACT_BATCH_SIZE } from './extractors/llm'
 import { deduplicateFlights } from './dedup'
 import { initLlm, isLlmReady } from './extractors/llm'
 import {
@@ -14,6 +14,7 @@ import {
 } from '@/lib/profiler'
 
 let profilerEnabled = false
+let multiWorkerMode = false
 
 function postMsg(msg: WorkerOutMessage) {
   postMessage(msg)
@@ -178,6 +179,19 @@ self.onmessage = async (e: MessageEvent<WorkerInMessage>) => {
         })
 
         // ── Phase 2: Extract flights from airline emails only ──
+
+        // In multi-worker mode, send airline emails to coordinator for distribution
+        if (multiWorkerMode) {
+          mp?.end('pipeline-total')
+          emitProfilerReport(mp, ep)
+          const scanData = { airlineEmails: airlineRawEmails, totalScanned: emailsScanned }
+          ;(postMessage as (msg: unknown, transfer: Transferable[]) => void)(
+            { type: 'scan-complete', data: scanData } as WorkerOutMessage,
+            airlineRawEmails,
+          )
+          break
+        }
+
         // Wait for LLM to be ready (likely already loaded during scan)
         await llmLoadPromise
 
@@ -185,41 +199,68 @@ self.onmessage = async (e: MessageEvent<WorkerInMessage>) => {
 
         mp?.start('extract-all')
 
-        for (let i = 0; i < airlineRawEmails.length; i++) {
-          // Now do the full MIME parse — but only for the small set of airline emails
-          let normalized: NormalizedEmail
+        // Process emails in batches of EXTRACT_BATCH_SIZE for fewer LLM calls
+        for (let i = 0; i < airlineRawEmails.length; i += EXTRACT_BATCH_SIZE) {
+          const batchEnd = Math.min(i + EXTRACT_BATCH_SIZE, airlineRawEmails.length)
 
-          // Profiler: track this airline email through normalize + extract
-          ep?.startEmail(emailsScanned + i, '', '')
+          // Normalize all emails in this batch
+          const batchData: Array<{
+            normalized: NormalizedEmail
+            rawIdx: number
+            normalizeMs: number
+          }> = []
 
-          try {
-            ep?.startSegment('normalize')
-            normalized = await normalizeEmail({ raw: airlineRawEmails[i] })
-            ep?.endSegment('normalize')
-            ep?.updateEmail(normalized.subject, normalized.senderDomain)
-          } catch {
-            ep?.endEmail()
-            continue // skip unparseable emails
+          for (let j = i; j < batchEnd; j++) {
+            try {
+              const start = performance.now()
+              const normalized = await normalizeEmail({ raw: airlineRawEmails[j] })
+              batchData.push({ normalized, rawIdx: j, normalizeMs: performance.now() - start })
+            } catch {
+              if (ep) {
+                ep.startEmail(emailsScanned + j, '', '')
+                ep.endEmail()
+              }
+            }
           }
 
-          // Call extractFromLlm directly — domain was already verified in
-          // Phase 1 via extractSenderDomainFast, no need to re-check.
-          ep?.startSegment('llm-extract')
-          const flights = await extractFromLlm(normalized)
-          ep?.endSegment('llm-extract')
-
-          if (flights.length > 0) {
-            allFlights.push(...flights)
+          if (batchData.length === 0) {
+            reportProgress({
+              phase: 'extracting',
+              current: batchEnd,
+              total: airlineRawEmails.length,
+              flightsFound: allFlights.length,
+              message: `Extracting flights: ${batchEnd}/${airlineRawEmails.length} airline emails processed`,
+            })
+            continue
           }
-          ep?.markFlights(flights.length)
-          ep?.endEmail()
+
+          // Batch LLM extraction — one call for up to EXTRACT_BATCH_SIZE emails
+          const llmStart = performance.now()
+          const batchFlights = await extractFromLlmBatch(batchData.map(d => d.normalized))
+          const llmMs = performance.now() - llmStart
+          const llmPerEmail = llmMs / batchData.length
+
+          // Record results and profiler data for each email in batch
+          for (let j = 0; j < batchData.length; j++) {
+            const { normalized, rawIdx, normalizeMs } = batchData[j]
+            const flights = batchFlights[j] || []
+            if (flights.length > 0) allFlights.push(...flights)
+
+            if (ep) {
+              ep.startEmail(emailsScanned + rawIdx, normalized.subject, normalized.senderDomain)
+              ep.addSegment('normalize', normalizeMs)
+              ep.addSegment('llm-extract', llmPerEmail)
+              ep.markFlights(flights.length)
+              ep.endEmail()
+            }
+          }
 
           reportProgress({
             phase: 'extracting',
-            current: i + 1,
+            current: batchEnd,
             total: airlineRawEmails.length,
             flightsFound: allFlights.length,
-            message: `Extracting flights: ${i + 1}/${airlineRawEmails.length} airline emails processed`,
+            message: `Extracting flights: ${batchEnd}/${airlineRawEmails.length} airline emails processed`,
           })
         }
 
@@ -251,6 +292,51 @@ self.onmessage = async (e: MessageEvent<WorkerInMessage>) => {
         postMsg({
           type: 'error',
           data: { message: err instanceof Error ? err.message : 'Failed to parse .mbox files' },
+        })
+      }
+      break
+
+    case 'set-multi-worker':
+      multiWorkerMode = msg.data
+      break
+
+    case 'extract-emails':
+      try {
+        await ensureLlmReady()
+        const rawEmails = msg.data
+        const extractedFlights: Flight[] = []
+
+        for (let i = 0; i < rawEmails.length; i += EXTRACT_BATCH_SIZE) {
+          const batchEnd = Math.min(i + EXTRACT_BATCH_SIZE, rawEmails.length)
+          const batchNormalized: NormalizedEmail[] = []
+
+          for (let j = i; j < batchEnd; j++) {
+            try {
+              batchNormalized.push(await normalizeEmail({ raw: rawEmails[j] }))
+            } catch { /* skip unparseable */ }
+          }
+
+          if (batchNormalized.length > 0) {
+            const batchFlights = await extractFromLlmBatch(batchNormalized)
+            for (const flights of batchFlights) {
+              extractedFlights.push(...flights)
+            }
+          }
+
+          reportProgress({
+            phase: 'extracting',
+            current: batchEnd,
+            total: rawEmails.length,
+            flightsFound: extractedFlights.length,
+            message: `Extracting flights: ${batchEnd}/${rawEmails.length} airline emails processed`,
+          })
+        }
+
+        postMsg({ type: 'extract-result', data: extractedFlights })
+      } catch (err) {
+        postMsg({
+          type: 'error',
+          data: { message: err instanceof Error ? err.message : 'Extraction failed' },
         })
       }
       break

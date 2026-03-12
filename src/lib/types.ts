@@ -51,6 +51,8 @@ export type WorkerInMessage =
   | { type: 'init-llm' }
   | { type: 'parse-mbox-files'; data: File[] }
   | { type: 'set-profiler'; data: boolean }
+  | { type: 'set-multi-worker'; data: boolean }
+  | { type: 'extract-emails'; data: ArrayBuffer[] }
   | { type: 'ping' }
 
 export type WorkerOutMessage =
@@ -60,6 +62,8 @@ export type WorkerOutMessage =
   | { type: 'error'; data: { message: string } }
   | { type: 'llm-ready' }
   | { type: 'pong' }
+  | { type: 'scan-complete'; data: { airlineEmails: ArrayBuffer[]; totalScanned: number } }
+  | { type: 'extract-result'; data: Flight[] }
 
 export interface NormalizedEmail {
   senderAddress: string

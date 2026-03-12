@@ -13,84 +13,378 @@ FlightWrapped was originally designed with Gmail OAuth PKCE for direct API acces
 3. **Drastically simpler architecture.** Eliminated: OAuth PKCE flow, code verifier/state management, sessionStorage for redirect, token exchange, Gmail API search/batch-fetch, rate limiting, retry logic with exponential backoff, callback URL handling, CSP allowlisting for Google domains. The entire `gmail.ts` module (~300 lines) was replaced by a ~20-line mbox parser + a file input component.
 4. **Stronger privacy claim.** "We never connect to your email account" vs "We connect read-only."
 
-## Data Flow
+## Pipeline Overview
 
 ```
-+-------------------------------------------------------------------+
-|                        USER'S BROWSER                             |
-|                                                                   |
-|  +---------+     +----------+     +---------------------------+   |
-|  |  React   |--> | File     |--> |      Web Worker            |   |
-|  |  App     |    | .stream()|     |                           |   |
-|  |          |    +----------+     |  Phase 1: Fast Scan        |   |
-|  |          |         |           |  +---------------------+   |   |
-|  |          |    ReadableStream   |  | Streaming Mbox      |   |   |
-|  |          |    (chunked)        |  | Parser               |   |   |
-|  |          |         |           |  +--------+------------+   |   |
-|  |          |         |           |           |                |   |
-|  |          |         |           |  +--------v------------+   |   |
-|  |          |         |           |  | Fast Domain Filter  |   |   |
-|  |          |         |           |  | (From: header scan, |   |   |
-|  |          |         |           |  |  first 16KB only,   |   |   |
-|  |          |         |           |  |  ~185 domains)      |   |   |
-|  |          |         |           |  +---+------------+----+   |   |
-|  |          |         |           |      |skip 99%    |match   |   |
-|  |          |         |           |      v            v        |   |
-|  |          |         |           |   (discard)  collect raw   |   |
-|  |          |         |           |              ArrayBuffer[] |   |
-|  |          |         |           |                            |   |
-|  |          |         |           |  Phase 2: Extract          |   |
-|  |          |         |           |  (only airline emails)     |   |
-|  |          |         |           |  +---------------------+   |   |
-|  |          |         +---------->|  | Email Normalizer    |   |   |
-|  |          |                     |  | (postal-mime)       |   |   |
-|  |          |                     |  +--------+------------+   |   |
-|  |          |                     |           |                |   |
-|  |          |                     |  +--------v------------+   |   |
-|  |          |                     |  | Local LLM           |   |   |
-|  |          |                     |  | Phi-3.5-mini         |   |   |
-|  |          |                     |  | (loaded in parallel  |   |   |
-|  |          |                     |  |  during Phase 1)     |   |   |
-|  |          |                     |  +--------+------------+   |   |
-|  |          |                     |           |                |   |
-|  |          |                     |  +--------v------------+   |   |
-|  |          |                     |  | IATA Validation     |   |   |
-|  |          |                     |  | (5,500+ airports)   |   |   |
-|  |          |                     |  +--------+------------+   |   |
-|  |          |                     |           |                |   |
-|  |          |                     |  +--------v------------+   |   |
-|  |          |                     |  | Deduplication       |   |   |
-|  |          |                     |  +--------+------------+   |   |
-|  |          |<--- Flight[] ------+           |                |   |
-|  |          |                     |           v                |   |
-|  |          |                     |    Deduplicated            |   |
-|  |          |                     |    Flight[]                |   |
-|  |          |                     +---------------------------+   |
-|  |          |                                                     |
-|  |          +-------> +--------------------+                      |
-|  |          |         |  IndexedDB (idb)   |                      |
-|  |          |<------- |  flights, import   |                      |
-|  |          |         |  timestamp         |                      |
-|  |          |         +--------------------+                      |
-|  |          |                                                     |
-|  |          v                                                     |
-|  |  +----------------------------------------+                   |
-|  |  |  Stats Engine (main thread, memoized)  |                   |
-|  |  |                                        |                   |
-|  |  |  calculateStats()    -> FlightStats    |                   |
-|  |  |  calculateFunStats() -> FunStats       |                   |
-|  |  |  generateInsights()  -> Insight[]      |                   |
-|  |  |  determineArchetype()-> Archetype      |                   |
-|  |  +----------------------------------------+                   |
-|  |          |                                                     |
-|  |          v                                                     |
-|  |  +----------------------------------------+                   |
-|  |  |  Dashboard                             |                   |
-|  |  |  3D Globe . Stats . Charts . Insights  |                   |
-|  |  |  Flight List                           |                   |
-|  |  +----------------------------------------+                   |
-|  +---------+                                                      |
-+-------------------------------------------------------------------+
+┌─────────────────────────────────────────────────────────────────────────┐
+│                          USER'S BROWSER                                │
+│                                                                        │
+│  ┌───────────┐    File[]     ┌──────────────────────────────────────┐  │
+│  │           │──────────────▶│          MAIN WORKER (W1)            │  │
+│  │  App.tsx  │               │                                      │  │
+│  │  (React)  │               │  ┌────────────────────────────────┐  │  │
+│  │           │◀──progress────│  │  PHASE 1: FAST SCAN            │  │  │
+│  │           │               │  │                                │  │  │
+│  │           │               │  │  .mbox ──▶ Stream chunks       │  │  │
+│  │           │               │  │           ──▶ "From " split    │  │  │
+│  │           │               │  │           ──▶ 16KB header scan │  │  │
+│  │           │               │  │           ──▶ domain filter    │  │  │
+│  │           │               │  │                 │       │      │  │  │
+│  │           │               │  │              skip     match    │  │  │
+│  │           │               │  │              99%+   (airline)  │  │  │
+│  │           │               │  │               │        │       │  │  │
+│  │           │               │  │               ▼        ▼       │  │  │
+│  │           │               │  │           (discard)  collect   │  │  │
+│  │           │               │  │                    ArrayBuf[]  │  │  │
+│  │           │               │  └────────────────────────────────┘  │  │
+│  │           │               │                                      │  │
+│  │           │               │  ┌────────────────────────────────┐  │  │
+│  │           │◀──progress────│  │  PHASE 2: LLM EXTRACTION      │  │  │
+│  │           │               │  │  (model loaded during Phase 1) │  │  │
+│  │           │               │  │                                │  │  │
+│  │           │               │  │  Batch emails (3 per LLM call) │  │  │
+│  │           │               │  │  ──▶ normalize (postal-mime)   │  │  │
+│  │           │               │  │  ──▶ strip to plain text       │  │  │
+│  │           │               │  │  ──▶ LLM batch extraction      │  │  │
+│  │           │               │  │  ──▶ IATA validation           │  │  │
+│  │           │               │  └────────────────────────────────┘  │  │
+│  │           │               │                                      │  │
+│  │           │               │  ┌────────────────────────────────┐  │  │
+│  │           │◀──result──────│  │  PHASE 3: DEDUP                │  │  │
+│  │           │               │  │  flight#+date ──▶ route+date   │  │  │
+│  │           │               │  │  ──▶ codeshare detection       │  │  │
+│  │           │               │  └────────────────────────────────┘  │  │
+│  │           │               └──────────────────────────────────────┘  │
+│  │           │                                                        │
+│  │           │──▶ Stats Engine (memoized)                             │
+│  │           │    calculateStats()     ──▶ FlightStats                │
+│  │           │    calculateFunStats()  ──▶ FunStats                   │
+│  │           │    generateInsights()   ──▶ Insight[]                  │
+│  │           │    determineArchetype() ──▶ Archetype                  │
+│  │           │                                                        │
+│  │           │──▶ IndexedDB ("flightwrapped")                        │
+│  │           │    flights + lastImportAt                               │
+│  │           │                                                        │
+│  │           │──▶ Dashboard                                           │
+│  │           │    3D Globe + Stats + Charts + Insights + Flight List  │
+│  └───────────┘                                                        │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+## Multi-Worker Architecture
+
+On capable devices, Phase 2 (LLM extraction) is parallelized across two workers. This is the most CPU/GPU-intensive phase, so splitting the workload can reduce total extraction time.
+
+### Capability Detection
+
+```
+detectCapabilities()  (src/lib/capabilities.ts)
+        │
+        ▼
+┌─────────────────────────────────┐
+│  navigator.deviceMemory >= 8 ?  │──── no ───▶  Single-worker mode
+│  navigator.hardwareConcurrency  │
+│                >= 8 ?           │
+└───────────────┬─────────────────┘
+                │ yes
+                ▼
+       Multi-worker eligible
+       (canMultiWorker = true)
+```
+
+At startup, `App.tsx` sends `set-multi-worker: true` to the main worker, which changes its Phase 2 behavior: instead of extracting locally, it emits a `scan-complete` message back to the coordinator.
+
+### Single-Worker vs Multi-Worker Decision
+
+```
+                        Phase 1 scan completes
+                    worker sends "scan-complete"
+                    with ArrayBuffer[] of airline emails
+                                │
+                                ▼
+                  ┌─────────────────────────────┐
+                  │  canMultiWorker = true       │
+                  │  AND airlineEmails.length    │
+                  │      >= 6 ?                  │
+                  └──────┬──────────────┬────────┘
+                         │              │
+                    yes  │              │  no
+                         │              │
+                         ▼              ▼
+                  ┌─────────────┐  ┌──────────────┐
+                  │ MULTI-WORKER│  │ SINGLE-WORKER│
+                  │ Split in    │  │ Send all     │
+                  │ half, spawn │  │ emails back  │
+                  │ Worker W2   │  │ to W1 for    │
+                  └──────┬──────┘  │ extraction   │
+                         │         └──────┬───────┘
+                         ▼                ▼
+                   (see below)      extract-emails
+                                    ──▶ extract-result
+                                    ──▶ finalize
+```
+
+### Multi-Worker Coordination Flow
+
+```
+   App.tsx (Main Thread)          Worker W1               Worker W2
+          │                          │                       │
+          │  parse-mbox-files        │                       │
+          │─────────────────────────▶│                       │
+          │                          │                       │
+          │  progress (scanning)     │  Phase 1:             │
+          │◀─────────────────────────│  stream mbox          │
+          │                          │  fast domain filter   │
+          │                          │  collect airline      │
+          │                          │  ArrayBuffers         │
+          │                          │                       │
+          │  scan-complete           │                       │
+          │  { airlineEmails:        │                       │
+          │    ArrayBuffer[N],       │                       │
+          │    totalScanned }        │                       │
+          │◀═════════════════════════│                       │
+          │  (ArrayBuffers           │                       │
+          │   transferred,           │                       │
+          │   zero-copy)             │                       │
+          │                          │                       │
+          │──── split in half ───┐   │                       │
+          │                      │   │                       │
+          │  extract-emails      │   │                       │
+          │  batch1 [0..N/2]     │   │                       │
+          │═════════════════════▶│   │                       │
+          │  (transfer)          │   │                       │
+          │                      │   │                       │
+          │  spawn W2 ──────────────────────────────────────▶│
+          │                      │   │                       │
+          │  extract-emails      │   │                       │
+          │  batch2 [N/2..N]     │   │                       │
+          │══════════════════════════════════════════════════▶│
+          │  (transfer)          │   │                       │
+          │                      │   │                       │
+          │  progress            │   │  ensureLlmReady()     │
+          │◀─────────────────────│   │  (model from cache)   │
+          │                      │   │                       │
+          │                      │   │  progress             │
+          │◀─────────────────────────────────────────────────│
+          │                      │   │                       │
+          │  Phase 2 (parallel): │   │  Phase 2 (parallel):  │
+          │  normalize + batch   │   │  normalize + batch    │
+          │  LLM extract         │   │  LLM extract          │
+          │                      │   │                       │
+          │  extract-result      │   │                       │
+          │  Flight[] (1st half) │   │                       │
+          │◀─────────────────────│   │                       │
+          │  remaining: 2 -> 1   │   │                       │
+          │                      │   │  extract-result       │
+          │                      │   │  Flight[] (2nd half)  │
+          │◀─────────────────────────────────────────────────│
+          │  remaining: 1 -> 0   │   │                       │
+          │                      │   │                       │
+          │──── merge all ──────▶│   │                       │
+          │     flights          │   │                       │
+          │──── dedup ──────────▶│   │                       │
+          │──── finalize ───────▶│   │                       │
+          │──── terminate W2 ────────────────────────────────│✕
+          │                          │                       │
+          │  save to IndexedDB       │                       │
+          │  transition to reveal    │                       │
+          ▼                          ▼
+
+   Legend:  ───▶  structured clone (copy)
+            ═══▶  transferable (zero-copy, ownership moves)
+```
+
+### ArrayBuffer Ownership Transfer
+
+The pipeline uses `postMessage` transferables to avoid copying large email buffers:
+
+```
+  Worker W1 memory         Main Thread memory         Worker W2 memory
+  ─────────────────        ──────────────────          ──────────────────
+  airlineRawEmails[]
+  [buf0][buf1]...[bufN]
+         │
+         │ scan-complete (transfer)
+         │ buffers move to main thread
+         ▼
+  (detached)               [buf0][buf1]...[bufN]
+                                    │
+                           slice into halves
+                           batch1 = [buf0..bufN/2]
+                           batch2 = [bufN/2..bufN]
+                                    │
+                  ┌─────────────────┴──────────────────┐
+                  │ extract-emails (transfer)           │ extract-emails (transfer)
+                  ▼                                     ▼
+  [buf0..bufN/2]           (all detached)                    [bufN/2..bufN]
+
+  Each buffer is transferred exactly once per hop.
+  No buffer is ever copied -- zero-copy throughout.
+```
+
+## Batch LLM Extraction
+
+Instead of one LLM call per email, emails are grouped into batches of `EXTRACT_BATCH_SIZE = 3` and processed in a single inference call. This reduces LLM overhead (prompt parsing, KV cache setup) by ~3x.
+
+### Batch Processing Flow
+
+```
+  airlineEmails (ArrayBuffer[])
+          │
+          │ group into batches of 3
+          ▼
+  ┌─────────────────────────────────────────────────────────────────┐
+  │  Batch [i, i+1, i+2]                                           │
+  │                                                                 │
+  │  1. Normalize each email (postal-mime MIME parse)               │
+  │     ┌──────────┐  ┌──────────┐  ┌──────────┐                   │
+  │     │ email[i] │  │email[i+1]│  │email[i+2]│                   │
+  │     │ raw buf  │  │ raw buf  │  │ raw buf  │                   │
+  │     └────┬─────┘  └────┬─────┘  └────┬─────┘                   │
+  │          ▼             ▼             ▼                          │
+  │     NormalizedEmail  NormEmail    NormEmail                     │
+  │     { subject,       { ... }      { ... }                      │
+  │       htmlBody,                                                 │
+  │       textBody,                                                 │
+  │       senderDomain,                                             │
+  │       date }                                                    │
+  │                                                                 │
+  │  2. Strip to plain text (max 2000 chars each)                   │
+  │                                                                 │
+  │  3. Build combined prompt:                                      │
+  │     ┌─────────────────────────────────────────────────────┐     │
+  │     │ Extract flight information from each email below.   │     │
+  │     │ Return ONLY valid JSON, no other text.              │     │
+  │     │                                                     │     │
+  │     │ Format: {"email_1":{"flights":[]},                  │     │
+  │     │          "email_2":{"flights":[]},                  │     │
+  │     │          "email_3":{"flights":[]}}                  │     │
+  │     │                                                     │     │
+  │     │ === EMAIL 1 ===                                     │     │
+  │     │ <plain text of email[i], up to 2000 chars>          │     │
+  │     │                                                     │     │
+  │     │ === EMAIL 2 ===                                     │     │
+  │     │ <plain text of email[i+1]>                          │     │
+  │     │                                                     │     │
+  │     │ === EMAIL 3 ===                                     │     │
+  │     │ <plain text of email[i+2]> /no_think                │     │
+  │     └─────────────────────────────────────────────────────┘     │
+  │                                                                 │
+  │  4. Single LLM inference call                                   │
+  │     Qwen3-4B, temp=0.1, max_tokens = 500 * batch_size          │
+  │                                                                 │
+  │  5. Parse response: extract per-email flight arrays              │
+  │     ┌────────────────────────────────────────┐                  │
+  │     │ {"email_1":{"flights":[{...},{...}]},  │                  │
+  │     │  "email_2":{"flights":[]},             │                  │
+  │     │  "email_3":{"flights":[{...}]}}        │                  │
+  │     └────────────────────────────────────────┘                  │
+  │          │            │            │                             │
+  │          ▼            ▼            ▼                             │
+  │     Flight[]     Flight[]     Flight[]                          │
+  │     (validated)  (validated)  (validated)                       │
+  │                                                                 │
+  │  6. Validate each flight:                                       │
+  │     - IATA codes checked against 5,500+ airport DB              │
+  │     - origin != destination                                     │
+  │     - date parsed to YYYY-MM-DD (fallback: email date)          │
+  │     - confidence = 0.85                                         │
+  │                                                                 │
+  │  7. Fallback: if batch call fails, retry each email             │
+  │     individually via extractFromLlm()                           │
+  └─────────────────────────────────────────────────────────────────┘
+          │
+          │ next batch
+          ▼
+  ┌─────────────────┐
+  │ Batch [i+3, ...] │ ... repeat until all emails processed
+  └─────────────────┘
+```
+
+## Worker Message Protocol
+
+### Message Types
+
+**Inbound (Main Thread -> Worker):**
+
+| Type | Payload | Purpose |
+|------|---------|---------|
+| `init-llm` | -- | Start loading the LLM model |
+| `parse-mbox-files` | `File[]` | Begin full pipeline (scan + extract + dedup) |
+| `set-profiler` | `boolean` | Enable/disable pipeline timing profiler |
+| `set-multi-worker` | `boolean` | Enable multi-worker mode (scan-only, no local extract) |
+| `extract-emails` | `ArrayBuffer[]` | Extract flights from pre-scanned airline emails |
+| `ping` | -- | Health check |
+
+**Outbound (Worker -> Main Thread):**
+
+| Type | Payload | Purpose |
+|------|---------|---------|
+| `progress` | `ParseProgress` | Phase + progress updates for UI |
+| `result` | `Flight[]` | Final deduplicated flights (single-worker mode only) |
+| `scan-complete` | `{ airlineEmails, totalScanned }` | Phase 1 done, hand off emails for distribution (multi-worker) |
+| `extract-result` | `Flight[]` | This worker's extracted flights (multi-worker mode) |
+| `profiler-report` | `ProfilerReport` | Timing data for profiler overlay |
+| `llm-ready` | -- | Model loaded and ready |
+| `error` | `{ message }` | Fatal error |
+| `pong` | -- | Health check response |
+
+### Message Flow: Single-Worker Mode
+
+```
+Main Thread                    Worker
+     │                            │
+     │── init-llm ───────────────▶│
+     │                            │── start model download
+     │◀── progress (loading) ─────│
+     │◀── llm-ready ─────────────│
+     │                            │
+     │── parse-mbox-files ───────▶│
+     │                            │── Phase 1: scan
+     │◀── progress (scanning) ───│
+     │                            │── Phase 2: batch extract
+     │◀── progress (extracting) ─│
+     │                            │── Phase 3: dedup
+     │◀── progress (dedup) ──────│
+     │◀── result (Flight[]) ─────│
+     │                            │
+```
+
+### Message Flow: Multi-Worker Mode
+
+```
+Main Thread                    Worker W1                Worker W2
+     │                            │
+     │── set-multi-worker(true) ─▶│
+     │── init-llm ───────────────▶│
+     │◀── llm-ready ─────────────│
+     │                            │
+     │── parse-mbox-files ───────▶│
+     │◀── progress (scanning) ───│── Phase 1 only
+     │◀── scan-complete ═════════│   (transfers ArrayBuffers)
+     │                            │
+     │── extract-emails(half1) ══▶│
+     │                            │── Phase 2: batch extract
+     │                   ┌────────────────────────────▶│ (spawned)
+     │── extract-emails(half2) ══════════════════════▶│
+     │                            │                    │── ensureLlmReady
+     │◀── progress ──────────────│                    │── Phase 2: extract
+     │◀── progress ──────────────────────────────────│
+     │◀── extract-result ────────│                    │
+     │◀── extract-result ───────────────────────────│
+     │                            │                    │
+     │── merge + dedup            │                    │
+     │── terminate W2 ───────────────────────────────▶│✕
+     │                            │
+```
+
+### Progress Phases
+
+```
+loading-model ──▶ scanning ──▶ extracting ──▶ deduplicating ──▶ done
+                                                                  │
+                                     error ◀──────────────────────┘
+                                     (on failure at any phase)
 ```
 
 ## Mbox Parsing
@@ -104,12 +398,63 @@ The parser:
 2. Un-escapes `">From "` -> `"From "` in email bodies (standard mbox escaping)
 3. Returns `ArrayBuffer` per email for the normalization pipeline
 
+## Domain Pre-filtering (Two-Phase Architecture)
+
+Processing large mbox files (e.g., 6GB Gmail exports with 200k+ emails) efficiently requires avoiding expensive operations on the vast majority of non-airline emails. The pipeline uses a two-phase approach:
+
+**Phase 1: Fast scan.** As each email is streamed from the mbox, `extractSenderDomainFast()` performs a cheap string scan of the first 16KB of raw bytes to find the `From:` header and extract the sender domain. This is ~100x faster than a full MIME parse (postal-mime) because it skips attachment decoding, multipart handling, and character set conversion. The domain is checked against the curated airline domain set. Non-matching emails (typically 99%+) are discarded immediately. The LLM model loads in parallel during this phase.
+
+**Phase 2: Full extraction.** Only the small set of airline-domain emails (typically a few hundred out of hundreds of thousands) undergo the expensive processing: full MIME parse via postal-mime, text extraction, and LLM inference.
+
+The curated domain list (~185 domains) covers:
+
+- Major airlines (130+): United, Delta, AA, Southwest, BA, Lufthansa, Emirates, Singapore Airlines, etc.
+- Booking platforms (30+): Expedia, Kayak, Booking.com, Hopper, Kiwi, Trip.com, etc.
+- Travel agencies (10+): Concur, Navan, TravelPerk, Amadeus, etc.
+- Loyalty programs (6): MileagePlus, AAdvantage, SkyMiles, etc.
+
+Subdomain matching is supported (e.g., `email.united.com` matches `united.com`). The tradeoff is that flights from airlines not in the domain list won't be captured.
+
+## Local LLM Extraction
+
+Flight data is extracted entirely by a local LLM running in the browser -- no regex heuristics, no JSON-LD scraping, no server-side AI. This is a deliberate architectural choice:
+
+- **Privacy-first:** Email content never leaves the device. The model runs via WebGPU/WASM using WebLLM (Qwen3-4B-q4f16_1-MLC, ~2.5 GB, cached in IndexedDB after first download). The app requests durable storage via `navigator.storage.persist()` to protect the cached model from browser eviction.
+- **Simpler architecture:** One extraction path instead of a cascading multi-tier pipeline. Easier to reason about, test, and maintain.
+- **Stronger portfolio story:** Demonstrates real on-device AI inference, not just string matching dressed up as "AI-powered."
+- **Better generalization:** An LLM handles the long tail of airline email formats naturally, whereas regex/JSON-LD only covers known patterns.
+
+The tradeoff is speed -- LLM inference is slower per email than regex. We mitigate this with three strategies:
+
+1. **Domain pre-filtering:** Only airline/booking-domain emails (~185 domains) are sent to the model, skipping 99%+ of the inbox.
+2. **Batch extraction:** Emails are grouped in batches of 3 and processed in a single LLM call, reducing per-email overhead by ~3x.
+3. **Multi-worker parallelism:** On devices with 8+ GB RAM and 8+ cores, extraction is split across two workers running in parallel.
+
+**Extraction details:**
+1. Email HTML/text is stripped to plain text and truncated to 2,000 characters (flight info is typically near the top)
+2. A structured prompt asks the LLM to return JSON with `origin`, `destination`, `date`, `airline`, `flightNumber`
+3. The LLM runs at temperature 0.1 (near-deterministic) with max 500 tokens per email
+4. Qwen3's thinking mode is suppressed via `/no_think` directive for clean JSON output; `<think>` tags are stripped as a safety net
+5. Extracted IATA codes are validated against the airport database (5,500+ airports) -- invalid codes are rejected to catch hallucinations
+6. All extracted flights receive a confidence score of 0.85
+
+## Deduplication Strategy
+
+The same flight generates multiple emails (confirmation, itinerary update, check-in, boarding pass). Dedup uses:
+
+- **Primary key:** normalized flight number + date (e.g., `UA1234-2024-01-15`)
+- **Fallback key:** origin + destination + date (when flight number is missing)
+- **Conflict resolution:** keep the higher-confidence extraction as base, fill missing fields from the lower-confidence duplicate
+- **Output:** sorted by date ascending
+
+Flight number normalization strips spaces and uppercases: `"ua 1234"` -> `"UA1234"`.
+
 ## Application State Machine
 
 ```
-landing --> parsing --> reveal --> results
-   ^                                  |
-   +---------- "Start Over" ---------+
+landing ──▶ parsing ──▶ reveal ──▶ results
+   ▲                                  │
+   └──────── "Start Over" ───────────┘
 ```
 
 | State | Screen | Trigger |
@@ -119,7 +464,7 @@ landing --> parsing --> reveal --> results
 | `reveal` | Animated reveal sequence showing key stats one-by-one | Worker returns Flight[] (skipped if zero flights) |
 | `results` | Full dashboard with globe, stats, charts (skeleton loading -> staggered reveal) | Reveal sequence completes, or "View Dashboard" from cache |
 
-On "Start Over", the current worker is terminated, a fresh worker is spawned, IndexedDB is cleared, and a generation counter ensures stale messages from the old worker are ignored.
+On "Start Over", the current worker is terminated, all extraction workers are terminated, a fresh worker is spawned, IndexedDB is cleared, and a generation counter ensures stale messages from the old worker are ignored.
 
 ## Persistence
 
@@ -145,96 +490,47 @@ IndexedDB: "flightwrapped" (v1)
 4. New flights are extracted, merged with existing cached flights, deduplicated, and persisted
 5. The merged result replaces the cached data
 
-## Key Architecture Decisions
+## Profiler System
 
-### Zero-Server / File Upload Model
+An opt-in pipeline profiler measures timing for each processing step, toggled via the stopwatch icon in the top-right nav.
 
-We deliberately chose **no backend, no API access**. The entire app runs client-side with file upload as the only input.
-
-**Why this is the right call:**
-
-- **No verification barriers.** Gmail OAuth requires a CASA security assessment for restricted scopes. File upload requires nothing.
-- **No token management.** No OAuth flow, no PKCE, no session state, no token expiry.
-- **No server means no server to attack.** No SSRF, no credential leaks, no infrastructure to maintain.
-- **Strongest possible privacy.** We never connect to the user's email account at all.
-- **One-shot usage pattern.** Users export once, upload once, get results. No ongoing API connection needed.
-
-### Pure Local LLM Extraction
-
-Flight data is extracted entirely by a local LLM running in the browser -- no regex heuristics, no JSON-LD scraping, no server-side AI. This is a deliberate architectural choice:
-
-- **Privacy-first:** Email content never leaves the device. The model runs via WebGPU/WASM using WebLLM (Phi-3.5-mini-instruct-q4f16_1-MLC, ~2 GB, cached in IndexedDB after first download). The app requests durable storage via `navigator.storage.persist()` to protect the cached model from browser eviction.
-- **Simpler architecture:** One extraction path instead of a cascading multi-tier pipeline. Easier to reason about, test, and maintain.
-- **Stronger portfolio story:** Demonstrates real on-device AI inference, not just string matching dressed up as "AI-powered."
-- **Better generalization:** An LLM handles the long tail of airline email formats naturally, whereas regex/JSON-LD only covers known patterns.
-
-The tradeoff is speed -- LLM inference is slower per email than regex. We mitigate this by pre-filtering emails against a curated airline/booking domain list (~185 domains) so only relevant emails are sent to the model.
-
-**Extraction details:**
-1. Email HTML/text is stripped to plain text and truncated to 2,000 characters (flight info is typically near the top)
-2. A structured prompt asks the LLM to return JSON with `origin`, `destination`, `date`, `airline`, `flightNumber`
-3. The LLM runs at temperature 0.1 (near-deterministic) with max 500 tokens
-4. Extracted IATA codes are validated against the airport database (5,500+ airports) -- invalid codes are rejected to catch hallucinations
-5. All extracted flights receive a confidence score of 0.85
-
-### Domain Pre-filtering (Two-Phase Architecture)
-
-Processing large mbox files (e.g., 6GB Gmail exports with 200k+ emails) efficiently requires avoiding expensive operations on the vast majority of non-airline emails. The pipeline uses a two-phase approach:
-
-**Phase 1: Fast scan.** As each email is streamed from the mbox, `extractSenderDomainFast()` performs a cheap string scan of the first 16KB of raw bytes to find the `From:` header and extract the sender domain. This is ~100x faster than a full MIME parse (postal-mime) because it skips attachment decoding, multipart handling, and character set conversion. The domain is checked against the curated airline domain set. Non-matching emails (typically 99%+) are discarded immediately. The LLM model loads in parallel during this phase.
-
-**Phase 2: Full extraction.** Only the small set of airline-domain emails (typically a few hundred out of hundreds of thousands) undergo the expensive processing: full MIME parse via postal-mime, text extraction, and LLM inference.
-
-The curated domain list (~185 domains) covers:
-
-- Major airlines (130+): United, Delta, AA, Southwest, BA, Lufthansa, Emirates, Singapore Airlines, etc.
-- Booking platforms (30+): Expedia, Kayak, Booking.com, Hopper, Kiwi, Trip.com, etc.
-- Travel agencies (10+): Concur, Navan, TravelPerk, Amadeus, etc.
-- Loyalty programs (6): MileagePlus, AAdvantage, SkyMiles, etc.
-
-Subdomain matching is supported (e.g., `email.united.com` matches `united.com`). The tradeoff is that flights from airlines not in the domain list won't be captured.
-
-### Deduplication Strategy
-
-The same flight generates multiple emails (confirmation, itinerary update, check-in, boarding pass). Dedup uses:
-
-- **Primary key:** normalized flight number + date (e.g., `UA1234-2024-01-15`)
-- **Fallback key:** origin + destination + date (when flight number is missing)
-- **Conflict resolution:** keep the higher-confidence extraction as base, fill missing fields from the lower-confidence duplicate
-- **Output:** sorted by date ascending
-
-Flight number normalization strips spaces and uppercases: `"ua 1234"` -> `"UA1234"`.
-
-### Web Worker Pipeline
-
-All mbox parsing, email normalization, and LLM extraction runs in a Web Worker to keep the UI responsive. Communication uses a typed message protocol (`WorkerInMessage` / `WorkerOutMessage`). `File` objects are sent directly to the worker (structured-cloneable) and streamed via `File.stream()` -- no `FileReader` or `ArrayBuffer` transfer needed.
+### Two-Tier Profiling
 
 ```
-Main Thread                          Worker
-    |                                   |
-    |  [User uploads .mbox file(s)]     |
-    +-- { type: 'parse-mbox-files',    |
-    |        data: File[] } ----------->|
-    |                                   |
-    |                                   +-- Phase 1: Fast Scan
-    |                                   |   (LLM loads in parallel)
-    |                                   +-- stream mbox chunks
-    |                                   +-- fast From: header scan
-    |                                   +-- domain pre-filter
-    |<-- { type: 'progress',           |   (skips 99%+ of emails)
-    |      phase: 'scanning' } --------+
-    |                                   |
-    |                                   +-- Phase 2: Extract
-    |                                   +-- normalize airline emails (postal-mime)
-    |                                   +-- extract per email (LLM)
-    |<-- { type: 'progress',           |
-    |      phase: 'extracting' } ------+
-    |                                   +-- deduplicate
-    |<-- { type: 'result', Flight[] } -+
-    |                                   |
-```
+┌─────────────────────────────────────────────────────────┐
+│  MboxProfiler (pipeline-level)                          │
+│                                                         │
+│  pipeline-total ─────────────────────────────────────   │
+│    ├── model-load ──────────                            │
+│    ├── fast-scan ────────────────                       │
+│    │     ├── file-0-stream ──────                       │
+│    │     └── file-1-stream ──────                       │
+│    ├── extract-all ──────────────────────               │
+│    └── dedup ──                                         │
+│                                                         │
+│  Each segment: { name, startMs, endMs, durationMs }     │
+└─────────────────────────────────────────────────────────┘
 
-Progress phases: `loading-model` -> `scanning` -> `extracting` -> `deduplicating` -> `done`
+┌─────────────────────────────────────────────────────────┐
+│  EmailProfiler (per-email)                              │
+│                                                         │
+│  For each email:                                        │
+│    index, subject, domain, totalMs                      │
+│    ├── domain-filter  (Phase 1, filtered emails)        │
+│    ├── normalize      (Phase 2, MIME parse)             │
+│    └── llm-extract    (Phase 2, LLM inference)          │
+│    filteredOut: boolean                                  │
+│    flightsFound: number                                 │
+└─────────────────────────────────────────────────────────┘
+
+ProfilerReport (aggregated):
+  mboxSegments[], emails[], totalMs
+  summary: {
+    totalEmails, filteredEmails, processedEmails,
+    totalFlightsExtracted, avgNormalizeMs,
+    avgDomainFilterMs, avgLlmMs, avgDedupMs
+  }
+```
 
 ## Stats Engine
 
@@ -303,78 +599,79 @@ All stat calculations run on the main thread (memoized with `useMemo`) after the
 
 ```
 src/
-+-- main.tsx                          # React 19 entry point
-+-- App.tsx                           # State machine: landing -> parsing -> results
-+-- index.css                         # Tailwind + custom animations
-+-- hooks/
-|   +-- useCountUp.ts                 # Number counter animation hook
-+-- worker/
-|   +-- parser.worker.ts              # Web Worker orchestrator (two-phase scan + extract + dedup)
-|   +-- extract.ts                    # Domain filter + LLM extraction entry
-|   +-- dedup.ts                      # Flight deduplication
-|   +-- extractors/
-|       +-- llm.ts                    # WebLLM extraction + IATA validation
-+-- lib/
-|   +-- types.ts                      # All TypeScript interfaces
-|   +-- airports.ts                   # Airport DB (5,500+), Haversine distance
-|   +-- domains.ts                    # ~190 airline/booking domains
-|   +-- mbox-parser.ts               # Streaming .mbox parser (constant memory)
-|   +-- storage.ts                    # IndexedDB persistence (idb) -- flights, import timestamp
-|   +-- email-normalizer.ts           # Raw MIME -> NormalizedEmail (postal-mime) + fast domain extractor
-|   +-- profiler.ts                   # Pipeline timing profiler (mbox-level + per-email segments)
-|   +-- stats.ts                      # Flight statistics (18+ metrics)
-|   +-- funStats.ts                   # Fun comparisons (Earth orbits, Moon %)
-|   +-- insights.ts                   # 9 conditional personal insights
-|   +-- archetypes.ts                 # 6 flyer archetypes
-|   +-- archetypeColors.ts            # Per-archetype color palettes
-|   +-- icons.ts                      # String token -> emoji lookup map
-|   +-- eval.ts                       # Precision/recall evaluation framework
-+-- data/
-|   +-- airports.json                 # Airport database source
-+-- components/
-|   +-- InputScreen.tsx               # Landing page orchestrator (cached data banner)
-|   +-- MboxUpload.tsx                # File upload component (drag-and-drop + click)
-|   +-- ParsingProgress.tsx           # Progress UI during extraction
-|   +-- ProfilerOverlay.tsx           # Dev profiler overlay (toggle, mbox pipeline, per-email timings)
-|   +-- ErrorBoundary.tsx             # React error boundary around dashboard
-|   +-- landing/
-|   |   +-- HeroSection.tsx           # Full-screen hero: globe bg, headline, CTAs, privacy + attribution badges
-|   |   +-- HeroGlobe.tsx             # Decorative 3D globe (lazy-loaded)
-|   |   +-- demoFlights.ts            # 50 sample flights for demo mode (28 airports, 18 airlines)
-|   +-- dashboard/
-|       +-- Dashboard.tsx             # Dashboard layout with skeleton loading + year filter
-|       +-- RevealSequence.tsx        # Animated reveal sequence showing key stats one-by-one
-|       +-- DashboardHeader.tsx       # Sticky header: logo, archetype pill, import button, reset
-|       +-- GlobePanel.tsx            # Globe container (debounced ResizeObserver + lazy)
-|       +-- GlobeInner.tsx            # react-globe.gl with arcs + airport dots
-|       +-- StatsGrid.tsx             # 8-10 stat cards with count-up animation
-|       +-- FunStatsRow.tsx           # 3-4 fun comparison pills + distance label
-|       +-- InsightsRow.tsx           # Horizontal-scroll insight cards (gradient fade edge)
-|       +-- ChartsRow.tsx             # Chart container
-|       +-- TimelineChart.tsx         # SVG bar chart (flights by month)
-|       +-- AirlineDonut.tsx          # SVG donut chart (airline breakdown)
-|       +-- FlightList.tsx            # Sortable, paginated flight table (empty state)
-+-- __tests__/
-    +-- llm-parsing.test.ts           # JSON extraction, date parsing, HTML stripping (33 tests)
-    +-- stats.test.ts                 # Stats calculation, fun stats, insights, archetypes (31 tests)
-    +-- stats-edge-cases.test.ts      # Empty dates, zero miles, archetype thresholds (23 tests)
-    +-- dedup.test.ts                 # Flight number normalization, merge, edge cases (18 tests)
-    +-- eval.test.ts                  # Precision/recall, matching, field accuracy (16 tests)
-    +-- demoFlights.test.ts           # IATA validation, data integrity, pipeline smoke (16 tests)
-    +-- llm-real.test.ts              # Real-world LLM output parsing (16 tests)
-    +-- types.test.ts                 # Type contract compliance (11 tests)
-    +-- extraction.test.ts            # Extraction pipeline + dedup integration (11 tests)
-    +-- airports.test.ts              # Airport lookups, IATA validation, Haversine distance (11 tests)
-    +-- email-normalizer-edge.test.ts # ArrayBuffer input, batch processing, missing headers (9 tests)
-    +-- dashboard.test.tsx            # Dashboard component rendering (9 tests)
-    +-- domains.test.ts               # Domain whitelist coverage, case sensitivity (7 tests)
-    +-- gmail.test.ts                 # Airline domain relevance (5 tests)
-    +-- extract-filter.test.ts        # Domain filter gating LLM extraction (5 tests)
-    +-- archetypes.test.ts            # Archetype determination logic (4 tests)
-    +-- funStats.test.ts              # Fun stat calculations (4 tests)
-    +-- email-normalizer.test.ts      # MIME parsing, multipart emails, fast domain extractor (9 tests)
-    +-- icons.test.ts                 # Icon mapping (2 tests)
-    +-- worker.test.ts                # Worker message type shape (1 test)
+├── main.tsx                          # React 19 entry point
+├── App.tsx                           # State machine + multi-worker coordinator
+├── index.css                         # Tailwind + custom animations
+├── hooks/
+│   └── useCountUp.ts                 # Number counter animation hook
+├── worker/
+│   ├── parser.worker.ts              # Web Worker: scan + extract + dedup pipeline
+│   ├── extract.ts                    # Domain filter + LLM extraction entry
+│   ├── dedup.ts                      # Flight deduplication (3-tier: flight#, route, codeshare)
+│   └── extractors/
+│       └── llm.ts                    # Qwen3-4B engine: single + batch extraction, IATA validation
+├── lib/
+│   ├── types.ts                      # All TypeScript interfaces + worker message types
+│   ├── capabilities.ts               # Device capability detection (multi-worker eligibility)
+│   ├── airports.ts                   # Airport DB (5,500+), Haversine distance
+│   ├── domains.ts                    # ~185 airline/booking domains
+│   ├── mbox-parser.ts               # Streaming .mbox parser (constant memory)
+│   ├── storage.ts                    # IndexedDB persistence (idb) -- flights, import timestamp
+│   ├── email-normalizer.ts           # Raw MIME -> NormalizedEmail (postal-mime) + fast domain extractor
+│   ├── profiler.ts                   # Pipeline timing profiler (mbox-level + per-email segments)
+│   ├── stats.ts                      # Flight statistics (18+ metrics)
+│   ├── funStats.ts                   # Fun comparisons (Earth orbits, Moon %)
+│   ├── insights.ts                   # 9 conditional personal insights
+│   ├── archetypes.ts                 # 6 flyer archetypes
+│   ├── archetypeColors.ts            # Per-archetype color palettes
+│   ├── icons.ts                      # String token -> emoji lookup map
+│   └── eval.ts                       # Precision/recall evaluation framework
+├── data/
+│   └── airports.json                 # Airport database source
+├── components/
+│   ├── InputScreen.tsx               # Landing page orchestrator (cached data banner)
+│   ├── MboxUpload.tsx                # File upload component (drag-and-drop + click)
+│   ├── ParsingProgress.tsx           # Progress UI during extraction
+│   ├── ProfilerOverlay.tsx           # Dev profiler overlay (toggle, mbox pipeline, per-email timings)
+│   ├── ErrorBoundary.tsx             # React error boundary around dashboard
+│   ├── landing/
+│   │   ├── HeroSection.tsx           # Full-screen hero: globe bg, headline, CTAs, privacy badges
+│   │   ├── HeroGlobe.tsx             # Decorative 3D globe (lazy-loaded)
+│   │   └── demoFlights.ts            # 50 sample flights for demo mode (28 airports, 18 airlines)
+│   └── dashboard/
+│       ├── Dashboard.tsx             # Dashboard layout with skeleton loading + year filter
+│       ├── RevealSequence.tsx        # Animated reveal showing key stats one-by-one
+│       ├── DashboardHeader.tsx       # Sticky header: logo, archetype pill, import button, reset
+│       ├── GlobePanel.tsx            # Globe container (debounced ResizeObserver + lazy)
+│       ├── GlobeInner.tsx            # react-globe.gl with arcs + airport dots
+│       ├── StatsGrid.tsx             # 8-10 stat cards with count-up animation
+│       ├── FunStatsRow.tsx           # 3-4 fun comparison pills + distance label
+│       ├── InsightsRow.tsx           # Horizontal-scroll insight cards (gradient fade edge)
+│       ├── ChartsRow.tsx             # Chart container
+│       ├── TimelineChart.tsx         # SVG bar chart (flights by month)
+│       ├── AirlineDonut.tsx          # SVG donut chart (airline breakdown)
+│       └── FlightList.tsx            # Sortable, paginated flight table (empty state)
+└── __tests__/
+    ├── llm-parsing.test.ts           # JSON extraction, date parsing, HTML stripping (33 tests)
+    ├── stats.test.ts                 # Stats calculation, fun stats, insights, archetypes (31 tests)
+    ├── stats-edge-cases.test.ts      # Empty dates, zero miles, archetype thresholds (23 tests)
+    ├── dedup.test.ts                 # Flight number normalization, merge, edge cases (18 tests)
+    ├── eval.test.ts                  # Precision/recall, matching, field accuracy (16 tests)
+    ├── demoFlights.test.ts           # IATA validation, data integrity, pipeline smoke (16 tests)
+    ├── llm-real.test.ts              # Real-world LLM output parsing (16 tests)
+    ├── types.test.ts                 # Type contract compliance (11 tests)
+    ├── extraction.test.ts            # Extraction pipeline + dedup integration (11 tests)
+    ├── airports.test.ts              # Airport lookups, IATA validation, Haversine distance (11 tests)
+    ├── email-normalizer-edge.test.ts # ArrayBuffer input, batch processing, missing headers (9 tests)
+    ├── dashboard.test.tsx            # Dashboard component rendering (9 tests)
+    ├── email-normalizer.test.ts      # MIME parsing, multipart, fast domain extractor (9 tests)
+    ├── domains.test.ts               # Domain whitelist coverage, case sensitivity (7 tests)
+    ├── gmail.test.ts                 # Airline domain relevance (5 tests)
+    ├── extract-filter.test.ts        # Domain filter gating LLM extraction (5 tests)
+    ├── archetypes.test.ts            # Archetype determination logic (4 tests)
+    ├── funStats.test.ts              # Fun stat calculations (4 tests)
+    ├── icons.test.ts                 # Icon mapping (2 tests)
+    └── worker.test.ts                # Worker message type shape (1 test)
 ```
 
 ## Landing Page
@@ -422,6 +719,7 @@ A single full-screen hero section with a rotating 3D globe background (lazy-load
 - **No COOP/COEP headers.** WebGPU requires `crossOriginIsolated = true`. Without COOP/COEP (GitHub Pages doesn't support custom headers), Chrome falls back to WASM CPU inference (slower). Could use `coi-serviceworker` pattern.
 - **airports.json in main chunk.** The entire airport database loads on first page view. Only needed when flights exist. Could use dynamic import.
 - **WCAG contrast.** Some `text-gray-500` and `text-gray-600` elements may not meet WCAG AA contrast ratios on dark backgrounds.
+- **Multi-worker memory.** Each worker loads its own LLM instance (~2.5 GB). Two workers require ~5 GB for models alone. The 8 GB memory gate in `detectCapabilities()` may be tight on some devices. Monitor for OOM issues.
 
 ## Future Enhancements
 
@@ -430,9 +728,10 @@ A single full-screen hero section with a rotating 3D globe background (lazy-load
 - **Hero globe demo arcs.** Render demo flight arcs on the hero globe background.
 - **Story mode.** Wrapped-style vertical card sequence through top 5 highlights.
 - **Globe auto-fly.** Zoom to most-visited airport on dashboard mount.
-- **Background model download.** Background Fetch API for the 2 GB LLM model.
+- **Background model download.** Background Fetch API for the 2.5 GB LLM model.
 - **Install prompt.** Deferred `beforeinstallprompt` after results view.
 - **App.tsx state machine tests.** No tests currently cover state transitions, worker lifecycle, or error handling.
 - **Full pipeline integration test.** No test exercises the full path: email -> normalize -> worker -> extract -> stats -> render.
 - **Private jet / charter support.** Private/charter flights don't send standardized confirmation emails from domains in our list. Could add major charter companies (NetJets, Wheels Up, VistaJet) but their formats are highly varied.
 - **Dynamic confidence scoring.** Currently all LLM-extracted flights receive a static confidence score of 0.85. Could compute per-flight confidence based on extraction quality signals.
+- **Shared model instance.** Investigate SharedArrayBuffer / COOP+COEP to share a single LLM model across workers, halving multi-worker memory.

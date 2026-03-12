@@ -97,6 +97,7 @@ export interface EmailProfiler {
   updateEmail(subject: string, domain: string): void
   startSegment(name: string): void
   endSegment(name: string): void
+  addSegment(name: string, durationMs: number): void
   markFiltered(): void
   markFlights(count: number): void
   endEmail(): void
@@ -145,6 +146,11 @@ export function createEmailProfiler(): EmailProfiler {
       current.pending.delete(name)
       const endMs = performance.now()
       current.segments.push({ name, startMs, endMs, durationMs: endMs - startMs })
+    },
+    addSegment(name: string, durationMs: number) {
+      if (!current) return
+      const endMs = performance.now()
+      current.segments.push({ name, startMs: endMs - durationMs, endMs, durationMs })
     },
     markFiltered() {
       if (current) current.filteredOut = true

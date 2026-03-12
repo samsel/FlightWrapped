@@ -9,7 +9,7 @@ No servers. No sign-ups. No data leaves your device.
 ## How It Works
 
 1. **Export** -- Go to [Google Takeout](https://takeout.google.com/), select only "Mail", and download your .mbox file
-2. **Upload** -- Drop the .mbox file into FlightWrapped. A local LLM (Phi-3.5-mini via WebLLM) runs in your browser to parse flight data from confirmation emails
+2. **Upload** -- Drop the .mbox file into FlightWrapped. A local LLM (Qwen3-4B via WebLLM) runs in your browser to parse flight data from confirmation emails
 3. **Visualize** -- See your flights on an interactive 3D globe, get stats, insights, and your flyer archetype
 
 You can also click **"Try with sample data"** to explore the full dashboard with 50 demo flights across 28 airports and 18 airlines. No file upload needed.
@@ -26,7 +26,7 @@ FlightWrapped was originally built with Gmail OAuth PKCE (direct API access). I 
 ## Features
 
 - **Privacy-first** -- Zero servers, zero databases, zero analytics. Everything runs entirely in your browser. No API access to your email -- you export and upload the file yourself.
-- **Local AI extraction** -- Phi-3.5-mini runs on-device via WebLLM (WebGPU/WASM). Email content is processed locally through Web Workers.
+- **Local AI extraction** -- Qwen3-4B runs on-device via WebLLM (WebGPU/WASM). Email content is processed locally through Web Workers. Emails are batched (3 per LLM call) for fewer inference rounds. On capable devices (8+ GB RAM, 8+ cores), extraction is parallelized across two workers.
 - **Handles large exports** -- Streaming mbox parser uses constant memory. A fast domain pre-filter (cheap From: header scan) skips 99%+ of non-airline emails before any expensive MIME parsing or LLM inference, making 6GB+ files practical.
 - **Persistent** -- Flight data is cached in IndexedDB. Return visits skip re-parsing. Re-import merges and deduplicates with existing data.
 - **3D globe visualization** -- Interactive globe (react-globe.gl / Three.js) showing flight arcs and airport markers.
@@ -47,7 +47,7 @@ FlightWrapped was originally built with Gmail OAuth PKCE (direct API access). I 
 | 3D Globe | react-globe.gl (Three.js) |
 | Email Parsing | postal-mime |
 | Mbox Parsing | Custom streaming parser (constant memory, handles 6GB+ files) |
-| Local LLM | WebLLM -- Phi-3.5-mini-instruct (~2 GB, cached in IndexedDB) |
+| Local LLM | WebLLM -- Qwen3-4B q4f16_1 (~2.5 GB, cached in IndexedDB) |
 | Persistence | IndexedDB via idb (flights, import timestamp) |
 | Charts | Custom SVG (no charting library) |
 | PWA | vite-plugin-pwa (Workbox) |
@@ -89,4 +89,4 @@ No secrets or environment variables need to be configured.
 
 ## Architecture
 
-See [ARCHITECTURE.md](ARCHITECTURE.md) for a detailed overview of the extraction pipeline, data flow, and component structure.
+See [ARCHITECTURE.md](ARCHITECTURE.md) for a detailed overview of the extraction pipeline, multi-worker coordination, batch LLM extraction, and component structure.
