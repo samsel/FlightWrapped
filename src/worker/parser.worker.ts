@@ -71,15 +71,15 @@ self.onmessage = async (e: MessageEvent<WorkerInMessage>) => {
       break
 
     case 'init-llm':
-      try {
-        await ensureLlmReady()
-        postMsg({ type: 'llm-ready' })
-      } catch (err) {
-        postMsg({
+      // Fire-and-forget: start model download without blocking the message
+      // handler. CreateMLCEngine has synchronous GPU shader compilation that
+      // would block the worker thread and prevent parse-mbox-files from running.
+      ensureLlmReady()
+        .then(() => postMsg({ type: 'llm-ready' }))
+        .catch((err) => postMsg({
           type: 'error',
           data: { message: err instanceof Error ? err.message : 'Failed to load AI model' },
-        })
-      }
+        }))
       break
 
     case 'parse-mbox-files':
@@ -98,11 +98,6 @@ self.onmessage = async (e: MessageEvent<WorkerInMessage>) => {
         let emailsSkipped = 0
 
         mp?.start('pipeline-total')
-
-        // Start loading the LLM in parallel with the scan phase so it's
-        // ready (or nearly ready) by the time we need it for extraction.
-        const llmLoadPromise = ensureLlmReady(mp)
-
         mp?.start('fast-scan')
 
         for (let fileIdx = 0; fileIdx < files.length; fileIdx++) {
@@ -191,8 +186,9 @@ self.onmessage = async (e: MessageEvent<WorkerInMessage>) => {
           break
         }
 
-        // Wait for LLM to be ready (likely already loaded during scan)
-        await llmLoadPromise
+        // Wait for LLM to be ready (model loading started by init-llm,
+        // likely already loaded or nearly loaded by the time scan finishes)
+        await ensureLlmReady(mp)
 
         const allFlights: Flight[] = []
 
