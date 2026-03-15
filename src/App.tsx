@@ -42,6 +42,8 @@ function App() {
   // Multi-worker extraction coordination
   const extractionWorkersRef = useRef<Worker[]>([])
   const extractionResultsRef = useRef<{ remaining: number; flights: Flight[] }>({ remaining: 0, flights: [] })
+  // Pre-created second worker with LLM pre-loaded for multi-worker extraction
+  const preloadedWorkerRef = useRef<Worker | null>(null)
 
   // Create a worker and wire up its message handler
   const createWorker = useCallback(() => {
@@ -116,8 +118,10 @@ function App() {
             extractionResultsRef.current = { remaining: 2, flights: [] }
             // Main worker handles first half
             worker.postMessage({ type: 'extract-emails', data: batch1 }, batch1)
-            // Second worker handles second half
-            const w2 = new Worker(new URL('./worker/parser.worker.ts', import.meta.url), { type: 'module' })
+            // Second worker handles second half — use pre-loaded worker (LLM already initialized)
+            const w2 = preloadedWorkerRef.current
+              ?? new Worker(new URL('./worker/parser.worker.ts', import.meta.url), { type: 'module' })
+            preloadedWorkerRef.current = null
             let w2Settled = false
             let w2Timer: ReturnType<typeof setTimeout> | null = null
 
@@ -185,6 +189,12 @@ function App() {
     const caps = detectCapabilities()
     if (caps.canMultiWorker) {
       worker.postMessage({ type: 'set-multi-worker', data: true })
+      // Pre-create second worker and start loading LLM now so it's ready
+      // when extraction starts (instead of loading after scan completes)
+      preloadedWorkerRef.current?.terminate()
+      const w2 = new Worker(new URL('./worker/parser.worker.ts', import.meta.url), { type: 'module' })
+      w2.postMessage({ type: 'init-llm' })
+      preloadedWorkerRef.current = w2
     }
     worker.postMessage({ type: 'init-llm' })
     return worker
@@ -202,6 +212,7 @@ function App() {
     return () => {
       workerRef.current?.terminate()
       extractionWorkersRef.current.forEach(w => w.terminate())
+      preloadedWorkerRef.current?.terminate()
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -268,6 +279,8 @@ function App() {
     workerRef.current?.terminate()
     extractionWorkersRef.current.forEach(w => w.terminate())
     extractionWorkersRef.current = []
+    preloadedWorkerRef.current?.terminate()
+    preloadedWorkerRef.current = null
     extractionResultsRef.current = { remaining: 0, flights: [] }
     createWorker()
     await clearAllData()
