@@ -25,7 +25,7 @@ export default function DashboardHeader({ archetype, onReset, lastSyncAt, onFile
 
   return (
     <header className="sticky top-0 z-20 glass-header">
-      <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-4 flex-wrap sm:flex-nowrap">
+      <div className="max-w-6xl mx-auto pl-4 pr-48 py-3 flex items-center justify-between gap-4 flex-wrap sm:flex-nowrap">
         <span className="text-lg font-bold tracking-tight">FlightWrapped</span>
 
         <span className={`${getArchetypeColors(archetype.id).bg} ${getArchetypeColors(archetype.id).text} px-4 py-1 text-sm font-medium order-3 sm:order-none truncate max-w-[200px] sm:max-w-none`}>
