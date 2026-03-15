@@ -103,6 +103,16 @@ function App() {
           setError(msg.data.message)
           setProgress((p) => ({ ...p, phase: 'error', message: msg.data.message }))
           break
+        case 'llm-ready': {
+          // Main worker's model is cached — now start w2 so it loads from cache
+          const caps2 = detectCapabilities()
+          if (caps2.canMultiWorker && !preloadedWorkerRef.current) {
+            const w2 = new Worker(new URL('./worker/parser.worker.ts', import.meta.url), { type: 'module' })
+            w2.postMessage({ type: 'init-llm' })
+            preloadedWorkerRef.current = w2
+          }
+          break
+        }
         case 'scan-complete': {
           const { airlineEmails } = msg.data
           if (airlineEmails.length === 0) {
@@ -189,12 +199,6 @@ function App() {
     const caps = detectCapabilities()
     if (caps.canMultiWorker) {
       worker.postMessage({ type: 'set-multi-worker', data: true })
-      // Pre-create second worker and start loading LLM now so it's ready
-      // when extraction starts (instead of loading after scan completes)
-      preloadedWorkerRef.current?.terminate()
-      const w2 = new Worker(new URL('./worker/parser.worker.ts', import.meta.url), { type: 'module' })
-      w2.postMessage({ type: 'init-llm' })
-      preloadedWorkerRef.current = w2
     }
     worker.postMessage({ type: 'init-llm' })
     return worker
