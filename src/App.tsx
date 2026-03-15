@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo, type MutableRefObject } from 'react'
 import InputScreen from '@/components/InputScreen'
 import ParsingProgress from '@/components/ParsingProgress'
+import SplitFlapBoard from '@/components/splitflap/SplitFlapBoard'
 import ProfilerOverlay from '@/components/ProfilerOverlay'
 import { calculateStats } from '@/lib/stats'
 import { calculateFunStats } from '@/lib/funStats'
@@ -394,8 +395,13 @@ function App() {
   if (appState === 'parsing') {
     return (
       <div className="min-h-screen glass-bg text-[#1A1A1A] flex flex-col items-center justify-center px-4 animate-fade-in">
-        <h1 className="text-3xl font-bold mb-8" style={{ fontFamily: "'DM Serif Display', Georgia, serif" }}>FlightWrapped</h1>
-        <ParsingProgress progress={progress} onReset={resetToLanding} />
+        <div className="flex flex-col lg:flex-row items-center lg:items-start justify-center gap-8 lg:gap-12 w-full max-w-5xl">
+          <div className="flex flex-col items-center">
+            <h1 className="text-3xl font-bold mb-8" style={{ fontFamily: "'DM Serif Display', Georgia, serif" }}>FlightWrapped</h1>
+            <ParsingProgress progress={progress} onReset={resetToLanding} />
+          </div>
+          <SplitFlapBoard />
+        </div>
         {topNav}
         {profilerPanel}
       </div>
