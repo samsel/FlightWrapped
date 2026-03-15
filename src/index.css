@@ -1,5 +1,35 @@
 @import "tailwindcss";
 
+/* ─── Seed-inspired design tokens ─── */
+
+:root {
+  --seed-cream: #F5F1EB;
+  --seed-cream-dark: #EDE8E0;
+  --seed-white: #FFFFFF;
+  --seed-green: #2D5A27;
+  --seed-green-hover: #3A7233;
+  --seed-green-light: #E8F0E4;
+  --seed-green-lighter: #F0F5EE;
+  --seed-green-dark: #1B3409;
+  --seed-text: #1A1A1A;
+  --seed-text-secondary: #6B6960;
+  --seed-text-tertiary: #9A9690;
+  --seed-border: #E5E0D5;
+  --seed-dark: #1B1B1B;
+}
+
+/* ─── Base typography ─── */
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  color: var(--seed-text);
+  background: var(--seed-cream);
+}
+
 /* ─── Keyframes ─── */
 
 @keyframes fadeIn {
@@ -72,66 +102,64 @@
   animation: heroEntrance 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-/* Heading text */
+/* Heading text — Seed-style dark green */
 .gradient-text-animated {
-  color: #ffffff;
+  color: var(--seed-green-dark);
+  font-family: 'DM Serif Display', Georgia, 'Times New Roman', serif;
 }
 
-/* ─── Glass system ─── */
+/* ─── Glass system (Seed-inspired light theme) ─── */
 
-/* Subtle background that gives glass panels something to blur against */
+/* Light warm cream background */
 .glass-bg {
-  background:
-    radial-gradient(ellipse at 15% 50%, rgba(59, 130, 246, 0.04) 0%, transparent 50%),
-    radial-gradient(ellipse at 85% 20%, rgba(139, 92, 246, 0.03) 0%, transparent 50%),
-    radial-gradient(ellipse at 50% 90%, rgba(6, 182, 212, 0.02) 0%, transparent 40%),
-    #030712;
+  background: var(--seed-cream);
 }
 
-/* Glass panel — frosted translucent surface with top-edge light refraction */
+/* Card — clean white surface with subtle border */
 .glass-card {
-  background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-top-color: rgba(255, 255, 255, 0.1);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  background: var(--seed-white);
+  border: 1px solid var(--seed-border);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  border-radius: 8px;
 }
 
 .glass-card:hover {
-  border-color: rgba(255, 255, 255, 0.1);
-  border-top-color: rgba(255, 255, 255, 0.14);
+  border-color: #D5D0C8;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
-/* Heavier glass — for containers and sections */
+/* Heavier surface — for containers and sections */
 .glass-surface {
-  background: rgba(255, 255, 255, 0.02);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-top-color: rgba(255, 255, 255, 0.08);
+  background: var(--seed-white);
+  border: 1px solid var(--seed-border);
+  border-radius: 8px;
 }
 
-/* Glass container — used for section wrappers like privacy */
+/* Container style */
 .gradient-border {
-  background: rgba(255, 255, 255, 0.02);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-top-color: rgba(255, 255, 255, 0.1);
+  background: var(--seed-white);
+  border: 1px solid var(--seed-border);
+  border-radius: 8px;
 }
 
-/* Sticky header glass — heavier blur for readability */
+/* Sticky header — cream with subtle bottom border */
 .glass-header {
-  background: rgba(3, 7, 18, 0.7);
-  backdrop-filter: blur(20px) saturate(1.2);
-  -webkit-backdrop-filter: blur(20px) saturate(1.2);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(245, 241, 235, 0.85);
+  backdrop-filter: blur(12px) saturate(1.2);
+  -webkit-backdrop-filter: blur(12px) saturate(1.2);
+  border-bottom: 1px solid var(--seed-border);
 }
 
 /* No-op for unused class references */
 .orb { display: none; }
 .noise-overlay::after { display: none; }
+
+/* ─── Dark section (globe, reveal) ─── */
+
+.dark-section {
+  background: var(--seed-dark);
+  color: #ffffff;
+}
 
 /* ─── Reveal sequence ─── */
 
@@ -163,7 +191,7 @@
 
 .reveal-label {
   font-size: clamp(1rem, 3vw, 1.5rem);
-  color: #9ca3af;
+  color: #9A9690;
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -171,7 +199,7 @@
 
 .reveal-sublabel {
   font-size: clamp(0.875rem, 2vw, 1.125rem);
-  color: #6b7280;
+  color: #7A7670;
   margin-top: 8px;
 }
 
@@ -186,11 +214,6 @@
 
 .donut-animated {
   animation: donutFill 1.2s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-/* Smooth scroll */
-html {
-  scroll-behavior: smooth;
 }
 
 /* ─── Reduced motion ─── */
@@ -216,12 +239,8 @@ html {
   .donut-animated {
     animation: none !important;
   }
-  .glass-card,
-  .glass-surface,
-  .gradient-border,
   .glass-header {
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
-    background: #111827 !important;
   }
 }

@@ -28,7 +28,7 @@ export default function InsightsRow({ insights }: Props) {
 
   return (
     <div>
-      <h2 className="text-lg font-semibold mb-3">Your Travel Insights</h2>
+      <h2 className="text-lg font-semibold mb-3 text-[#1A1A1A]" style={{ fontFamily: "'DM Serif Display', Georgia, serif" }}>Your Travel Insights</h2>
       <div className="relative">
         <div
           ref={scrollRef}
@@ -38,18 +38,18 @@ export default function InsightsRow({ insights }: Props) {
           {insights.map((insight) => (
             <div
               key={insight.id}
-              className="flex-shrink-0 w-64 bg-gray-900 border border-gray-800 p-4 snap-start hover:border-gray-700 transition-colors"
+              className="flex-shrink-0 w-64 bg-white border border-[#E5E0D5] p-4 rounded-lg snap-start hover:border-[#D5D0C8] transition-colors"
             >
-              <p className="font-medium">{insight.title}</p>
-              <p className="text-sm text-gray-400 mt-1">{insight.description}</p>
+              <p className="font-medium text-[#1A1A1A]">{insight.title}</p>
+              <p className="text-sm text-[#6B6960] mt-1">{insight.description}</p>
             </div>
           ))}
         </div>
         {showFades && scrollPos !== 'end' && (
-          <div className="absolute right-0 top-0 bottom-2 w-12 bg-gradient-to-l from-gray-950 to-transparent pointer-events-none" />
+          <div className="absolute right-0 top-0 bottom-2 w-12 bg-gradient-to-l from-[#F5F1EB] to-transparent pointer-events-none" />
         )}
         {showFades && scrollPos !== 'start' && (
-          <div className="absolute left-0 top-0 bottom-2 w-12 bg-gradient-to-r from-gray-950 to-transparent pointer-events-none" />
+          <div className="absolute left-0 top-0 bottom-2 w-12 bg-gradient-to-r from-[#F5F1EB] to-transparent pointer-events-none" />
         )}
       </div>
     </div>

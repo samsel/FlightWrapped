@@ -1,13 +1,13 @@
 const ARCHETYPE_COLORS: Record<string, { bg: string; text: string; border: string }> = {
-  'commuter': { bg: 'bg-amber-500/20', text: 'text-amber-300', border: 'border-amber-500/30' },
-  'explorer': { bg: 'bg-emerald-500/20', text: 'text-emerald-300', border: 'border-emerald-500/30' },
-  'road-warrior': { bg: 'bg-red-500/20', text: 'text-red-300', border: 'border-red-500/30' },
-  'long-hauler': { bg: 'bg-purple-500/20', text: 'text-purple-300', border: 'border-purple-500/30' },
-  'weekender': { bg: 'bg-cyan-500/20', text: 'text-cyan-300', border: 'border-cyan-500/30' },
-  'occasional-flyer': { bg: 'bg-blue-500/20', text: 'text-blue-300', border: 'border-blue-500/30' },
+  'commuter': { bg: 'bg-[#FFF3CD]', text: 'text-[#8B6914]', border: 'border-[#E5D49A]' },
+  'explorer': { bg: 'bg-[#E8F0E4]', text: 'text-[#2D5A27]', border: 'border-[#C8DCC2]' },
+  'road-warrior': { bg: 'bg-[#FDDDD5]', text: 'text-[#9B3A2A]', border: 'border-[#F0B8AA]' },
+  'long-hauler': { bg: 'bg-[#EDE4F5]', text: 'text-[#6B3FA0]', border: 'border-[#D4C4E4]' },
+  'weekender': { bg: 'bg-[#E0F0F0]', text: 'text-[#2A6B6B]', border: 'border-[#B8D8D8]' },
+  'occasional-flyer': { bg: 'bg-[#E8F0E4]', text: 'text-[#2D5A27]', border: 'border-[#C8DCC2]' },
 }
 
-const DEFAULT = { bg: 'bg-blue-500/20', text: 'text-blue-300', border: 'border-blue-500/30' }
+const DEFAULT = { bg: 'bg-[#E8F0E4]', text: 'text-[#2D5A27]', border: 'border-[#C8DCC2]' }
 
 export function getArchetypeColors(id: string) {
   return ARCHETYPE_COLORS[id] ?? DEFAULT

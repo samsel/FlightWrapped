@@ -47,7 +47,7 @@ export default function HeroGlobe({ width, height }: { width: number; height: nu
       backgroundColor="rgba(0,0,0,0)"
       globeImageUrl={`${import.meta.env.BASE_URL}textures/earth-blue-marble.jpg`}
       showAtmosphere={true}
-      atmosphereColor="#3b82f6"
+      atmosphereColor="#4A8B42"
       atmosphereAltitude={0.15}
       animateIn={false}
       arcsData={arcsData}
@@ -55,7 +55,7 @@ export default function HeroGlobe({ width, height }: { width: number; height: nu
       arcStartLng="startLng"
       arcEndLat="endLat"
       arcEndLng="endLng"
-      arcColor={() => ['rgba(59,130,246,0.6)', 'rgba(96,165,250,0.6)']}
+      arcColor={() => ['rgba(74,139,66,0.6)', 'rgba(107,184,90,0.6)']}
       arcDashLength={0.6}
       arcDashGap={0.3}
       arcDashAnimateTime={3000}

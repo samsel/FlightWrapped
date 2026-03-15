@@ -69,12 +69,12 @@ export default function GlobePanel({ flights }: Props) {
   }, [flights])
 
   return (
-    <div ref={containerRef} className="w-full flex justify-center overflow-hidden" aria-hidden="true">
+    <div ref={containerRef} className="w-full flex justify-center overflow-hidden bg-[#1B1B1B] rounded-b-2xl" aria-hidden="true">
       {dimensions ? (
         <Suspense
           fallback={
             <div
-              className="bg-gray-900 animate-pulse"
+              className="bg-[#1B1B1B] animate-pulse"
               style={{ width: dimensions.height, height: dimensions.height }}
             />
           }
@@ -87,7 +87,7 @@ export default function GlobePanel({ flights }: Props) {
           />
         </Suspense>
       ) : (
-        <div className="bg-gray-900 animate-pulse" style={{ width: 300, height: 300 }} />
+        <div className="bg-[#1B1B1B] animate-pulse" style={{ width: 300, height: 300 }} />
       )}
     </div>
   )

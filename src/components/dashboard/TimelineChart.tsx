@@ -47,14 +47,14 @@ export default function TimelineChart({ flights }: Props) {
   const bottomPad = 40
 
   return (
-    <div className="bg-gray-900 border border-gray-800 p-4">
-      <h3 className="text-sm font-semibold text-gray-400 mb-3">Flights Over Time</h3>
+    <div className="bg-white border border-[#E5E0D5] p-4 rounded-lg">
+      <h3 className="text-sm font-semibold text-[#6B6960] mb-3">Flights Over Time</h3>
       <div className="overflow-x-auto">
         <svg
           viewBox={`0 0 ${chartWidth} ${chartHeight + topPad + bottomPad}`}
           width="100%"
           style={{ minWidth: chartWidth }}
-          className="text-gray-300"
+          className="text-[#1A1A1A]"
           onMouseLeave={() => setHoveredIndex(null)}
         >
           {/* Baseline */}
@@ -63,7 +63,7 @@ export default function TimelineChart({ flights }: Props) {
             x2={chartWidth}
             y1={topPad + chartHeight}
             y2={topPad + chartHeight}
-            stroke="#374151"
+            stroke="#E5E0D5"
             strokeWidth={1}
           />
 
@@ -86,7 +86,8 @@ export default function TimelineChart({ flights }: Props) {
                     y={topPad}
                     width={barWidth + 4}
                     height={chartHeight}
-                    fill="rgba(59, 130, 246, 0.06)"
+                    fill="rgba(45, 90, 39, 0.04)"
+                    rx={4}
                   />
                 )}
 
@@ -96,7 +97,8 @@ export default function TimelineChart({ flights }: Props) {
                   y={y}
                   width={barWidth}
                   height={barHeight}
-                  fill={isHovered ? '#60a5fa' : '#3b82f6'}
+                  fill={isHovered ? '#3A7233' : '#2D5A27'}
+                  rx={3}
                   className="bar-animated"
                   style={{ animationDelay: `${i * 60}ms`, transition: 'fill 0.15s ease' }}
                 >
@@ -109,7 +111,7 @@ export default function TimelineChart({ flights }: Props) {
                   y={y - 6}
                   textAnchor="middle"
                   fontSize={isHovered ? 11 : 10}
-                  fill={isHovered ? '#bfdbfe' : '#93c5fd'}
+                  fill={isHovered ? '#1B3409' : '#2D5A27'}
                   fontWeight={isHovered ? 600 : 400}
                   style={{ transition: 'all 0.15s ease' }}
                 >
@@ -122,7 +124,7 @@ export default function TimelineChart({ flights }: Props) {
                   y={topPad + chartHeight + 16}
                   textAnchor="middle"
                   fontSize={10}
-                  fill={isHovered ? '#9ca3af' : '#6b7280'}
+                  fill={isHovered ? '#6B6960' : '#9A9690'}
                   transform={`rotate(45, ${x + barWidth / 2}, ${topPad + chartHeight + 16})`}
                   style={{ transition: 'fill 0.15s ease' }}
                 >

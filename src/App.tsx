@@ -269,8 +269,8 @@ function App() {
         }}
         className={`relative p-2 transition-colors duration-200 ${
           profilerEnabled
-            ? 'text-green-400 hover:text-green-300'
-            : 'text-gray-500 hover:text-white'
+            ? 'text-[#2D5A27] hover:text-[#1B3409]'
+            : 'text-[#9A9690] hover:text-[#1A1A1A]'
         }`}
         title={profilerEnabled
           ? profilerReport
@@ -286,7 +286,7 @@ function App() {
           <path d="M12 2v2" />
         </svg>
         {profilerEnabled && (
-          <span className="absolute top-1 right-1 w-2 h-2 bg-green-400 rounded-full" />
+          <span className="absolute top-1 right-1 w-2 h-2 bg-[#2D5A27] rounded-full" />
         )}
       </button>
       {/* Blog post */}
@@ -294,7 +294,7 @@ function App() {
         href="https://samselvanathan.com/posts/flightwrapped-on-device-ai-flight-visualizer"
         target="_blank"
         rel="noopener noreferrer"
-        className="p-2 text-gray-500 hover:text-white transition-colors duration-200"
+        className="p-2 text-[#9A9690] hover:text-[#1A1A1A] transition-colors duration-200"
         aria-label="Read the blog post"
       >
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -306,7 +306,7 @@ function App() {
         href="https://github.com/samsel/FlightWrapped"
         target="_blank"
         rel="noopener noreferrer"
-        className="p-2 text-gray-500 hover:text-white transition-colors duration-200"
+        className="p-2 text-[#9A9690] hover:text-[#1A1A1A] transition-colors duration-200"
         aria-label="View source on GitHub"
       >
         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -343,7 +343,7 @@ function App() {
           }
           window.location.reload()
         }}
-        className="p-2 text-gray-500 hover:text-red-400 transition-colors duration-200"
+        className="p-2 text-[#9A9690] hover:text-[#9B3A2A] transition-colors duration-200"
         title="Clear all caches — removes AI model, flight data, and service workers"
       >
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -378,9 +378,9 @@ function App() {
           onViewCached={handleViewCached}
         />
         {error && (
-          <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-red-900/90 text-red-200 px-6 py-3 max-w-[90vw] text-sm z-50">
+          <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-[#FDDDD5] text-[#9B3A2A] px-6 py-3 max-w-[90vw] text-sm z-50 rounded-lg border border-[#F0B8AA] shadow-lg">
             {error}
-            <button onClick={() => setError(null)} className="ml-4 text-red-400 hover:text-red-300">
+            <button onClick={() => setError(null)} className="ml-4 text-[#9B3A2A]/60 hover:text-[#9B3A2A]">
               Dismiss
             </button>
           </div>
@@ -393,8 +393,8 @@ function App() {
 
   if (appState === 'parsing') {
     return (
-      <div className="min-h-screen glass-bg text-white flex flex-col items-center justify-center px-4 animate-fade-in">
-        <h1 className="text-3xl font-bold mb-8">FlightWrapped</h1>
+      <div className="min-h-screen glass-bg text-[#1A1A1A] flex flex-col items-center justify-center px-4 animate-fade-in">
+        <h1 className="text-3xl font-bold mb-8" style={{ fontFamily: "'DM Serif Display', Georgia, serif" }}>FlightWrapped</h1>
         <ParsingProgress progress={progress} onReset={resetToLanding} />
         {topNav}
         {profilerPanel}

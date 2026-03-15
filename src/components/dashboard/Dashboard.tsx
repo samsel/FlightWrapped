@@ -23,7 +23,7 @@ interface Props {
 }
 
 function Skeleton({ className = '' }: { className?: string }) {
-  return <div className={`bg-gray-800/50 animate-pulse ${className}`} />
+  return <div className={`bg-[#E5E0D5]/50 animate-pulse rounded-lg ${className}`} />
 }
 
 export default function Dashboard({ flights, stats, funStats, insights, archetype, onReset, lastSyncAt, onFileUpload }: Props) {
@@ -61,7 +61,7 @@ export default function Dashboard({ flights, stats, funStats, insights, archetyp
   }, [selectedYear, filteredFlights, filteredStats, insights])
 
   return (
-    <div className="min-h-screen glass-bg text-white">
+    <div className="min-h-screen glass-bg text-[#1A1A1A]">
       <DashboardHeader
         archetype={archetype}
         onReset={onReset}
@@ -73,7 +73,7 @@ export default function Dashboard({ flights, stats, funStats, insights, archetyp
         <GlobePanel flights={filteredFlights} />
         <button
           onClick={() => document.getElementById('dashboard-stats')?.scrollIntoView({ behavior: 'smooth' })}
-          className="absolute right-6 bottom-6 text-gray-500 hover:text-gray-300 transition-colors animate-bounce"
+          className="absolute right-6 bottom-6 text-[#9A9690] hover:text-[#6B6960] transition-colors animate-bounce"
           aria-label="Scroll to stats"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 13.5L12 21m0 0l-7.5-7.5M12 21V3" /></svg>
@@ -103,13 +103,13 @@ export default function Dashboard({ flights, stats, funStats, insights, archetyp
           <>
             {years.length > 0 && (
               <div className="animate-fade-in flex items-center gap-2 flex-wrap glass-card px-4 py-3">
-                <span className="text-sm text-gray-400 font-medium mr-1">Filter</span>
+                <span className="text-sm text-[#6B6960] font-medium mr-1">Filter</span>
                 <button
                   onClick={() => setSelectedYear('all')}
-                  className={`text-sm px-4 py-1.5 transition-all duration-200 font-medium ${
+                  className={`text-sm px-4 py-1.5 transition-all duration-200 font-medium rounded-full ${
                     selectedYear === 'all'
-                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
-                      : 'bg-gray-800/80 text-gray-400 hover:text-white hover:bg-gray-700/80'
+                      ? 'bg-[#2D5A27] text-white shadow-lg shadow-[#2D5A27]/20'
+                      : 'bg-[#F5F1EB] text-[#6B6960] hover:text-[#1A1A1A] hover:bg-[#EDE8E0]'
                   }`}
                 >
                   All Time
@@ -118,10 +118,10 @@ export default function Dashboard({ flights, stats, funStats, insights, archetyp
                   <button
                     key={year}
                     onClick={() => setSelectedYear(year)}
-                    className={`text-sm px-4 py-1.5 transition-all duration-200 font-medium ${
+                    className={`text-sm px-4 py-1.5 transition-all duration-200 font-medium rounded-full ${
                       selectedYear === year
-                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
-                        : 'bg-gray-800/80 text-gray-400 hover:text-white hover:bg-gray-700/80'
+                        ? 'bg-[#2D5A27] text-white shadow-lg shadow-[#2D5A27]/20'
+                        : 'bg-[#F5F1EB] text-[#6B6960] hover:text-[#1A1A1A] hover:bg-[#EDE8E0]'
                     }`}
                   >
                     {year}
@@ -134,17 +134,17 @@ export default function Dashboard({ flights, stats, funStats, insights, archetyp
             <div className="animate-fade-in" style={{ animationDelay: '0.2s' }}><InsightsRow insights={filteredInsights} /></div>
             <div className="animate-fade-in" style={{ animationDelay: '0.3s' }}>
               <div className="flex items-center gap-3 mb-1">
-                <div className="h-px flex-1 bg-gray-800" />
-                <span className="text-xs text-gray-500 font-medium uppercase tracking-widest">Charts</span>
-                <div className="h-px flex-1 bg-gray-800" />
+                <div className="h-px flex-1 bg-[#E5E0D5]" />
+                <span className="text-xs text-[#9A9690] font-medium uppercase tracking-widest">Charts</span>
+                <div className="h-px flex-1 bg-[#E5E0D5]" />
               </div>
               <ChartsRow stats={filteredStats} flights={filteredFlights} />
             </div>
             <div className="animate-fade-in" style={{ animationDelay: '0.4s' }}>
               <div className="flex items-center gap-3 mb-1">
-                <div className="h-px flex-1 bg-gray-800" />
-                <span className="text-xs text-gray-500 font-medium uppercase tracking-widest">Flight Log</span>
-                <div className="h-px flex-1 bg-gray-800" />
+                <div className="h-px flex-1 bg-[#E5E0D5]" />
+                <span className="text-xs text-[#9A9690] font-medium uppercase tracking-widest">Flight Log</span>
+                <div className="h-px flex-1 bg-[#E5E0D5]" />
               </div>
               <FlightList flights={filteredFlights} />
             </div>

@@ -19,7 +19,7 @@ interface Slide {
 function BigNumber({ value, suffix, started }: { value: number; suffix?: string; started: boolean }) {
   const count = useCountUp(value, 2000, started)
   return (
-    <span className="reveal-gradient-text" style={{ fontSize: 'clamp(3rem, 12vw, 7rem)', fontWeight: 800, lineHeight: 1 }}>
+    <span className="reveal-gradient-text" style={{ fontSize: 'clamp(3rem, 12vw, 7rem)', fontWeight: 800, lineHeight: 1, fontFamily: "'DM Serif Display', Georgia, serif" }}>
       {started ? count.toLocaleString() : '0'}{suffix ?? ''}
     </span>
   )
@@ -80,7 +80,7 @@ export default function RevealSequence({ stats, funStats, archetype, onComplete 
       render: () => (
         <div className="reveal-slide">
           <p className="reveal-label">you are</p>
-          <p className={`text-3xl sm:text-5xl font-bold mt-2 ${colors.text}`}>
+          <p className="text-3xl sm:text-5xl font-bold mt-2 text-white" style={{ fontFamily: "'DM Serif Display', Georgia, serif" }}>
             {archetype.name}
           </p>
           <p className="reveal-sublabel max-w-md mt-4">{archetype.description}</p>
@@ -128,7 +128,8 @@ export default function RevealSequence({ stats, funStats, archetype, onComplete 
 
   return (
     <div
-      className="fixed inset-0 z-50 glass-bg flex flex-col items-center justify-center px-4 cursor-pointer select-none"
+      className="fixed inset-0 z-50 flex flex-col items-center justify-center px-4 cursor-pointer select-none"
+      style={{ background: '#1B1B1B' }}
       onClick={handleClick}
       onKeyDown={handleKeyDown}
       role="button"
@@ -144,7 +145,7 @@ export default function RevealSequence({ stats, funStats, archetype, onComplete 
         {slides.map((s, i) => (
           <div
             key={s.key}
-            className={`h-1 transition-all duration-300 ${
+            className={`h-1 rounded-full transition-all duration-300 ${
               i === slideIndex ? 'bg-white w-6' : i < slideIndex ? 'bg-gray-500 w-2' : 'bg-gray-700 w-2'
             }`}
           />

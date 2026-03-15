@@ -19,12 +19,12 @@ function AnimatedStat({ card, started }: { card: StatCard; started: boolean }) {
   const count = useCountUp(card.value, 1500, started)
 
   return (
-    <div className="bg-gray-900 border border-gray-800 p-4">
-      <p className="text-2xl sm:text-3xl font-bold">
+    <div className="bg-white border border-[#E5E0D5] p-4 rounded-lg">
+      <p className="text-2xl sm:text-3xl font-bold text-[#1A1A1A]">
         {card.displayValue ?? (started ? count.toLocaleString() : '0')}{card.suffix ?? ''}
       </p>
-      <p className="text-sm text-gray-400">{card.label}</p>
-      {card.subtitle && <p className="text-xs text-gray-400 mt-1 truncate">{card.subtitle}</p>}
+      <p className="text-sm text-[#6B6960]">{card.label}</p>
+      {card.subtitle && <p className="text-xs text-[#9A9690] mt-1 truncate">{card.subtitle}</p>}
     </div>
   )
 }

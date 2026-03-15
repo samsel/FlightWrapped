@@ -63,14 +63,14 @@ export default function GlobeInner({ width, height, arcsData, pointsData }: Prop
       height={height}
       backgroundColor="rgba(0,0,0,0)"
       globeImageUrl={`${import.meta.env.BASE_URL}textures/earth-night.jpg`}
-      atmosphereColor="#3b82f6"
+      atmosphereColor="#4A8B42"
       atmosphereAltitude={0.2}
       arcsData={arcsData}
       arcStartLat="startLat"
       arcStartLng="startLng"
       arcEndLat="endLat"
       arcEndLng="endLng"
-      arcColor={() => ['#3b82f6', '#60a5fa']}
+      arcColor={() => ['#4A8B42', '#6BB85A']}
       arcDashLength={0.6}
       arcDashGap={0.3}
       arcDashAnimateTime={2000}
@@ -78,7 +78,7 @@ export default function GlobeInner({ width, height, arcsData, pointsData }: Prop
       pointsData={pointsData}
       pointLat="lat"
       pointLng="lng"
-      pointColor={() => '#f59e0b'}
+      pointColor={() => '#8B6914'}
       pointAltitude={0.01}
       pointRadius={0.4}
       pointsMerge={true}

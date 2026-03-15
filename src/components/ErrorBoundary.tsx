@@ -26,20 +26,20 @@ export default class ErrorBoundary extends Component<Props, State> {
     if (!this.state.hasError) return this.props.children
 
     return (
-      <div className="min-h-screen bg-gray-950 text-white flex flex-col items-center justify-center px-4">
+      <div className="min-h-screen bg-[#F5F1EB] text-[#1A1A1A] flex flex-col items-center justify-center px-4">
         <div className="max-w-md text-center">
-          <h1 className="text-2xl font-bold mb-3">Something went wrong</h1>
-          <p className="text-gray-400 text-sm mb-6">
+          <h1 className="text-2xl font-bold mb-3" style={{ fontFamily: "'DM Serif Display', Georgia, serif" }}>Something went wrong</h1>
+          <p className="text-[#6B6960] text-sm mb-6">
             An unexpected error occurred while rendering the dashboard.
           </p>
           {this.state.error && (
-            <pre className="text-xs text-red-400/80 bg-red-950/30 border border-red-900/30 p-4 mb-6 text-left overflow-x-auto max-h-32">
+            <pre className="text-xs text-[#9B3A2A]/80 bg-[#FDDDD5]/30 border border-[#FDDDD5] p-4 mb-6 text-left overflow-x-auto max-h-32 rounded-lg">
               {this.state.error.message}
             </pre>
           )}
           <button
             onClick={this.handleReset}
-            className="bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium px-6 py-3 transition-colors"
+            className="bg-[#2D5A27] hover:bg-[#3A7233] text-white text-sm font-medium px-6 py-3 transition-colors rounded-full"
           >
             Start Over
           </button>

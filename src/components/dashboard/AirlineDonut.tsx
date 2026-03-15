@@ -5,7 +5,8 @@ interface Props {
   stats: FlightStats
 }
 
-const COLORS = ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#06b6d4', '#f97316', '#84cc16']
+// Nature-inspired palette matching Seed aesthetic
+const COLORS = ['#2D5A27', '#6B8E5A', '#8B6914', '#7B4B3A', '#4A7C59', '#9B7B3A', '#5D6B4A', '#3A6B6B']
 
 export default function AirlineDonut({ stats }: Props) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
@@ -37,8 +38,8 @@ export default function AirlineDonut({ stats }: Props) {
   const circumference = 2 * Math.PI * radius
 
   return (
-    <div className="bg-gray-900 border border-gray-800 p-4">
-      <h3 className="text-sm font-semibold text-gray-400 mb-3">Airlines</h3>
+    <div className="bg-white border border-[#E5E0D5] p-4 rounded-lg">
+      <h3 className="text-sm font-semibold text-[#6B6960] mb-3">Airlines</h3>
       <div className="flex flex-col items-center gap-4">
         <svg
           width={size}
@@ -71,10 +72,10 @@ export default function AirlineDonut({ stats }: Props) {
               </circle>
             )
           })}
-          <text x={cx} y={cy - 6} textAnchor="middle" fill="white" fontSize={22} fontWeight="bold">
+          <text x={cx} y={cy - 6} textAnchor="middle" fill="#1A1A1A" fontSize={22} fontWeight="bold">
             {hoveredIndex !== null ? segments[hoveredIndex][1] : total}
           </text>
-          <text x={cx} y={cy + 12} textAnchor="middle" fill="#9ca3af" fontSize={11}>
+          <text x={cx} y={cy + 12} textAnchor="middle" fill="#9A9690" fontSize={11}>
             {hoveredIndex !== null ? segments[hoveredIndex][0] : 'flights'}
           </text>
         </svg>
@@ -83,17 +84,17 @@ export default function AirlineDonut({ stats }: Props) {
           {segments.map(([name, count], i) => (
             <div
               key={name}
-              className="flex items-center gap-2 py-0.5 px-1 -mx-1 transition-colors cursor-default"
-              style={{ backgroundColor: hoveredIndex === i ? 'rgba(255,255,255,0.05)' : 'transparent' }}
+              className="flex items-center gap-2 py-0.5 px-1 -mx-1 rounded transition-colors cursor-default"
+              style={{ backgroundColor: hoveredIndex === i ? 'rgba(45, 90, 39, 0.05)' : 'transparent' }}
               onMouseEnter={() => setHoveredIndex(i)}
               onMouseLeave={() => setHoveredIndex(null)}
             >
               <span
-                className="w-3 h-3 flex-shrink-0"
+                className="w-3 h-3 rounded-sm flex-shrink-0"
                 style={{ backgroundColor: COLORS[i % COLORS.length] }}
               />
-              <span className="text-gray-400 truncate">{name}</span>
-              <span className="text-gray-400 ml-auto">{count}</span>
+              <span className="text-[#6B6960] truncate">{name}</span>
+              <span className="text-[#6B6960] ml-auto">{count}</span>
             </div>
           ))}
         </div>

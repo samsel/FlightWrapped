@@ -25,7 +25,7 @@ function SegmentBar({ segment, maxMs }: { segment: SegmentTiming; maxMs: number 
       <span className="w-28 truncate text-gray-400 font-mono">{segment.name}</span>
       <div className="flex-1 bg-gray-800 h-3 overflow-hidden">
         <div
-          className="h-full bg-blue-500/70"
+          className="h-full bg-[#2D5A27]/70"
           style={{ width: `${Math.max(pct, 1)}%` }}
         />
       </div>
@@ -158,7 +158,7 @@ export default function ProfilerOverlay({ enabled, onToggle, report, panelOpen, 
               onClick={() => setActiveTab('mbox')}
               className={`px-4 py-2 text-xs font-medium transition-colors ${
                 activeTab === 'mbox'
-                  ? 'text-blue-400 border-b-2 border-blue-400'
+                  ? 'text-[#4A8B42] border-b-2 border-[#4A8B42]'
                   : 'text-gray-500 hover:text-gray-300'
               }`}
             >
@@ -168,7 +168,7 @@ export default function ProfilerOverlay({ enabled, onToggle, report, panelOpen, 
               onClick={() => setActiveTab('emails')}
               className={`px-4 py-2 text-xs font-medium transition-colors ${
                 activeTab === 'emails'
-                  ? 'text-blue-400 border-b-2 border-blue-400'
+                  ? 'text-[#4A8B42] border-b-2 border-[#4A8B42]'
                   : 'text-gray-500 hover:text-gray-300'
               }`}
             >
@@ -235,7 +235,7 @@ export default function ProfilerOverlay({ enabled, onToggle, report, panelOpen, 
                     type="checkbox"
                     checked={hideFiltered}
                     onChange={(e) => setHideFiltered(e.target.checked)}
-                    className="accent-blue-500"
+                    className="accent-[#2D5A27]"
                   />
                   Hide filtered
                 </label>
@@ -311,7 +311,7 @@ function SortBtn({
     <button
       onClick={() => onClick(sortKey)}
       className={`${width} ${align} hover:text-gray-300 transition-colors ${
-        active ? 'text-blue-400' : ''
+        active ? 'text-[#4A8B42]' : ''
       }`}
     >
       {label}
