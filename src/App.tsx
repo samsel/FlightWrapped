@@ -74,6 +74,7 @@ function App() {
 
     const handleExtractResult = (flights: Flight[]) => {
       const pending = extractionResultsRef.current
+      if (pending.remaining <= 0) return // already finalized
       pending.flights.push(...flights)
       pending.remaining--
       if (pending.remaining <= 0) {
@@ -117,26 +118,48 @@ function App() {
             worker.postMessage({ type: 'extract-emails', data: batch1 }, batch1)
             // Second worker handles second half
             const w2 = new Worker(new URL('./worker/parser.worker.ts', import.meta.url), { type: 'module' })
+            let w2Settled = false
+            let w2Timer: ReturnType<typeof setTimeout> | null = null
+
+            // If w2 fails or hangs, resend its batch to the main worker
+            const w2Fallback = () => {
+              if (w2Settled) return
+              w2Settled = true
+              if (w2Timer) clearTimeout(w2Timer)
+              w2.terminate()
+              // batch2 is still valid (cloned to w2, not transferred)
+              worker.postMessage({ type: 'extract-emails', data: batch2 }, batch2)
+            }
+
             w2.onmessage = (e2: MessageEvent<WorkerOutMessage>) => {
               if (generationRef.current !== gen) return
               const m = e2.data
               if (m.type === 'progress') {
                 setProgress(m.data)
               } else if (m.type === 'extract-result') {
+                if (w2Settled) return // fallback already handled this batch
+                w2Settled = true
+                if (w2Timer) clearTimeout(w2Timer)
                 handleExtractResult(m.data)
               } else if (m.type === 'error') {
-                // If second worker fails, just decrement and continue
-                const p = extractionResultsRef.current
-                p.remaining--
-                if (p.remaining <= 0) {
-                  extractionWorkersRef.current.forEach(w => w.terminate())
-                  extractionWorkersRef.current = []
-                  finalizeResults(p.flights)
-                }
+                w2Fallback()
               }
             }
+
+            w2.onerror = () => {
+              if (generationRef.current !== gen) return
+              w2Fallback()
+            }
+
+            // Timeout: if w2 hasn't completed within 90s, fall back to main worker
+            w2Timer = setTimeout(() => {
+              if (generationRef.current !== gen) return
+              w2Fallback()
+            }, 90_000)
+
             extractionWorkersRef.current = [w2]
-            w2.postMessage({ type: 'extract-emails', data: batch2 }, batch2)
+            // Clone batch2 to w2 (don't transfer — keep copy for fallback)
+            w2.postMessage({ type: 'extract-emails', data: batch2 })
           } else {
             // Single worker: send all back
             extractionResultsRef.current = { remaining: 1, flights: [] }

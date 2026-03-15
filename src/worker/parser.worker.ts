@@ -126,14 +126,6 @@ self.onmessage = async (e: MessageEvent<WorkerInMessage>) => {
 
             if (!isAirline) {
               emailsSkipped++
-              // Record filtered-out emails in profiler
-              if (ep) {
-                ep.startEmail(emailsScanned - 1, '', domain)
-                ep.startSegment('domain-filter')
-                ep.endSegment('domain-filter')
-                ep.markFiltered()
-                ep.endEmail()
-              }
               // Report progress periodically during scan
               if (emailsScanned % 500 === 0) {
                 reportProgress({
@@ -177,12 +169,12 @@ self.onmessage = async (e: MessageEvent<WorkerInMessage>) => {
         // In multi-worker mode, send airline emails to coordinator for distribution
         if (multiWorkerMode) {
           mp?.end('pipeline-total')
-          emitProfilerReport(mp, ep)
           const scanData = { airlineEmails: airlineRawEmails, totalScanned: emailsScanned }
           ;(postMessage as (msg: unknown, transfer: Transferable[]) => void)(
             { type: 'scan-complete', data: scanData } as WorkerOutMessage,
             airlineRawEmails,
           )
+          try { emitProfilerReport(mp, ep) } catch { /* profiler report too large */ }
           break
         }
 
@@ -281,8 +273,8 @@ self.onmessage = async (e: MessageEvent<WorkerInMessage>) => {
           flightsFound: deduplicated.length,
         })
 
-        emitProfilerReport(mp, ep)
         postMsg({ type: 'result', data: deduplicated })
+        try { emitProfilerReport(mp, ep) } catch { /* profiler report too large */ }
       } catch (err) {
         postMsg({
           type: 'error',
