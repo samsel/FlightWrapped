@@ -87,6 +87,23 @@ No secrets or environment variables need to be configured.
 
 250 tests across 21 test files, run with Vitest. A pre-commit git hook runs the full test suite + TypeScript type-check on every commit.
 
+## LLM Evals
+
+Comprehensive eval suite for the flight extraction LLM pipeline using [promptfoo](https://promptfoo.dev), running locally via [Ollama](https://ollama.com). 46 eval cases across 6 categories test extraction accuracy, JSON compliance, IATA validity, and edge cases.
+
+```bash
+# Prerequisites: Ollama running with llama3.2:3b
+ollama pull llama3.2:3b
+
+# Run evals
+cd evals && npx promptfoo eval
+
+# View HTML report
+npx promptfoo view
+```
+
+See [evals/README.md](evals/README.md) for full documentation.
+
 ## Architecture
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for a detailed overview of the extraction pipeline, multi-worker coordination, batch LLM extraction, and component structure.

@@ -721,6 +721,58 @@ A single full-screen hero section with a rotating 3D globe background (lazy-load
 - **WCAG contrast.** Some `text-gray-500` and `text-gray-600` elements may not meet WCAG AA contrast ratios on dark backgrounds.
 - **Multi-worker memory.** Each worker loads its own LLM instance (~2.5 GB). Two workers require ~5 GB for models alone. The 8 GB memory gate in `detectCapabilities()` may be tight on some devices. Monitor for OOM issues.
 
+## LLM Evals
+
+The `evals/` directory contains a comprehensive evaluation suite for the flight extraction pipeline, built with [promptfoo](https://promptfoo.dev). Evals run locally against [Ollama](https://ollama.com) with Llama 3.2 3B (or any compatible model).
+
+### Eval Architecture
+
+```
+evals/
+├── promptfooconfig.yaml          # Main config (providers, prompts, test suites)
+├── promptfooconfig.batch.yaml    # Batch extraction config
+├── prompts/                      # Prompt templates (mirroring llm.ts)
+│   ├── single-extract.txt
+│   └── batch-extract.txt
+├── datasets/                     # Ground truth datasets (YAML)
+│   ├── single-flight.yaml        # 10 cases: one flight per email
+│   ├── multi-flight.yaml         # 8 cases: round trips, connections
+│   ├── no-flight.yaml            # 8 cases: no actual flights
+│   ├── edge-cases.yaml           # 8 cases: dates, languages, noise
+│   ├── airline-formats.yaml      # 8 cases: different email formats
+│   └── batch-extraction.yaml     # 4 cases: 3-email batch extraction
+├── assertions/                   # Custom assertion modules (ESM)
+│   ├── flight-assertions.mjs     # Single-email ground truth check
+│   └── batch-assertions.mjs      # Batch ground truth check
+└── scripts/
+    └── run-evals.sh              # Convenience runner
+```
+
+### What's Tested
+
+| Category | Cases | Description |
+|----------|-------|-------------|
+| Single Flight | 10 | One flight per email across diverse airlines |
+| Multi-Flight | 8 | Round trips, multi-city, connections |
+| No Flight | 8 | Marketing, loyalty, cancellation emails |
+| Edge Cases | 8 | Date formats, languages, truncation, noise |
+| Airline Formats | 8 | Table, bullet, inline, receipt styles |
+| Batch | 4 | 3-email batch extraction accuracy |
+
+### Assertions
+
+Every test checks: valid JSON, `flights` array schema, IATA code validity (3-letter uppercase), date format (`YYYY-MM-DD`), and ground truth accuracy (precision/recall >= 0.8). Scoring uses F1 = 2*P*R/(P+R).
+
+### Running
+
+```bash
+ollama pull llama3.2:3b       # one-time setup
+cd evals && npx promptfoo eval
+npx promptfoo view            # HTML report
+```
+
+See [evals/README.md](evals/README.md) for full documentation.
+
 ## Future Enhancements
 
 - **Chart interactivity.** Hover tooltips on timeline bars and donut segments (e.g., "March 2023: 4 flights").

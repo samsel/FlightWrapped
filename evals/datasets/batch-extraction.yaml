@@ -1,0 +1,241 @@
+- vars:
+    email_1: |
+      Subject: United Airlines Flight Confirmation
+
+      United Airlines
+      Confirmation: QK8N2W
+
+      Dear Steven Park,
+
+      Flight UA 354
+      Date: March 10, 2024
+      From: San Francisco (SFO) at 7:00 AM PST
+      To: Denver (DEN) at 10:35 AM MST
+
+      Class: Economy
+      Seat: 27A
+
+      MileagePlus: KQ8291047
+    email_2: |
+      Subject: Delta Air Lines - Booking Confirmed
+
+      Delta Air Lines
+      Confirmation #: WNKQ48
+
+      Hello Steven Park,
+
+      Flight DL 1628
+      April 22, 2024
+      Depart: Denver (DEN) at 1:15 PM MDT
+      Arrive: Atlanta (ATL) at 6:42 PM EDT
+
+      Seat: 14F (Comfort+)
+      SkyMiles: 4829107362
+    email_3: |
+      Subject: Southwest Airlines - You're booked!
+
+      Southwest Airlines
+      Confirmation #: R7KQ2N
+
+      Howdy Steven!
+
+      WN 1843
+      May 5, 2024
+      Departing: Atlanta (ATL) at 9:20 AM EDT
+      Arriving: Chicago Midway (MDW) at 10:45 AM CDT
+
+      Fare: Wanna Get Away Plus
+      Rapid Rewards: 92817463
+    ground_truth_1: '{"flights":[{"origin":"SFO","destination":"DEN","date":"2024-03-10","airline":"United Airlines","flightNumber":"UA 354"}]}'
+    ground_truth_2: '{"flights":[{"origin":"DEN","destination":"ATL","date":"2024-04-22","airline":"Delta Air Lines","flightNumber":"DL 1628"}]}'
+    ground_truth_3: '{"flights":[{"origin":"ATL","destination":"MDW","date":"2024-05-05","airline":"Southwest Airlines","flightNumber":"WN 1843"}]}'
+  assert: []
+
+- vars:
+    email_1: |
+      Subject: American Airlines Confirmation - AA 2104
+
+      American Airlines
+      Record Locator: PQKN48
+
+      Passenger: Lisa Huang
+      AAdvantage: 8K29107
+
+      Flight AA 2104
+      June 14, 2024
+      Dallas/Fort Worth (DFW) to New York JFK (JFK)
+      Depart: 8:30 AM CDT | Arrive: 12:55 PM EDT
+
+      Seat: 6A (First Class)
+      Ticket: 001-8291740365
+    email_2: |
+      Subject: JetBlue Confirmation - B6 516
+
+      JetBlue Airways
+      Confirmation Code: WQKN82
+
+      Hi Lisa Huang,
+
+      Flight B6 516
+      June 20, 2024
+      New York JFK (JFK) to Boston (BOS)
+      Departure: 4:00 PM EDT
+      Arrival: 5:22 PM EDT
+
+      Fare: Blue Extra
+      Seat: 8A (Even More Space)
+      TrueBlue: 829104736
+    email_3: |
+      Subject: Your SkyMiles Account Update - March 2024
+
+      Delta SkyMiles
+
+      Dear Lisa Huang,
+
+      Here's your monthly SkyMiles summary:
+
+      SkyMiles Number: 2918470362
+      Status: Gold Medallion
+      MQMs Earned: 42,187 / 75,000 for Platinum
+      MQDs Earned: $6,841 / $12,000 for Platinum
+      Miles Balance: 87,291
+
+      Earn miles faster with the Delta SkyMiles American Express Card!
+
+      Recent Activity:
+      - Crossover Rewards bonus: 2,000 miles
+      - Dining program: 412 miles
+      - Shopping portal: 891 miles
+
+      Delta Air Lines
+    ground_truth_1: '{"flights":[{"origin":"DFW","destination":"JFK","date":"2024-06-14","airline":"American Airlines","flightNumber":"AA 2104"}]}'
+    ground_truth_2: '{"flights":[{"origin":"JFK","destination":"BOS","date":"2024-06-20","airline":"JetBlue Airways","flightNumber":"B6 516"}]}'
+    ground_truth_3: '{"flights":[]}'
+  assert: []
+
+- vars:
+    email_1: |
+      Subject: British Airways Booking - Round Trip Confirmed
+
+      British Airways
+      Booking Reference: QN4K82
+
+      Dear Mr. Ethan Cole,
+
+      OUTBOUND
+      Flight BA 115
+      Date: September 8, 2024
+      London Heathrow (LHR) T5 to New York JFK (JFK) T7
+      Depart: 08:30 BST | Arrive: 11:25 EDT
+
+      RETURN
+      Flight BA 178
+      Date: September 15, 2024
+      New York JFK (JFK) T7 to London Heathrow (LHR) T5
+      Depart: 21:30 EDT | Arrive: 09:15+1 BST
+
+      Class: Club World (Business)
+      Executive Club: 48291037
+
+      Kind regards,
+      British Airways
+    email_2: |
+      Subject: Your Lufthansa Confirmation
+
+      Lufthansa
+      Booking Code: LH2QK9
+
+      Dear Herr Maximilian Weber,
+
+      Flight LH 401
+      Date: October 2, 2024
+      From: New York (JFK) Terminal 1
+      To: Frankfurt (FRA) Terminal 1
+      Departure: 17:30 EDT
+      Arrival: 07:10+1 CET
+
+      Class: Business (C)
+      Seat: 3K
+      Miles & More: 1829374650
+    email_3: |
+      Subject: Emirates Booking Confirmed
+
+      Emirates
+      Booking Reference: EK9QN4
+
+      Dear Ms. Fatima Al-Hassan,
+
+      Flight EK 203
+      Date: November 1, 2024
+      From: Dubai (DXB) Terminal 3
+      To: New York JFK (JFK) Terminal 4
+      Departure: 08:25 GST
+      Arrival: 13:55 EDT
+
+      Class: First Class
+      Seat: 2A (Private Suite)
+      Skywards: EK 829104736
+    ground_truth_1: '{"flights":[{"origin":"LHR","destination":"JFK","date":"2024-09-08","airline":"British Airways","flightNumber":"BA 115"},{"origin":"JFK","destination":"LHR","date":"2024-09-15","airline":"British Airways","flightNumber":"BA 178"}]}'
+    ground_truth_2: '{"flights":[{"origin":"JFK","destination":"FRA","date":"2024-10-02","airline":"Lufthansa","flightNumber":"LH 401"}]}'
+    ground_truth_3: '{"flights":[{"origin":"DXB","destination":"JFK","date":"2024-11-01","airline":"Emirates","flightNumber":"EK 203"}]}'
+  assert: []
+
+- vars:
+    email_1: |
+      Subject: Air Canada Booking Confirmation
+
+      Air Canada
+      Booking Reference: AC8KN2
+
+      Dear Mr. James Wilson,
+
+      Flight AC 855
+      Date: July 18, 2024
+      Toronto Pearson (YYZ) T1 to Vancouver (YVR)
+      Departure: 8:00 AM EDT
+      Arrival: 10:25 AM PDT
+
+      Class: Business (J)
+      Seat: 3A
+      Aeroplan: 829104736
+    email_2: |
+      Subject: Qantas Booking Confirmed
+
+      Qantas
+      Booking Reference: QF4KN8
+
+      Dear Mr. Tom Henderson,
+
+      Flight QF 11
+      Date: August 3, 2024
+      From: Sydney (SYD) Terminal 1
+      To: Los Angeles (LAX) Tom Bradley International Terminal
+      Departure: 9:50 AM AEST
+      Arrival: 6:30 AM PDT (same day)
+
+      Class: Premium Economy
+      Seat: 28A
+      Frequent Flyer: QF 829174036
+    email_3: |
+      Subject: Singapore Airlines Itinerary Confirmation
+
+      Singapore Airlines
+      Booking Reference: SQ2KN9
+
+      Dear Ms. Yuki Tanaka,
+
+      Flight SQ 12
+      Date: September 14, 2024
+      From: Singapore Changi (SIN) Terminal 3
+      To: Los Angeles (LAX) Tom Bradley International Terminal
+      Departure: 08:35 SGT
+      Arrival: 08:10 PDT (same day)
+      Duration: 15h 35m (non-stop)
+
+      Class: Business (Z)
+      Seat: 17A
+      KrisFlyer: SQ 482917036
+    ground_truth_1: '{"flights":[{"origin":"YYZ","destination":"YVR","date":"2024-07-18","airline":"Air Canada","flightNumber":"AC 855"}]}'
+    ground_truth_2: '{"flights":[{"origin":"SYD","destination":"LAX","date":"2024-08-03","airline":"Qantas","flightNumber":"QF 11"}]}'
+    ground_truth_3: '{"flights":[{"origin":"SIN","destination":"LAX","date":"2024-09-14","airline":"Singapore Airlines","flightNumber":"SQ 12"}]}'
+  assert: []

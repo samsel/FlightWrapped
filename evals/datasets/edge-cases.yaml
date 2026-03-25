@@ -1,0 +1,241 @@
+- vars:
+    email_text: |
+      Conf: XK9281
+      UA 573 SFO-ORD 15Jan24 dep 0800 arr 1415
+      Pax: J. Smith
+    ground_truth: '{"flights":[{"origin":"SFO","destination":"ORD","date":"2024-01-15","airline":"United Airlines","flightNumber":"UA 573"}]}'
+  assert: []
+
+- vars:
+    email_text: |
+      Subject: Ryanair Booking Confirmation
+
+      Ryanair
+
+      Booking Reference: KW4N8T
+
+      Dear Mr. Liam Murphy,
+
+      Flight: FR 1842
+      Date: 27/03/2024
+      From: London Stansted (STN)
+      To: Milan Bergamo (BGY)
+      Departure: 14:20
+      Arrival: 17:35 (local)
+
+      Passenger: Liam Murphy
+      Date of Birth: 15/08/1990
+      Travel Document Expiry: 22/11/2029
+
+      Fare: Regular
+      Seat: 14A
+
+      Check in opens on 25/03/2024 at 14:20.
+    ground_truth: '{"flights":[{"origin":"STN","destination":"BGY","date":"2024-03-27","airline":"Ryanair","flightNumber":"FR 1842"}]}'
+  assert: []
+
+- vars:
+    email_text: |
+      Subject: Your Flight Confirmation - Alaska Airlines
+
+      Alaska Airlines
+      Confirmation Code: GQWN4P
+
+      Dear Emily Chen,
+
+      Your flight is confirmed.
+
+      Flight AS 332
+      Date: September 22, 2024
+      From: Seattle to Los Angeles
+      Departure: 10:15 AM Pacific
+      Arrival: 1:05 PM Pacific
+
+      Passenger: Emily Chen
+      Class: First Class
+      Mileage Plan: 291847
+
+      Thank you for choosing Alaska Airlines.
+    ground_truth: '{"flights":[{"origin":"SEA","destination":"LAX","date":"2024-09-22","airline":"Alaska Airlines","flightNumber":"AS 332"}]}'
+  assert: []
+
+- vars:
+    email_text: |
+      Subject: Confirmacion de Vuelo - Avianca
+
+      Avianca
+
+      Estimado Sr. Juan Carlos Gutierrez,
+
+      Su reserva ha sido confirmada.
+
+      Codigo de Reserva: AV7K2N
+      Numero de Vuelo: AV 89
+      Fecha: 18 de mayo de 2024
+      Origen: Bogota (BOG) - Terminal Internacional
+      Destino: Ciudad de Mexico (MEX) - Terminal 1
+      Salida: 08:30 COT
+      Llegada: 12:15 CST
+
+      Clase: Ejecutiva
+      Asiento: 4A
+
+      Pasajero: Juan Carlos Gutierrez
+      Documento: CC 1098274651
+      LifeMiles: AV 892741
+
+      Recuerde hacer su check-in en linea 24 horas antes de su vuelo en avianca.com.
+
+      Gracias por elegir Avianca,
+      Avianca S.A.
+    ground_truth: '{"flights":[{"origin":"BOG","destination":"MEX","date":"2024-05-18","airline":"Avianca","flightNumber":"AV 89"}]}'
+  assert: []
+
+- vars:
+    email_text: |
+      Subject: You're going to NEW YORK! Plus earn TRIPLE MILES this month!
+
+      ============================================
+      EARN TRIPLE MILES ON ALL PURCHASES IN MARCH!
+      Shop now at our partner stores >>>
+      ============================================
+
+      JetBlue Airways
+      Booking Confirmation
+
+      ============================================
+      LIMITED TIME: Upgrade to Mint for just $299!
+      Experience lie-flat seats & artisanal dining
+      ============================================
+
+      Hi Amanda Foster,
+
+      Confirmation: WKQT8N
+
+      ============================================
+      NEW! JetBlue Vacations - Hotel + Flight Packages
+      Save up to 30% when you bundle!
+      ============================================
+
+      YOUR FLIGHT DETAILS:
+      Flight B6 917
+      October 5, 2024
+      Los Angeles (LAX) to New York JFK (JFK)
+      Departs: 11:30 PM PDT
+      Arrives: 7:52 AM+1 EDT
+
+      Fare: Blue Extra
+      Seat: 22F
+
+      ============================================
+      Don't forget travel insurance! Protect your trip
+      from just $29. Add it now >>>
+      ============================================
+
+      TrueBlue #: 481927365
+
+      ============================================
+      JETBLUE CREDIT CARD - Earn 6x points on JetBlue!
+      Apply now and get 50,000 bonus points >>>
+      ============================================
+
+      Download the JetBlue app for mobile boarding passes.
+
+      ============================================
+      Unsubscribe | Privacy Policy | Contact Us
+      JetBlue Airways, 27-01 Queens Plaza North,
+      Long Island City, NY 11101
+      ============================================
+    ground_truth: '{"flights":[{"origin":"LAX","destination":"JFK","date":"2024-10-05","airline":"JetBlue Airways","flightNumber":"B6 917"}]}'
+  assert: []
+
+- vars:
+    email_text: |
+      Subject: Booking Reference QT9281 - Qantas
+
+      Qantas
+
+      Dear Andrew Mitchell,
+
+      Your booking QT9281 has been received and is being processed.
+
+      We will send your full itinerary details shortly. In the meantime, you can view your booking at qantas.com using your booking reference.
+
+      Booking Reference: QT9281
+      Passenger: Andrew Mitchell
+      Frequent Flyer: QF 18293740
+
+      If you have any questions, please contact Qantas on 13 13 13 (within Australia) or +61 2 9691 3636 (international).
+
+      Kind regards,
+      Qantas Airways
+    ground_truth: '{"flights":[]}'
+  assert: []
+
+- vars:
+    email_text: |
+      Subject: Singapore Airlines Booking Confirmation - Ref: SQ82NW
+
+      Singapore Airlines
+
+      Booking Reference: SQ82NW
+
+      Dear Mr. David Tan,
+
+      Your Singapore Airlines flight is confirmed.
+
+      Flight SQ 21
+      Date: November 8, 2019
+      From: Newark Liberty (EWR) Terminal B
+      To: Singapore Changi (SIN) Terminal 3
+      Departure: 10:45 AM EST
+      Arrival: 5:30 PM+1 SGT
+      Duration: 18h 45m (non-stop)
+      Aircraft: Airbus A350-900ULR
+
+      Class: Premium Economy
+      Seat: 31A
+
+      KrisFlyer Number: 8827194036
+
+      Please ensure your passport is valid for at least 6 months beyond your arrival date.
+
+      Thank you for choosing Singapore Airlines.
+    ground_truth: '{"flights":[{"origin":"EWR","destination":"SIN","date":"2019-11-08","airline":"Singapore Airlines","flightNumber":"SQ 21"}]}'
+  assert: []
+
+- vars:
+    email_text: |
+      Subject: Air France Booking Confirmation
+
+      Air France
+      Booking Reference: AF4QN8
+
+      Dear Mme. Claire Dubois,
+
+      Your reservation is confirmed.
+
+      OUTBOUND
+      Flight AF 11
+      Date: 15 June 2024
+      From: Paris Charles de Gaulle (CDG) 2E
+      To: New York JFK (JFK) Terminal 1
+      Depart: 10:25 (15/06/2024)
+      Arrive: 12:50 (06/15/2024 local)
+      Duration: 8h 25m
+
+      RETURN
+      Flight AF 8
+      Departure Date: July 1, 2024
+      From: New York JFK (JFK) Terminal 1
+      To: Paris CDG (CDG) 2E
+      Depart: 19:00 on 01/07/2024
+      Arrive: 08:45 on 02/07/2024
+
+      Class: Premium Economy (W)
+      Flying Blue Number: 2918374650
+
+      Merci et bon voyage!
+      Air France
+    ground_truth: '{"flights":[{"origin":"CDG","destination":"JFK","date":"2024-06-15","airline":"Air France","flightNumber":"AF 11"},{"origin":"JFK","destination":"CDG","date":"2024-07-01","airline":"Air France","flightNumber":"AF 8"}]}'
+  assert: []

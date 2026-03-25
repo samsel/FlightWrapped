@@ -1,0 +1,16 @@
+Extract flight information from each email below. Return ONLY valid JSON, no other text.
+
+Format: {"email_1":{"flights":[]},"email_2":{"flights":[]},"email_3":{"flights":[]}}
+
+For each email, list flights with: origin (3-letter IATA), destination (3-letter IATA), date (YYYY-MM-DD), airline, flightNumber (with airline prefix).
+If no flights found for an email, return empty flights array.
+Include ALL flights mentioned (outbound + return).
+
+=== EMAIL 1 ===
+{{email_1}}
+
+=== EMAIL 2 ===
+{{email_2}}
+
+=== EMAIL 3 ===
+{{email_3}}

@@ -1,0 +1,292 @@
+- vars:
+    email_text: |
+      Subject: Your AAdvantage Account Summary - March 2024
+
+      American Airlines AAdvantage
+
+      Dear Platinum Pro Member,
+
+      Here's your monthly loyalty account summary:
+
+      Name: Jennifer Walsh
+      AAdvantage Number: 4K82N19
+      Status: Platinum Pro
+      Status Valid Through: March 31, 2025
+
+      Miles Balance: 142,867 miles
+      Miles Earned This Month: 8,412
+      Loyalty Points This Year: 31,208 / 125,000 for Executive Platinum
+
+      Recent Activity:
+      - Mar 2: Dining reward, 312 miles
+      - Mar 8: SimplyMiles offer, 500 miles
+      - Mar 15: Shopping portal, 1,204 miles
+      - Mar 18: Credit card spend, 6,396 miles
+
+      Your Platinum Pro benefits include complimentary upgrades, priority boarding, and free checked bags.
+
+      Redeem miles at aa.com/redeem
+
+      Thank you for your loyalty,
+      American Airlines AAdvantage
+    ground_truth: '{"flights":[]}'
+  assert: []
+
+- vars:
+    email_text: |
+      Subject: Flight Cancellation Notice - UA 4521
+
+      United Airlines
+
+      Dear Mr. Gregory Simmons,
+
+      We regret to inform you that your upcoming flight has been cancelled.
+
+      CANCELLED FLIGHT:
+      Flight UA 4521
+      Originally scheduled: April 12, 2024
+      Route: Newark (EWR) to Charlotte (CLT)
+      Departure: 2:15 PM EDT
+
+      Reason: Operational requirements
+
+      Your booking (Confirmation: JQ9N2W) has been cancelled and a full refund has been initiated to your original form of payment. Please allow 7-10 business days for the refund to appear on your statement.
+
+      Refund Amount: $218.60
+      Refund Reference: RF-88291047
+
+      If you wish to rebook, please visit united.com or call 1-800-864-8331.
+
+      We apologize for the inconvenience.
+
+      Sincerely,
+      United Airlines Customer Care
+    ground_truth: '{"flights":[]}'
+  assert: []
+
+- vars:
+    email_text: |
+      Subject: Delta SkyMiles Flash Sale - Fares from $49!
+
+      Delta Air Lines
+
+      FLASH SALE - 48 HOURS ONLY
+
+      SkyMiles Members get exclusive access to these incredible fares!
+
+      TOP DEALS:
+      * Atlanta to New York from $49
+      * Los Angeles to San Francisco from $59
+      * Chicago to Miami from $79
+      * Boston to Orlando from $89
+      * Seattle to Las Vegas from $69
+
+      INTERNATIONAL STEALS:
+      * New York to London from $299
+      * Atlanta to Paris from $349
+      * Los Angeles to Tokyo from $449
+
+      Book by midnight on Friday, March 22, 2024.
+      Travel dates: April 1 - June 30, 2024.
+      Blackout dates apply.
+
+      Terms: Fares shown are each way based on round-trip purchase. Seats are limited. Taxes and fees additional. Basic Economy fare rules apply.
+
+      BOOK NOW at delta.com/deals
+
+      You're receiving this because you're a Delta SkyMiles member.
+      Unsubscribe | Privacy Policy
+
+      Delta Air Lines, P.O. Box 20980, Atlanta, GA 30320
+    ground_truth: '{"flights":[]}'
+  assert: []
+
+- vars:
+    email_text: |
+      Subject: Your Hotel Reservation Confirmation - Marriott Bonvoy
+
+      Marriott Bonvoy
+
+      Confirmation Number: 91827364
+      Loyalty Number: 382917465
+
+      Dear Ms. Katherine Lee,
+
+      Thank you for your reservation at the JW Marriott Miami Turnberry Resort & Spa.
+
+      CHECK-IN: Friday, May 10, 2024 at 4:00 PM
+      CHECK-OUT: Monday, May 13, 2024 at 11:00 AM
+      Duration: 3 nights
+
+      Room Type: Deluxe King Room - Resort View
+      Rate: $289.00 per night
+      Total (before taxes): $867.00
+      Taxes & Fees: $156.06
+      Resort Fee: $45.00/night ($135.00 total)
+      TOTAL: $1,158.06
+
+      Guests: 2 Adults
+
+      Hotel Address:
+      19999 W Country Club Dr
+      Aventura, FL 33180
+      Phone: (305) 932-6200
+
+      Airport: Miami International Airport (MIA) - approximately 30 minutes
+
+      Cancellation Policy: Free cancellation until May 8, 2024 at 6:00 PM.
+
+      Manage your reservation at marriott.com
+    ground_truth: '{"flights":[]}'
+  assert: []
+
+- vars:
+    email_text: |
+      Subject: Hertz Rental Car Confirmation - Reservation H9182736
+
+      Hertz
+
+      Reservation Confirmed
+      Confirmation #: H9182736
+
+      Dear Daniel Brooks,
+
+      Your rental car reservation is confirmed.
+
+      PICK-UP
+      Location: Denver International Airport (DEN)
+      Date: June 5, 2024
+      Time: 11:00 AM
+
+      DROP-OFF
+      Location: Denver International Airport (DEN)
+      Date: June 9, 2024
+      Time: 11:00 AM
+
+      Vehicle: Intermediate SUV or similar
+      Rate: $62.99/day
+      Estimated Total: $311.96 (includes taxes and fees)
+
+      Gold Plus Rewards #: 07291846
+
+      Extras:
+      - GPS Navigation: $12.99/day
+      - Additional Driver: $15.00/day
+
+      Pick up your vehicle at the Hertz counter in the DEN rental car facility. Take the airport train to the rental car center.
+
+      Modify or cancel at hertz.com
+
+      Hertz - Let's Go!
+    ground_truth: '{"flights":[]}'
+  assert: []
+
+- vars:
+    email_text: |
+      Subject: Your Citi / AAdvantage Card Statement - February 2024
+
+      Citi / AAdvantage Platinum Select World Elite Mastercard
+
+      Statement Period: January 15, 2024 - February 14, 2024
+      Payment Due Date: March 10, 2024
+
+      Account Holder: Michael R. Torres
+      Account ending in: 8472
+
+      ACCOUNT SUMMARY
+      Previous Balance: $1,247.33
+      Payments & Credits: -$1,247.33
+      New Purchases: $2,891.07
+      Fees: $0.00
+      Interest Charged: $0.00
+      New Balance: $2,891.07
+      Minimum Payment Due: $29.00
+
+      AAdvantage MILES EARNED
+      Miles earned this period: 3,412
+      Bonus miles from airline purchases: 1,800
+      Total miles earned: 5,212
+
+      RECENT TRANSACTIONS
+      02/14 AMERICAN AIRLINES    DFW    $487.20
+      02/12 UBER TRIP                    $24.50
+      02/10 WHOLE FOODS MARKET           $87.31
+      02/08 AMERICAN AIR 001-7281940     $312.00
+      02/05 SHELL OIL                    $52.18
+      02/03 AMAZON.COM                   $142.99
+      02/01 STARBUCKS                    $6.75
+
+      Manage your account at citi.com
+    ground_truth: '{"flights":[]}'
+  assert: []
+
+- vars:
+    email_text: |
+      Subject: Baggage Claim Update - Southwest Airlines
+
+      Southwest Airlines
+
+      Baggage Service Report
+      Claim Reference: SW-DEN-20240405-1892
+
+      Dear Jessica Martinez,
+
+      We are writing to provide an update on your delayed baggage claim.
+
+      Original Flight: WN 3087
+      Date of Travel: April 5, 2024
+      Route: Denver (DEN) to Seattle (SEA)
+
+      Bag Description: Black Samsonite rolling suitcase, 26 inch
+      Bag Tag Number: WN 891247
+
+      STATUS: Located
+      Your bag has been located at Denver International Airport and is being sent on the next available flight to Seattle.
+
+      Estimated Delivery: April 6, 2024 between 10:00 AM and 2:00 PM PDT
+      Delivery Address: 4521 Pine St, Seattle, WA 98101
+
+      If you have purchased essential items due to the delay, please retain receipts for reimbursement (up to $50/day for domestic flights).
+
+      Track your bag at southwest.com/bagclaim or call 1-888-202-1024.
+
+      We apologize for the inconvenience,
+      Southwest Airlines Baggage Services
+    ground_truth: '{"flights":[]}'
+  assert: []
+
+- vars:
+    email_text: |
+      Subject: Flight Delay Notification - BA 287
+
+      British Airways
+
+      IMPORTANT: Flight Delay Notification
+
+      Dear Ms. Rebecca Clarke,
+
+      We wish to inform you of a delay to your upcoming flight.
+
+      AFFECTED FLIGHT:
+      Flight BA 287
+      Route: London Heathrow (LHR) to San Francisco (SFO)
+      Original Departure: 16:30 GMT
+      NEW Departure Time: 19:45 GMT (delay of 3 hours 15 minutes)
+      Date: December 3, 2024
+
+      NEW Estimated Arrival: 20:10 PST (originally 18:55 PST)
+
+      Reason: Late arriving aircraft from previous sector.
+
+      Your existing booking remains valid. No action is required on your part.
+
+      If you are connecting at San Francisco, please contact our Customer Service team on +44 344 493 0787 to check your onward connection.
+
+      Refreshment vouchers worth GBP 10 are available from the British Airways customer service desk in Terminal 5 Departures.
+
+      We apologise for the inconvenience and thank you for your patience.
+
+      Kind regards,
+      British Airways Operations
+    ground_truth: '{"flights":[]}'
+  assert: []
