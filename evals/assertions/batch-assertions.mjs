@@ -6,10 +6,13 @@
  * ground_truth_2, ground_truth_3 etc. Each email's extraction is validated
  * independently and results are aggregated.
  *
- * Uses the same JSON extraction, IATA validation, date validation, and
- * flight matching logic as flight-assertions.mjs.
+ * Features:
+ *   - Configurable pass threshold via context.vars.pass_threshold (default 0.8)
+ *   - Micro + macro F1 (macro catches per-email failures masked by aggregation)
+ *   - Exact-match (EM) metric per email
+ *   - componentResults for per-email breakdowns in promptfoo UI
  *
- * Export: default function(output, context) => { pass, score, reason }
+ * Export: default function(output, context) => { pass, score, reason, componentResults }
  */
 
 // Hardcoded common IATA codes (same set as flight-assertions.mjs)
@@ -24,9 +27,10 @@ const VALID_IATA = new Set([
   'JNB', 'CPT', 'CAI', 'ADD', 'NBO', 'CMB', 'DAC', 'KTM', 'RUH', 'JED',
   'TLV', 'AMM', 'BWI', 'SAN', 'TPA', 'MCO', 'PDX', 'SLC', 'IAD', 'FLL',
   'AUS', 'RDU', 'STL', 'PIT', 'CLE', 'IND', 'CMH', 'MCI', 'OAK', 'SMF',
-  'STN', 'BGY', 'MDW', 'YVR',
+  'STN', 'BGY', 'MDW', 'YVR', 'AUH', 'GIG', 'TBS', 'KBP',
 ]);
 
+const DEFAULT_THRESHOLD = 0.8;
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const IATA_RE = /^[A-Z]{3}$/;
 
@@ -34,10 +38,6 @@ const IATA_RE = /^[A-Z]{3}$/;
 // JSON extraction -- mirrors the greedy { ... } approach in production llm.ts
 // ---------------------------------------------------------------------------
 
-/**
- * Extract the outermost JSON object from a string that may contain markdown
- * code fences, thinking tags, or other surrounding text.
- */
 function extractJson(raw) {
   if (!raw || typeof raw !== 'string') return null;
 
@@ -79,14 +79,6 @@ function normalizeFlightNum(fn) {
   return fn.replace(/\s+/g, '').toUpperCase();
 }
 
-// ---------------------------------------------------------------------------
-// Per-email validation
-// ---------------------------------------------------------------------------
-
-/**
- * Validate structural integrity of a flights array.
- * Returns { iataErrors, unknownIata, dateErrors }.
- */
 function validateFlights(flights) {
   const iataErrors = [];
   const unknownIata = [];
@@ -100,42 +92,31 @@ function validateFlights(flights) {
     const dest = String(f.destination ?? '').toUpperCase().trim();
     const date = String(f.date ?? '');
 
-    if (!isValidIata(origin)) {
-      iataErrors.push(`Flight ${i}: invalid origin "${origin}"`);
-    } else if (!isKnownIata(origin)) {
-      unknownIata.push(origin);
-    }
+    if (!isValidIata(origin)) iataErrors.push(`Flight ${i}: invalid origin "${origin}"`);
+    else if (!isKnownIata(origin)) unknownIata.push(origin);
 
-    if (!isValidIata(dest)) {
-      iataErrors.push(`Flight ${i}: invalid destination "${dest}"`);
-    } else if (!isKnownIata(dest)) {
-      unknownIata.push(dest);
-    }
+    if (!isValidIata(dest)) iataErrors.push(`Flight ${i}: invalid destination "${dest}"`);
+    else if (!isKnownIata(dest)) unknownIata.push(dest);
 
-    if (!isValidDate(date)) {
-      dateErrors.push(`Flight ${i}: invalid date "${date}"`);
-    }
+    if (!isValidDate(date)) dateErrors.push(`Flight ${i}: invalid date "${date}"`);
   }
 
   return { iataErrors, unknownIata, dateErrors };
 }
 
 // ---------------------------------------------------------------------------
-// Ground-truth comparison (same logic as eval.ts / flight-assertions.mjs)
+// Ground-truth comparison
 // ---------------------------------------------------------------------------
 
-/**
- * Match extracted flights to ground truth by origin + destination + date.
- */
 function compareToGroundTruth(extracted, groundTruth) {
   if (groundTruth.length === 0 && extracted.length === 0) {
-    return { precision: 1, recall: 1, f1: 1, truePositives: 0, airlineAcc: 1, flightNumAcc: 1 };
+    return { precision: 1, recall: 1, f1: 1, truePositives: 0, exactMatch: true, airlineAcc: 1, flightNumAcc: 1 };
   }
   if (groundTruth.length === 0) {
-    return { precision: 0, recall: 1, f1: 0, truePositives: 0, airlineAcc: 0, flightNumAcc: 0 };
+    return { precision: 0, recall: 1, f1: 0, truePositives: 0, exactMatch: false, airlineAcc: 0, flightNumAcc: 0 };
   }
   if (extracted.length === 0) {
-    return { precision: 1, recall: 0, f1: 0, truePositives: 0, airlineAcc: 0, flightNumAcc: 0 };
+    return { precision: 1, recall: 0, f1: 0, truePositives: 0, exactMatch: false, airlineAcc: 0, flightNumAcc: 0 };
   }
 
   const matched = new Set();
@@ -156,12 +137,8 @@ function compareToGroundTruth(extracted, groundTruth) {
       truePositives++;
       const gt = groundTruth[matchIdx];
 
-      if ((ext.airline || '').toUpperCase().trim() === (gt.airline || '').toUpperCase().trim()) {
-        airlineCorrect++;
-      }
-      if (normalizeFlightNum(ext.flightNumber) === normalizeFlightNum(gt.flightNumber)) {
-        flightNumCorrect++;
-      }
+      if ((ext.airline || '').toUpperCase().trim() === (gt.airline || '').toUpperCase().trim()) airlineCorrect++;
+      if (normalizeFlightNum(ext.flightNumber) === normalizeFlightNum(gt.flightNumber)) flightNumCorrect++;
     }
   }
 
@@ -170,18 +147,16 @@ function compareToGroundTruth(extracted, groundTruth) {
   const f1 = precision + recall > 0 ? (2 * precision * recall) / (precision + recall) : 0;
   const airlineAcc = truePositives > 0 ? airlineCorrect / truePositives : 0;
   const flightNumAcc = truePositives > 0 ? flightNumCorrect / truePositives : 0;
+  const exactMatch = truePositives === groundTruth.length &&
+    truePositives === extracted.length &&
+    airlineCorrect === truePositives &&
+    flightNumCorrect === truePositives;
 
-  return { precision, recall, f1, truePositives, airlineAcc, flightNumAcc };
+  return { precision, recall, f1, truePositives, exactMatch, airlineAcc, flightNumAcc };
 }
 
-/**
- * Parse ground truth from a context.vars value.
- * Accepts a JSON string or an already-parsed object/array.
- * Returns a flights array, or null on failure.
- */
 function parseGroundTruth(raw) {
   if (!raw) return null;
-
   try {
     let gt = typeof raw === 'string' ? JSON.parse(raw) : raw;
     if (!Array.isArray(gt)) {
@@ -201,10 +176,9 @@ function parseGroundTruth(raw) {
 /**
  * @param {string} output  - Raw LLM response containing per-email extraction keys
  * @param {object} context - promptfoo context; context.vars contains ground_truth_1, etc.
- * @returns {{ pass: boolean, score: number, reason: string }}
+ * @returns {{ pass: boolean, score: number, reason: string, componentResults?: object[] }}
  */
 export default function batchAssertion(output, context) {
-  // -- Step 1: Parse JSON from LLM output --
   if (!output || typeof output !== 'string' || output.trim().length === 0) {
     return { pass: false, score: 0, reason: 'Empty LLM output' };
   }
@@ -214,134 +188,105 @@ export default function batchAssertion(output, context) {
     return { pass: false, score: 0, reason: 'Could not extract valid JSON from LLM output' };
   }
 
-  // -- Step 2: Discover email keys --
-  // Look for keys like email_1, email_2, email_3, Email_1, Email 1, etc.
-  // Also check how many ground_truth_N vars exist to know expected count.
   const vars = context?.vars ?? {};
+  const threshold = parseFloat(vars.pass_threshold) || DEFAULT_THRESHOLD;
 
-  // Determine the number of emails by scanning ground_truth_N keys
+  // Determine email count from ground_truth_N keys or output keys
   let emailCount = 0;
   for (let n = 1; n <= 20; n++) {
-    if (vars[`ground_truth_${n}`] !== undefined) {
-      emailCount = n;
-    } else {
-      break;
-    }
+    if (vars[`ground_truth_${n}`] !== undefined) emailCount = n;
+    else break;
   }
-
-  // If no ground truth keys found, infer count from parsed output keys
   if (emailCount === 0) {
     for (let n = 1; n <= 20; n++) {
-      const key = `email_${n}`;
-      if (parsed[key] !== undefined || parsed[`Email ${n}`] !== undefined || parsed[`Email_${n}`] !== undefined) {
-        emailCount = n;
-      } else {
-        break;
-      }
+      if (parsed[`email_${n}`] !== undefined || parsed[`Email ${n}`] !== undefined || parsed[`Email_${n}`] !== undefined) emailCount = n;
+      else break;
     }
   }
 
   if (emailCount === 0) {
-    return {
-      pass: false,
-      score: 0,
-      reason: 'No email keys found in output and no ground_truth_N vars provided',
-    };
+    return { pass: false, score: 0, reason: 'No email keys found in output and no ground_truth_N vars provided' };
   }
 
-  // -- Step 3: Process each email independently --
+  // Process each email independently
   const perEmailResults = [];
+  const componentResults = [];
   let totalTP = 0;
   let totalExtracted = 0;
   let totalGroundTruth = 0;
   let allStructureValid = true;
   let anyGroundTruth = false;
+  const perEmailF1s = [];
 
   for (let n = 1; n <= emailCount; n++) {
-    const emailKey = `email_${n}`;
-    const emailData = parsed[emailKey] ?? parsed[`Email ${n}`] ?? parsed[`Email_${n}`];
+    const emailData = parsed[`email_${n}`] ?? parsed[`Email ${n}`] ?? parsed[`Email_${n}`];
 
-    // Extract flights array from this email's data
     let flights = [];
     if (emailData && typeof emailData === 'object') {
       const rawFlights = emailData.flights ?? emailData.flight ?? [];
       flights = Array.isArray(rawFlights) ? rawFlights : [rawFlights];
     }
 
-    // Validate structure
     const validation = validateFlights(flights);
     const structureValid = validation.iataErrors.length === 0 && validation.dateErrors.length === 0;
     if (!structureValid) allStructureValid = false;
 
-    // Compare to ground truth if available
     const gtRaw = vars[`ground_truth_${n}`];
     const groundTruth = parseGroundTruth(gtRaw);
 
-    let emailResult;
     if (groundTruth) {
       anyGroundTruth = true;
       const comparison = compareToGroundTruth(flights, groundTruth);
       totalTP += comparison.truePositives;
       totalExtracted += flights.length;
       totalGroundTruth += groundTruth.length;
+      perEmailF1s.push(comparison.f1);
 
-      emailResult = {
-        email: n,
-        extracted: flights.length,
-        groundTruth: groundTruth.length,
-        ...comparison,
-        structureValid,
-        validationIssues: [
-          ...validation.iataErrors,
-          ...validation.dateErrors,
-        ],
-      };
+      perEmailResults.push({
+        email: n, extracted: flights.length, groundTruth: groundTruth.length,
+        ...comparison, structureValid,
+        validationIssues: [...validation.iataErrors, ...validation.dateErrors],
+      });
+
+      // componentResult for this email
+      componentResults.push({
+        pass: comparison.precision >= threshold && comparison.recall >= threshold && structureValid,
+        score: comparison.f1,
+        reason: `Email ${n}: ${comparison.truePositives}/${groundTruth.length} TP, P=${(comparison.precision * 100).toFixed(0)}% R=${(comparison.recall * 100).toFixed(0)}% F1=${(comparison.f1 * 100).toFixed(0)}% EM=${comparison.exactMatch ? 'YES' : 'NO'}`,
+        assertion: { type: 'batch-email', value: `email_${n}` },
+      });
     } else {
       totalExtracted += flights.length;
-      emailResult = {
-        email: n,
-        extracted: flights.length,
-        groundTruth: 0,
-        structureValid,
-        validationIssues: [
-          ...validation.iataErrors,
-          ...validation.dateErrors,
-        ],
-      };
+      perEmailResults.push({
+        email: n, extracted: flights.length, groundTruth: 0, structureValid,
+        validationIssues: [...validation.iataErrors, ...validation.dateErrors],
+      });
     }
-
-    perEmailResults.push(emailResult);
   }
 
-  // -- Step 4: Aggregate results --
+  // Aggregate results
   const reasons = [];
 
-  // Build per-email summary lines
   for (const r of perEmailResults) {
     const parts = [`Email ${r.email}: ${r.extracted} extracted`];
     if (r.groundTruth !== undefined && r.groundTruth > 0) {
       parts.push(`${r.truePositives}/${r.groundTruth} matched`);
       parts.push(`P=${(r.precision * 100).toFixed(0)}% R=${(r.recall * 100).toFixed(0)}%`);
+      parts.push(`EM=${r.exactMatch ? 'YES' : 'NO'}`);
     }
-    if (!r.structureValid) {
-      parts.push(`ISSUES: ${r.validationIssues.join('; ')}`);
-    }
+    if (!r.structureValid) parts.push(`ISSUES: ${r.validationIssues.join('; ')}`);
     reasons.push(parts.join(', '));
   }
 
-  // Calculate aggregate precision/recall/F1
-  let aggregatePrecision, aggregateRecall, aggregateF1;
-
   if (anyGroundTruth) {
+    let aggregatePrecision, aggregateRecall, aggregateF1;
+
     if (totalExtracted === 0 && totalGroundTruth === 0) {
-      aggregatePrecision = 1;
-      aggregateRecall = 1;
+      aggregatePrecision = 1; aggregateRecall = 1;
     } else if (totalExtracted === 0) {
-      aggregatePrecision = 1;
-      aggregateRecall = 0;
+      aggregatePrecision = 1; aggregateRecall = 0;
     } else if (totalGroundTruth === 0) {
-      aggregatePrecision = 0;
-      aggregateRecall = 1;
+      aggregatePrecision = 0; aggregateRecall = 1;
     } else {
       aggregatePrecision = totalTP / totalExtracted;
       aggregateRecall = totalTP / totalGroundTruth;
@@ -351,26 +296,32 @@ export default function batchAssertion(output, context) {
       ? (2 * aggregatePrecision * aggregateRecall) / (aggregatePrecision + aggregateRecall)
       : 0;
 
+    // Macro F1: average of per-email F1 scores (catches individual email failures)
+    const macroF1 = perEmailF1s.length > 0
+      ? perEmailF1s.reduce((a, b) => a + b, 0) / perEmailF1s.length
+      : 0;
+
     reasons.push(
       `Aggregate: P=${(aggregatePrecision * 100).toFixed(1)}% ` +
       `R=${(aggregateRecall * 100).toFixed(1)}% ` +
-      `F1=${(aggregateF1 * 100).toFixed(1)}% ` +
+      `Micro-F1=${(aggregateF1 * 100).toFixed(1)}% ` +
+      `Macro-F1=${(macroF1 * 100).toFixed(1)}% ` +
       `(${totalTP}/${totalGroundTruth} TP across ${emailCount} emails)`
     );
 
-    const passThreshold = aggregatePrecision >= 0.8 && aggregateRecall >= 0.8;
+    const passThreshold = aggregatePrecision >= threshold && aggregateRecall >= threshold;
     if (!passThreshold) {
-      reasons.push('FAILED: aggregate precision or recall below 0.8 threshold');
+      reasons.push(`FAILED: aggregate precision or recall below ${threshold} threshold`);
     }
 
     return {
       pass: passThreshold && allStructureValid,
       score: aggregateF1,
       reason: reasons.join(' | '),
+      componentResults: componentResults.length > 0 ? componentResults : undefined,
     };
   }
 
-  // No ground truth at all -- pass based on structure validity
   reasons.push(
     `No ground truth provided. ${emailCount} email(s) parsed, ` +
     `structure ${allStructureValid ? 'valid' : 'invalid'}`

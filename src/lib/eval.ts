@@ -20,9 +20,6 @@ export interface EvalResult {
   precision: number
   recall: number
   fieldAccuracy: {
-    origin: FieldAccuracy
-    destination: FieldAccuracy
-    date: FieldAccuracy
     airline: FieldAccuracy
     flightNumber: FieldAccuracy
   }
@@ -30,6 +27,10 @@ export interface EvalResult {
 
 /**
  * Evaluate extraction results against ground truth.
+ *
+ * Matching: origin + destination + date (case-insensitive, trimmed).
+ * Field accuracy is tracked only for airline and flightNumber since
+ * origin/destination/date are the match keys (always 100% for matched pairs).
  */
 export function evaluateExtraction(
   extracted: Flight[],
@@ -51,7 +52,7 @@ export function evaluateExtraction(
     return { precision: 1, recall: 0, fieldAccuracy: emptyFieldAccuracy() }
   }
 
-  // Match extracted flights to ground truth by origin+destination+date
+  // Match extracted flights to ground truth by origin+destination+date (case-insensitive)
   const matched = new Set<number>()
   let truePositives = 0
   const fieldAccuracy = emptyFieldAccuracy()
@@ -60,8 +61,8 @@ export function evaluateExtraction(
     const matchIdx = groundTruth.findIndex(
       (gt, i) =>
         !matched.has(i) &&
-        gt.origin === ext.origin &&
-        gt.destination === ext.destination &&
+        gt.origin.toUpperCase().trim() === ext.origin.toUpperCase().trim() &&
+        gt.destination.toUpperCase().trim() === ext.destination.toUpperCase().trim() &&
         gt.date === ext.date,
     )
 
@@ -70,11 +71,12 @@ export function evaluateExtraction(
       truePositives++
 
       const gt = groundTruth[matchIdx]
-      checkField(fieldAccuracy.origin, ext.origin, gt.origin)
-      checkField(fieldAccuracy.destination, ext.destination, gt.destination)
-      checkField(fieldAccuracy.date, ext.date, gt.date)
       checkField(fieldAccuracy.airline, ext.airline, gt.airline)
-      checkField(fieldAccuracy.flightNumber, normalizeFlightNum(ext.flightNumber), normalizeFlightNum(gt.flightNumber))
+      checkField(
+        fieldAccuracy.flightNumber,
+        normalizeFlightNum(ext.flightNumber),
+        normalizeFlightNum(gt.flightNumber),
+      )
     }
   }
 
@@ -98,9 +100,6 @@ function normalizeFlightNum(fn: string): string {
 
 function emptyFieldAccuracy(): EvalResult['fieldAccuracy'] {
   return {
-    origin: { correct: 0, total: 0, accuracy: 0 },
-    destination: { correct: 0, total: 0, accuracy: 0 },
-    date: { correct: 0, total: 0, accuracy: 0 },
     airline: { correct: 0, total: 0, accuracy: 0 },
     flightNumber: { correct: 0, total: 0, accuracy: 0 },
   }

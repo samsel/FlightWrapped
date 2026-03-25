@@ -12,7 +12,9 @@ providers:
     label: llama3.2-3b
     config:
       temperature: 0.1
-      max_tokens: 1500
+      num_predict: 1500
+      passthrough:
+        format: 'json'
 
 prompts:
   - file://prompts/batch-extract.txt

@@ -49,6 +49,10 @@ evals/
 │   ├── no-flight.yaml            # 8 cases: no actual flights
 │   ├── edge-cases.yaml           # 8 cases: dates, languages, noise
 │   ├── airline-formats.yaml      # 8 cases: different email formats
+│   ├── booking-platforms.yaml    # 4 cases: Expedia, Kayak, Trip.com, Google Flights
+│   ├── html-emails.yaml          # 6 cases: stripped HTML table/CSS content
+│   ├── robustness.yaml           # 5 cases: truncation, forwarded, injection
+│   ├── high-traffic-airlines.yaml # 5 cases: Turkish, easyJet, LATAM, Qatar, Etihad
 │   └── batch-extraction.yaml     # 4 cases: 3-email batch extraction
 ├── assertions/
 │   ├── flight-assertions.mjs     # Custom assertion: ground truth check
@@ -68,28 +72,38 @@ evals/
 | No Flight | `no-flight.yaml` | 8 | Emails that should return empty flights |
 | Edge Cases | `edge-cases.yaml` | 8 | Date formats, languages, noise |
 | Airline Formats | `airline-formats.yaml` | 8 | Different email layout styles |
+| Booking Platforms | `booking-platforms.yaml` | 4 | Expedia, Kayak, Trip.com, Google Flights |
+| HTML Emails | `html-emails.yaml` | 6 | Stripped HTML table/CSS/newsletter content |
+| Robustness | `robustness.yaml` | 5 | Truncation, forwarded, rebook, prompt injection |
+| High-Traffic Airlines | `high-traffic-airlines.yaml` | 5 | Turkish, easyJet, LATAM, Qatar, Etihad |
 | Batch Extraction | `batch-extraction.yaml` | 4 | 3-email batch processing |
 
-**Total: ~46 eval cases** across 6 dataset files.
+**Total: 66 eval cases** across 10 dataset files.
 
 ## Assertions
 
-Every test case is checked against these assertions:
+Every test case is validated by a custom assertion module that checks:
 
-1. **Valid JSON** - Output must parse as JSON
+1. **Valid JSON** - Extracts JSON from output (handles markdown fences, thinking tags)
 2. **Schema compliance** - Must have a `flights` array
 3. **IATA validity** - All airport codes must be 3-letter uppercase
 4. **Date format** - All dates must be `YYYY-MM-DD`
-5. **Ground truth accuracy** - Precision and recall vs expected flights (threshold: 0.8)
+5. **Ground truth accuracy** - Precision and recall vs expected flights (configurable threshold, default 0.8)
+6. **Exact Match (EM)** - Binary: did the model get every flight and field exactly right?
+7. **Per-flight componentResults** - Detailed per-flight breakdowns in the promptfoo HTML report
 
 ## Scoring
 
 - **Precision**: `true_positives / total_extracted` (penalizes hallucinated flights)
 - **Recall**: `true_positives / ground_truth_count` (penalizes missed flights)
 - **F1 Score**: `2 * precision * recall / (precision + recall)` (overall score)
+- **Exact Match**: `1` if all flights matched with correct airline and flight number
 - **Field Accuracy**: Per-field checks for airline name and flight number
+- **Macro F1** (batch only): Average of per-email F1 scores (catches individual failures)
 
-Flights are matched by `origin + destination + date` (same logic as production dedup).
+Flights are matched by `origin + destination + date` (case-insensitive, same logic as production).
+
+The pass threshold is configurable per test case via `pass_threshold` in test vars (default: 0.8).
 
 ## Configuring a Different Model
 

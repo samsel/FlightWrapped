@@ -757,11 +757,15 @@ evals/
 | No Flight | 8 | Marketing, loyalty, cancellation emails |
 | Edge Cases | 8 | Date formats, languages, truncation, noise |
 | Airline Formats | 8 | Table, bullet, inline, receipt styles |
+| Booking Platforms | 4 | Expedia, Kayak, Trip.com, Google Flights |
+| HTML Emails | 6 | Stripped HTML table/CSS/newsletter formats |
+| Robustness | 5 | Truncation, forwarded, rebook, prompt injection |
+| High-Traffic Airlines | 5 | Turkish, easyJet, LATAM, Qatar, Etihad |
 | Batch | 4 | 3-email batch extraction accuracy |
 
 ### Assertions
 
-Every test checks: valid JSON, `flights` array schema, IATA code validity (3-letter uppercase), date format (`YYYY-MM-DD`), and ground truth accuracy (precision/recall >= 0.8). Scoring uses F1 = 2*P*R/(P+R).
+Every test checks: valid JSON, `flights` array schema, IATA code validity (3-letter uppercase), date format (`YYYY-MM-DD`), and ground truth accuracy (precision/recall >= configurable threshold, default 0.8). Scoring uses F1 = 2*P*R/(P+R), with exact-match (EM) and per-flight componentResults for detailed breakdowns.
 
 ### Running
 

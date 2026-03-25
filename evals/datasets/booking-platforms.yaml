@@ -1,0 +1,242 @@
+- vars:
+    email_text: |
+      Subject: Your Expedia Trip Confirmation - Itinerary #72849103847
+
+      Expedia
+      Your trip to Miami is confirmed!
+
+      Itinerary #72849103847
+
+      Hi Daniel,
+
+      Thanks for booking on Expedia. Here's everything you need for your upcoming trip.
+
+      ============================================================
+      FLIGHT
+      ============================================================
+      American Airlines
+      Confirmation: KQTW7N
+
+      AA 2145
+      Saturday, July 20, 2024
+      Depart: Dallas/Fort Worth (DFW) at 10:25 AM CDT
+      Arrive: Miami (MIA) at 2:40 PM EDT
+      Duration: 3h 15m
+      Cabin: Main Cabin
+      Passenger: Daniel Park
+
+      Ticket Number: 001-8294716350
+      Seat assigned at check-in
+
+      Price: $187.40 (includes taxes & fees)
+
+      Manage your flight on aa.com with confirmation KQTW7N.
+
+      ============================================================
+      HOTEL - Don't forget to book!
+      ============================================================
+      We found great hotels near Miami Beach starting from $89/night!
+
+      * Marriott South Beach - $142/night (4.2 stars)
+      * Hilton Miami Downtown - $119/night (4.0 stars)
+      * Holiday Inn Miami Beach - $89/night (3.8 stars)
+
+      >>> Book your hotel now and save up to 20% when you bundle! <<<
+
+      ============================================================
+      CAR RENTAL
+      ============================================================
+      Need a car in Miami? Prices from $32/day.
+      Book now at expedia.com/cars
+
+      ============================================================
+
+      Download the Expedia app to manage your trip on the go.
+
+      Expedia, Inc.
+      1111 Expedia Group Way W, Seattle, WA 98119
+      Privacy Policy | Terms of Use | Unsubscribe
+    ground_truth: '{"flights":[{"origin":"DFW","destination":"MIA","date":"2024-07-20","airline":"American Airlines","flightNumber":"AA 2145"}]}'
+  assert: []
+
+- vars:
+    email_text: |
+      Subject: Your Trip Summary - Kayak Booking #KYK-2024-09847261
+
+      KAYAK
+      Powered by Booking.com
+
+      Trip Summary
+
+      Booking Reference: KYK-2024-09847261
+      Booked by: Michelle Torres
+      Payment: Visa ending in 3847
+
+      ============================================================
+      YOUR FLIGHTS
+      ============================================================
+
+      OUTBOUND - Thursday, September 5, 2024
+      Delta Air Lines | Confirmation: NWQK82
+
+      DL 1890
+      Boston Logan (BOS) -> Atlanta Hartsfield-Jackson (ATL)
+      Depart: 7:15 AM EDT
+      Arrive: 10:28 AM EDT
+      Duration: 3h 13m
+      Class: Main Cabin
+
+      RETURN - Thursday, September 12, 2024
+      Delta Air Lines | Confirmation: NWQK82
+
+      DL 1891
+      Atlanta Hartsfield-Jackson (ATL) -> Boston Logan (BOS)
+      Depart: 4:50 PM EDT
+      Arrive: 8:05 PM EDT
+      Duration: 3h 15m
+      Class: Main Cabin
+
+      Passenger: Michelle Torres
+      Total Airfare: $347.82
+
+      ============================================================
+      MANAGE YOUR TRIP
+      ============================================================
+      View or change your booking: kayak.com/trips
+      Airline check-in: delta.com (opens 24h before departure)
+
+      ============================================================
+      EXPLORE ATLANTA
+      ============================================================
+      Hotels in Atlanta from $79/night
+      Car rentals from $28/day
+      Things to do: Georgia Aquarium, World of Coca-Cola, more...
+
+      >>> Complete your trip at kayak.com <<<
+
+      ============================================================
+      Price Alert: We're tracking prices on this route for you.
+      ============================================================
+
+      KAYAK is a booking.com company
+      800 Connecticut Ave, Norwalk, CT 06854
+      Unsubscribe | Help Center | Privacy Policy
+    ground_truth: '{"flights":[{"origin":"BOS","destination":"ATL","date":"2024-09-05","airline":"Delta Air Lines","flightNumber":"DL 1890"},{"origin":"ATL","destination":"BOS","date":"2024-09-12","airline":"Delta Air Lines","flightNumber":"DL 1891"}]}'
+  assert: []
+
+- vars:
+    email_text: |
+      Subject: Trip.com Booking Confirmed | Order No. 24110382947
+
+      Trip.com
+
+      Booking Confirmed!
+
+      Order Number: 24110382947
+      Booking Status: Confirmed
+
+      Dear Yuki Tanaka,
+
+      Your flight booking has been confirmed. Please see the details below.
+
+      -----------------------------------------------------------
+      FLIGHT DETAILS
+      -----------------------------------------------------------
+      Singapore Airlines
+      Airline Booking Ref: SQKW4N
+
+      Flight: SQ 638
+      Date: Sunday, 3 November 2024
+      From: Singapore Changi Airport (SIN) Terminal 3
+      To: Tokyo Narita Airport (NRT) Terminal 1
+      Departure: 08:20 SGT
+      Arrival: 16:15 JST
+      Aircraft: Boeing 787-10
+      Duration: 6h 55m
+
+      Passenger: Yuki Tanaka
+      Cabin Class: Economy
+      Baggage: 30kg checked + 7kg carry-on
+      Meal: Included
+
+      -----------------------------------------------------------
+      PRICE SUMMARY
+      -----------------------------------------------------------
+      Flight fare                    SGD 485.00
+      Taxes & airport charges        SGD  78.42
+      Service fee                    SGD  12.00
+      -----------------------------------------------------------
+      Total                          SGD 575.42
+      Paid via: Mastercard ending 9271
+
+      -----------------------------------------------------------
+      COMPLETE YOUR TRIP
+      -----------------------------------------------------------
+      Hotels in Tokyo from SGD 85/night
+        * Shinjuku Granbell Hotel - SGD 112/night
+        * APA Hotel Asakusa - SGD 85/night
+      Airport Transfer: Book Narita Express - SGD 42
+      Pocket WiFi rental from SGD 5/day
+
+      -----------------------------------------------------------
+
+      Need help? Contact Trip.com 24/7
+      Phone: +65 6212 6688
+      Email: service@trip.com
+
+      Trip.com | Download our app
+      Unsubscribe from marketing emails
+    ground_truth: '{"flights":[{"origin":"SIN","destination":"NRT","date":"2024-11-03","airline":"Singapore Airlines","flightNumber":"SQ 638"}]}'
+  assert: []
+
+- vars:
+    email_text: |
+      Subject: Fwd: Your flight to Denver - Booking confirmed
+
+      ---------- Forwarded message ----------
+      From: Google Flights <flights-noreply@google.com>
+      Date: Mon, Jul 29, 2024 at 3:14 PM
+      Subject: Your flight to Denver - Booking confirmed
+      To: kevin.wright@gmail.com
+
+      Google Flights
+
+      Your flight is booked!
+
+      Booking confirmed through United Airlines.
+      Google Flights Booking ID: GF-8472910384
+
+      ============================================================
+      FLIGHT DETAILS
+      ============================================================
+      United Airlines
+      Confirmation Number: QKWN82
+
+      UA 507
+      Thursday, August 15, 2024
+      San Francisco (SFO) -> Denver (DEN)
+      Depart: 11:45 AM PDT
+      Arrive: 3:12 PM MDT
+      Duration: 2h 27m
+      Aircraft: Boeing 737 MAX 9
+
+      Passenger: Kevin Wright
+      Cabin: Economy (K)
+      Seat: Assigned at check-in
+      Bags: 1 personal item included
+
+      Total charged: $198.20
+
+      ============================================================
+
+      This booking was completed through United Airlines.
+      Manage your reservation directly at united.com using
+      confirmation number QKWN82.
+
+      Check in online at united.com 24 hours before departure.
+
+      ---
+      Tracked by Google Flights. Price guarantee does not apply.
+      Google LLC, 1600 Amphitheatre Parkway, Mountain View, CA 94043
+    ground_truth: '{"flights":[{"origin":"SFO","destination":"DEN","date":"2024-08-15","airline":"United Airlines","flightNumber":"UA 507"}]}'
+  assert: []

@@ -89,7 +89,7 @@ No secrets or environment variables need to be configured.
 
 ## LLM Evals
 
-Comprehensive eval suite for the flight extraction LLM pipeline using [promptfoo](https://promptfoo.dev), running locally via [Ollama](https://ollama.com). 46 eval cases across 6 categories test extraction accuracy, JSON compliance, IATA validity, and edge cases.
+Comprehensive eval suite for the flight extraction LLM pipeline using [promptfoo](https://promptfoo.dev), running locally via [Ollama](https://ollama.com). 66 eval cases across 10 categories test extraction accuracy, JSON compliance, IATA validity, edge cases, booking platforms, HTML emails, and adversarial robustness.
 
 ```bash
 # Prerequisites: Ollama running with llama3.2:3b
