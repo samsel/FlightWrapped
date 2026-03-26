@@ -1,0 +1,291 @@
+- vars:
+    email_text: |
+      Subject: Your Round-Trip Itinerary - Delta Air Lines
+
+      Delta Air Lines - Trip Confirmation
+
+      Confirmation #: WKQN4T
+
+      Passenger: Linda Park
+
+      OUTBOUND FLIGHT
+      Flight DL 1893
+      Thursday, February 8, 2024
+      Depart: Los Angeles (LAX) at 9:00 AM PST
+      Arrive: New York JFK (JFK) at 5:22 PM EST
+      Seat: 22F (Main Cabin)
+
+      RETURN FLIGHT
+      Flight DL 472
+      Monday, February 12, 2024
+      Depart: New York JFK (JFK) at 7:30 PM EST
+      Arrive: Los Angeles (LAX) at 10:48 PM PST
+      Seat: 18A (Main Cabin)
+
+      Total Cost: $387.40
+
+      Manage your trip at delta.com
+    ground_truth: '{"flights":[{"origin":"LAX","destination":"JFK","date":"2024-02-08","airline":"Delta Air Lines","flightNumber":"DL 1893"},{"origin":"JFK","destination":"LAX","date":"2024-02-12","airline":"Delta Air Lines","flightNumber":"DL 472"}]}'
+  assert: []
+
+- vars:
+    email_text: |
+      Subject: Multi-City Booking Confirmation - American Airlines
+
+      American Airlines
+      Record Locator: VJ93KW
+
+      Passenger: Carlos Rivera
+      AAdvantage #: 8X29Q14
+
+      ITINERARY
+
+      Flight 1:
+      AA 1104
+      March 20, 2024
+      Chicago O'Hare (ORD) to Miami (MIA)
+      Depart: 6:15 AM CST | Arrive: 10:40 AM EST
+      Seat: 12C
+
+      Flight 2:
+      AA 963
+      March 25, 2024
+      Miami (MIA) to Dallas/Fort Worth (DFW)
+      Depart: 1:00 PM EST | Arrive: 3:20 PM CST
+      Seat: 8A
+
+      Flight 3:
+      AA 558
+      March 29, 2024
+      Dallas/Fort Worth (DFW) to Chicago O'Hare (ORD)
+      Depart: 5:45 PM CST | Arrive: 8:10 PM CST
+      Seat: 15F
+
+      Total Fare: $542.18
+      Ticket: 0012938471625
+
+      Visit aa.com to manage your booking.
+    ground_truth: '{"flights":[{"origin":"ORD","destination":"MIA","date":"2024-03-20","airline":"American Airlines","flightNumber":"AA 1104"},{"origin":"MIA","destination":"DFW","date":"2024-03-25","airline":"American Airlines","flightNumber":"AA 963"},{"origin":"DFW","destination":"ORD","date":"2024-03-29","airline":"American Airlines","flightNumber":"AA 558"}]}'
+  assert: []
+
+- vars:
+    email_text: |
+      Subject: United Airlines - Connection Itinerary Confirmed
+
+      United Airlines
+      Confirmation: MQ7R2P
+
+      Dear Kevin O'Malley,
+
+      Your connecting flight itinerary is confirmed.
+
+      SEGMENT 1
+      Flight UA 2241
+      July 14, 2024
+      Depart: Boston (BOS) at 11:50 AM EDT
+      Arrive: Denver (DEN) at 2:35 PM MDT
+
+      SEGMENT 2
+      Flight UA 617
+      July 14, 2024
+      Depart: Denver (DEN) at 4:10 PM MDT
+      Arrive: San Francisco (SFO) at 5:25 PM PDT
+
+      Connection Time in Denver: 1h 35m
+
+      Passenger: Kevin O'Malley
+      Class: Economy Plus
+      Bags: 1 checked bag included
+
+      MileagePlus Number: JK8291740
+    ground_truth: '{"flights":[{"origin":"BOS","destination":"DEN","date":"2024-07-14","airline":"United Airlines","flightNumber":"UA 2241"},{"origin":"DEN","destination":"SFO","date":"2024-07-14","airline":"United Airlines","flightNumber":"UA 617"}]}'
+  assert: []
+
+- vars:
+    email_text: |
+      Subject: Booking Confirmation - 4 Passengers - Southwest Airlines
+
+      Southwest Airlines
+      Confirmation #: K9WL3T
+
+      Howdy!
+
+      Here's your family's flight info:
+
+      Passengers:
+      1. Mark Thompson
+      2. Susan Thompson
+      3. Emily Thompson
+      4. Jack Thompson
+
+      Flight WN 1482
+      May 28, 2024
+      Departing: Chicago Midway (MDW) at 10:05 AM CDT
+      Arriving: Orlando (MCO) at 2:30 PM EDT
+
+      Flight WN 2294
+      June 4, 2024
+      Departing: Orlando (MCO) at 6:15 PM EDT
+      Arriving: Chicago Midway (MDW) at 8:00 PM CDT
+
+      Fare: Wanna Get Away Plus x 4
+      Total: $1,264.00
+
+      All 4 passengers are on the same flights. Check in separately for each passenger to get boarding positions.
+
+      Have a great trip!
+    ground_truth: '{"flights":[{"origin":"MDW","destination":"MCO","date":"2024-05-28","airline":"Southwest Airlines","flightNumber":"WN 1482"},{"origin":"MCO","destination":"MDW","date":"2024-06-04","airline":"Southwest Airlines","flightNumber":"WN 2294"}]}'
+  assert: []
+
+- vars:
+    email_text: |
+      Subject: Booking Confirmation - British Airways / American Airlines Codeshare
+
+      British Airways
+      Booking Reference: QT4WN8
+
+      Dear Mr. Richard Hayes,
+
+      Your booking has been confirmed for the following codeshare flight:
+
+      Flight BA 1516 (operated by American Airlines as AA 100)
+      Date: September 3, 2024
+      From: New York JFK (JFK) Terminal 8
+      To: London Heathrow (LHR) Terminal 5
+      Departure: 19:00 EDT
+      Arrival: 07:05+1 BST
+
+      Cabin: Club World (Business)
+      Seat: 17A
+
+      E-Ticket: 125-8273649102
+
+      Note: This flight is operated by American Airlines. Please check in at the American Airlines terminal.
+
+      British Airways Executive Club: 10293847
+
+      Regards,
+      British Airways
+    ground_truth: '{"flights":[{"origin":"JFK","destination":"LHR","date":"2024-09-03","airline":"British Airways","flightNumber":"BA 1516"}]}'
+  assert: []
+
+- vars:
+    email_text: |
+      Subject: Business Travel Confirmation - Lufthansa
+
+      Lufthansa
+      Booking Code: HN6K9P
+
+      Dear Ms. Angela Fischer,
+
+      Your corporate travel itinerary is confirmed.
+
+      LEG 1
+      LH 908
+      Monday, November 4, 2024
+      Frankfurt (FRA) -> London Heathrow (LHR)
+      Depart: 07:00 CET | Arrive: 07:45 GMT
+      Seat: 4A (Business)
+
+      LEG 2
+      LH 921
+      Wednesday, November 6, 2024
+      London Heathrow (LHR) -> Frankfurt (FRA)
+      Depart: 18:30 GMT | Arrive: 21:15 CET
+      Seat: 3K (Business)
+
+      LEG 3
+      LH 710
+      Thursday, November 7, 2024
+      Frankfurt (FRA) -> Singapore Changi (SIN)
+      Depart: 22:10 CET | Arrive: 17:30+1 SGT
+      Seat: 6A (Business)
+
+      LEG 4
+      LH 711
+      Tuesday, November 12, 2024
+      Singapore Changi (SIN) -> Frankfurt (FRA)
+      Depart: 23:15 SGT | Arrive: 05:40+1 CET
+      Seat: 7K (Business)
+
+      Corporate Account: DE-LH-4928
+      Miles & More: 6281940375
+
+      Freundliche Grüße,
+      Lufthansa
+    ground_truth: '{"flights":[{"origin":"FRA","destination":"LHR","date":"2024-11-04","airline":"Lufthansa","flightNumber":"LH 908"},{"origin":"LHR","destination":"FRA","date":"2024-11-06","airline":"Lufthansa","flightNumber":"LH 921"},{"origin":"FRA","destination":"SIN","date":"2024-11-07","airline":"Lufthansa","flightNumber":"LH 710"},{"origin":"SIN","destination":"FRA","date":"2024-11-12","airline":"Lufthansa","flightNumber":"LH 711"}]}'
+  assert: []
+
+- vars:
+    email_text: |
+      Subject: Your Two Bookings Confirmed - JetBlue
+
+      JetBlue Airways
+
+      Hi Priya Sharma,
+
+      You have two one-way bookings confirmed under separate confirmation codes.
+
+      BOOKING 1
+      Confirmation Code: FGHT8N
+      Flight B6 1187
+      January 10, 2025
+      Fort Lauderdale (FLL) to Boston (BOS)
+      Departure: 7:25 AM EST
+      Arrival: 10:45 AM EST
+      Fare: Blue Basic
+      Seat: 28C
+
+      BOOKING 2
+      Confirmation Code: MNQP4W
+      Flight B6 688
+      January 17, 2025
+      Boston (BOS) to Fort Lauderdale (FLL)
+      Departure: 3:50 PM EST
+      Arrival: 7:15 PM EST
+      Fare: Blue
+      Seat: 10A
+
+      Need to make changes? Visit jetblue.com and enter each confirmation code separately.
+    ground_truth: '{"flights":[{"origin":"FLL","destination":"BOS","date":"2025-01-10","airline":"JetBlue Airways","flightNumber":"B6 1187"},{"origin":"BOS","destination":"FLL","date":"2025-01-17","airline":"JetBlue Airways","flightNumber":"B6 688"}]}'
+  assert: []
+
+- vars:
+    email_text: |
+      Subject: Emirates Itinerary Confirmation - Round Trip with Connection
+
+      Emirates
+      Booking Reference: QW8TN4K
+
+      Dear Mr. Raj Patel,
+
+      Your itinerary is confirmed.
+
+      OUTBOUND
+      Segment 1: EK 501
+      Date: August 15, 2024
+      Dubai (DXB) Terminal 3 -> Singapore Changi (SIN) Terminal 1
+      Departure: 03:30 GST
+      Arrival: 15:00 SGT
+      Aircraft: Boeing 777-300ER
+
+      RETURN (with connection)
+      Segment 2: EK 405
+      Date: August 25, 2024
+      Singapore Changi (SIN) Terminal 1 -> Dubai (DXB) Terminal 3
+      Departure: 21:50 SGT
+      Arrival: 01:05+1 GST
+
+      Segment 3: EK 29
+      Date: August 26, 2024
+      Dubai (DXB) Terminal 3 -> Sydney (SYD) Terminal 1
+      Departure: 10:15 GST
+      Arrival: 06:35+1 AEST
+
+      Class: Economy (Flex Plus)
+      Skywards Member: EK 182736459
+
+      Enjoy your journey!
+      Emirates
+    ground_truth: '{"flights":[{"origin":"DXB","destination":"SIN","date":"2024-08-15","airline":"Emirates","flightNumber":"EK 501"},{"origin":"SIN","destination":"DXB","date":"2024-08-25","airline":"Emirates","flightNumber":"EK 405"},{"origin":"DXB","destination":"SYD","date":"2024-08-26","airline":"Emirates","flightNumber":"EK 29"}]}'
+  assert: []

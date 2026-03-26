@@ -109,6 +109,14 @@ describe('evaluateExtraction', () => {
       expect(result.precision).toBe(0.5) // 1 true positive out of 2 extracted
       expect(result.recall).toBe(1) // 1 found out of 1
     })
+
+    it('matches case-insensitively on origin and destination', () => {
+      const ext = [flight({ origin: 'jfk', destination: 'lax' })]
+      const gt = [flight({ origin: 'JFK', destination: 'LAX' })]
+      const result = evaluateExtraction(ext, gt)
+      expect(result.recall).toBe(1)
+      expect(result.precision).toBe(1)
+    })
   })
 
   describe('field accuracy', () => {

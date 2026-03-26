@@ -1,0 +1,279 @@
+- vars:
+    email_text: |
+      Subject: Your Itinerary - Delta Air Lines
+
+      Delta Air Lines E-Ticket Itinerary
+
+      Confirmation Number: GKWN48
+
+      Passenger Name         Ticket Number          SkyMiles
+      -------------------------------------------------------
+      Maria Gonzalez         006-2918374650         8291047362
+
+      FLIGHT DETAILS
+      -------------------------------------------------------
+      Flight    Date         Route           Depart   Arrive
+      -------------------------------------------------------
+      DL 1247   08 Mar 2024  ATL -> LAX     07:15    09:30
+                              Terminal S     Pacific  Terminal 2
+      -------------------------------------------------------
+
+      FARE DETAILS
+      -------------------------------------------------------
+      Base Fare                              $178.00
+      U.S. Transportation Tax                 $13.35
+      September 11th Security Fee              $5.60
+      Passenger Facility Charge                $4.50
+      -------------------------------------------------------
+      TOTAL                                  $201.45
+      -------------------------------------------------------
+
+      Seat: 19A (Main Cabin)
+      Bags: 1 personal item included
+
+      Manage your trip at delta.com
+    ground_truth: '{"flights":[{"origin":"ATL","destination":"LAX","date":"2024-03-08","airline":"Delta Air Lines","flightNumber":"DL 1247"}]}'
+  assert: []
+
+- vars:
+    email_text: |
+      Subject: Booking Confirmation - Air New Zealand
+
+      Air New Zealand
+      Booking Reference: NZ8KQ2
+
+      Kia ora, Sophie Williams!
+
+      Your flight is confirmed. Here are the details:
+
+      * Flight: NZ 1 (The flagship!)
+      * Date: April 20, 2024
+      * Departing: Auckland (AKL) at 7:15 PM NZST
+      * Arriving: London Heathrow (LHR) at 6:05 AM+1 BST
+      * Cabin: Premium Economy
+      * Seat: 34K
+      * Aircraft: Boeing 787-9 Dreamliner
+      * Duration: Approximately 24 hours (via stopover)
+      * Meal: Pre-select your meal at airnewzealand.co.nz
+      * Baggage: 2x 23kg checked bags included
+      * Entertainment: Personal screen with over 2,000 hours of content
+
+      Airpoints Number: 192837465
+
+      Check in online from 24 hours before departure.
+
+      Happy travels!
+      Air New Zealand
+    ground_truth: '{"flights":[{"origin":"AKL","destination":"LHR","date":"2024-04-20","airline":"Air New Zealand","flightNumber":"NZ 1"}]}'
+  assert: []
+
+- vars:
+    email_text: |
+      Subject: Flight Confirmed
+
+      Hi Alex, your flight UA 891 from JFK to San Francisco on February 28, 2024 departing at 8:00 AM arriving at 11:32 AM has been confirmed. Your confirmation number is KQWN72 and your seat is 34B in Economy. Check in at united.com 24 hours before departure. Have a great flight!
+    ground_truth: '{"flights":[{"origin":"JFK","destination":"SFO","date":"2024-02-28","airline":"United Airlines","flightNumber":"UA 891"}]}'
+  assert: []
+
+- vars:
+    email_text: |
+      Subject: American Airlines - Receipt for Travel
+
+      American Airlines
+      Electronic Ticket Receipt
+
+      Date of Issue: January 5, 2024
+      Issuing Office: AA.COM
+
+      PASSENGER: THOMPSON/BRIAN MR
+      RECORD LOCATOR: VQKN48
+      TICKET NUMBER: 001-2918374650
+      FORM OF PAYMENT: VISA XXXXXXXXXXXX4829
+
+      ITINERARY / RECEIPT
+
+      01  AA 1782  09JAN  DFWLAX  0620  0745  ECONOMY (S)  OK
+          DALLAS/FT WORTH TO LOS ANGELES
+          BOEING 737-800 / NON-STOP
+          SEAT 23C / MAIN CABIN EXTRA
+
+      FARE CALCULATION:
+      DFW AA LAX 159.00 USD END
+
+      BASE FARE:             USD    159.00
+      TAX US:                USD     11.93
+      TAX ZP:                USD      4.20
+      TAX AY:                USD      5.60
+      TAX XF DFW4.50:       USD      4.50
+      TOTAL:                 USD    185.23
+
+      FARE RULES: NON-REFUNDABLE. CHANGE FEE MAY APPLY.
+      BAGGAGE ALLOWANCE: 1 PERSONAL ITEM. CHECKED BAGS ADDITIONAL FEE.
+
+      AAdvantage Number: 7K29184
+    ground_truth: '{"flights":[{"origin":"DFW","destination":"LAX","date":"2024-01-09","airline":"American Airlines","flightNumber":"AA 1782"}]}'
+  assert: []
+
+- vars:
+    email_text: |
+      Subject: Your flight is confirmed
+
+      Southwest Airlines
+
+      Conf# T8KW2N
+
+      Rachel Kim
+
+      WN 2156
+      Aug 12, 2024
+      LAX 6:00p -> DEN 9:32p
+      Wanna Get Away
+
+      Check in at southwest.com
+
+      1-800-435-9792
+    ground_truth: '{"flights":[{"origin":"LAX","destination":"DEN","date":"2024-08-12","airline":"Southwest Airlines","flightNumber":"WN 2156"}]}'
+  assert: []
+
+- vars:
+    email_text: |
+      Subject: Cathay Pacific - Itinerary Confirmation
+
+      Cathay Pacific Airways
+      Booking Reference: CX4KN2
+
+      Passenger: Mr. William Chan
+      Marco Polo Club: Gold - MP8291740
+
+      ================================================================
+      ITINERARY
+      ================================================================
+
+      FLIGHT          : CX 840
+      DATE            : Wednesday, 17 July 2024
+      DEPARTURE       : Hong Kong International Airport (HKG)
+                        Terminal 1
+                        Check-in: Row K, Zone A
+                        Departure Time: 00:05 HKT
+      ARRIVAL         : John F. Kennedy International Airport (JFK)
+                        Terminal 8
+                        Arrival Time: 01:55 EDT (same day)
+      AIRCRAFT        : Airbus A350-1000
+      CLASS           : Business (J)
+      SEAT            : 12K (Window)
+      MEAL            : Asian Vegetarian (pre-selected)
+      BAGGAGE         : 2 pieces x 32kg
+
+      ================================================================
+      FARE SUMMARY
+      ================================================================
+      Base Fare       : HKD 28,450.00
+      Taxes & Fees    : HKD  4,287.00
+      Total           : HKD 32,737.00
+
+      ================================================================
+      E-TICKET        : 160-2918374650
+      BOOKING CLASS   : J
+      FARE BASIS      : JOWCHK
+      STATUS          : Confirmed (HK)
+
+      ================================================================
+      IMPORTANT INFORMATION
+      ================================================================
+      - Online check-in opens 48 hours before departure
+      - Lounge access: The Pier, Business at HKG
+      - Priority baggage handling included
+      - Chauffeur-drive service: Not included in this fare
+
+      Thank you for choosing Cathay Pacific.
+    ground_truth: '{"flights":[{"origin":"HKG","destination":"JFK","date":"2024-07-17","airline":"Cathay Pacific","flightNumber":"CX 840"}]}'
+  assert: []
+
+- vars:
+    email_text: |
+      Subject: Your Boarding Pass - Emirates EK 215
+
+      Emirates
+
+      MOBILE BOARDING PASS
+
+      ==============================
+      BOARDING PASS
+      ==============================
+      Name: HASSAN/OMAR MR
+      From: DUBAI (DXB)
+      To:   LONDON HEATHROW (LHR)
+      ==============================
+      Flight : EK 215
+      Date   : 05 MAR 2024
+      Gate   : B22
+      Board  : 13:45
+      Depart : 14:30 GST
+      Arrive : 18:50 GMT
+      ==============================
+      Class  : ECONOMY
+      Seat   : 42A WINDOW
+      Seq    : 0147
+      ==============================
+      Booking Ref : QN4K82
+      Ticket      : 176-2918374650
+      Skywards    : EK 472918304
+      ==============================
+      TERMINAL 3
+
+      ** THIS IS YOUR BOARDING PASS **
+      Please have it ready at the gate.
+
+      Emirates - Fly Better
+    ground_truth: '{"flights":[{"origin":"DXB","destination":"LHR","date":"2024-03-05","airline":"Emirates","flightNumber":"EK 215"}]}'
+  assert: []
+
+- vars:
+    email_text: |
+      Subject: E-Ticket Receipt - Korean Air
+
+      Korean Air
+      E-Ticket Receipt / Itinerary
+
+      E-TICKET NUMBER: 180-2918374650
+      DATE OF ISSUE: 2024-02-20
+      BOOKING REFERENCE: KE8QN4
+      IATA NUMBER: 08291847
+
+      PASSENGER
+      Name: LEE/JIHOON MR
+      Frequent Flyer: SKYPASS KE 19283740
+      Contact: +82-10-8291-4736
+
+      FLIGHT INFORMATION
+      ------------------------------------------
+      KE 81       20MAR2024  ICNJFK
+      INCHEON INTL (ICN) T2
+      JOHN F KENNEDY INTL (JFK) T1
+      ETD: 10:00 KST    ETA: 10:30 EDT
+      Class: Prestige (C)  Status: OK
+      Aircraft: Boeing 777-300ER
+      Seat: 8A
+      Baggage: 2PC
+      ------------------------------------------
+
+      FARE DETAILS
+      Fare Basis: COWRKR
+      Fare: KRW 2,450,000
+      Tax (BP): KRW 28,000
+      Tax (SW): KRW 9,800
+      Tax (US): USD 21.60
+      Tax (YC): USD 7.00
+      Tax (XY): USD 5.60
+      Tax (AY): USD 5.60
+      Tax (XA): USD 4.00
+      TOTAL: KRW 2,487,800 + USD 43.80
+
+      ENDORSEMENTS/RESTRICTIONS:
+      NON-ENDORSABLE/REBOOKING FEE APPLIES
+
+      This is an electronic ticket. No paper ticket will be issued.
+
+      Korean Air - Excellence in Flight
+    ground_truth: '{"flights":[{"origin":"ICN","destination":"JFK","date":"2024-03-20","airline":"Korean Air","flightNumber":"KE 81"}]}'
+  assert: []

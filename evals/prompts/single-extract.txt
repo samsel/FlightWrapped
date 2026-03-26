@@ -1,0 +1,14 @@
+Extract all flight information from this email. Return ONLY valid JSON, no other text.
+
+Format:
+{"flights":[{"origin":"JFK","destination":"LAX","date":"2024-01-15","airline":"United Airlines","flightNumber":"UA 1234"}]}
+
+Rules:
+- origin and destination must be 3-letter IATA airport codes
+- date must be YYYY-MM-DD format
+- flightNumber should include airline code prefix (e.g. "UA 1234" not just "1234")
+- If no flights found, return: {"flights":[]}
+- Include ALL flights mentioned (outbound + return)
+
+Email:
+{{email_text}}

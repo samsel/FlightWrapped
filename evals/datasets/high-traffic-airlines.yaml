@@ -1,0 +1,217 @@
+- vars:
+    email_text: |
+      Subject: Turkish Airlines Booking Confirmation / Turk Hava Yollari Rezervasyon Onayiniz
+
+      Turkish Airlines
+      turkishairlines.com
+
+      Booking Reference (PNR): TK7W4M
+
+      Sayin Yolcu / Dear Passenger,
+
+      Rezervasyonunuz onaylanmistir. / Your reservation has been confirmed.
+
+      UCUS BILGILERI / FLIGHT DETAILS
+      ----------------------------------------
+      Ucus / Flight: TK 1
+      Tarih / Date: 18 September 2024 (Wednesday)
+      Kalkis / Departure: Istanbul (IST) at 19:15
+      Varis / Arrival: New York John F. Kennedy (JFK) at 23:10 (local time)
+      Ucak Tipi / Aircraft: Boeing 777-300ER
+      Sinif / Class: Economy (Y)
+      Koltuk / Seat: 28A
+
+      Yolcu / Passenger: Mr. Emre Yilmaz
+      Miles&Smiles No: 2847193065
+      Bilet No / Ticket No: 235-7192083746
+
+      BAGAJ HAKKI / BAGGAGE ALLOWANCE
+      Checked: 2 x 23kg
+      Cabin: 1 x 8kg
+
+      Online check-in opens 24 hours before departure at turkishairlines.com.
+      Enjoy complimentary meals and entertainment on board.
+
+      Istanbul Lounge access is available for purchase at turkishairlines.com/lounge.
+
+      Iyi yolculuklar dileriz. / We wish you a pleasant journey.
+
+      Turkish Airlines
+      Globally Yours
+    ground_truth: '{"flights":[{"origin":"IST","destination":"JFK","date":"2024-09-18","airline":"Turkish Airlines","flightNumber":"TK 1"}]}'
+  assert: []
+
+- vars:
+    email_text: |
+      Subject: easyJet Booking Confirmation - U2 8412
+
+      easyJet
+      Booking Reference: EZJ47KM
+
+      Hi Olivia Barnes,
+
+      You're all booked! Here are your flight details.
+
+      YOUR FLIGHT
+      Flight: U2 8412
+      Date: Friday 28 June 2024
+      From: London Gatwick (LGW) - North Terminal
+      To: Amsterdam Schiphol (AMS)
+      Departs: 07:20 BST
+      Arrives: 09:35 CEST
+      Duration: 1h 15m
+
+      Passenger: Olivia Barnes
+
+      WHAT'S INCLUDED
+      - 1 small cabin bag (45x36x20cm, under the seat)
+
+      ADD TO YOUR TRIP
+      + Large cabin bag (56x45x25cm, overhead locker): from GBP 7.49
+      + 23kg hold bag: from GBP 12.99
+      + Seat selection: from GBP 3.99
+      + Travel insurance: from GBP 6.50
+      + FLEXI upgrade (free changes + speedy boarding): GBP 22.99
+
+      Check in online between 30 days and 2 hours before departure at easyjet.com.
+
+      Important: Print your boarding pass or have it on the easyJet app. You will be charged GBP 9.00 at the airport if you need a boarding pass reprinted.
+
+      easyJet | easyjet.com
+    ground_truth: '{"flights":[{"origin":"LGW","destination":"AMS","date":"2024-06-28","airline":"easyJet","flightNumber":"U2 8412"}]}'
+  assert: []
+
+- vars:
+    email_text: |
+      Subject: Confirmacion de Reserva LATAM / Booking Confirmation
+
+      LATAM Airlines
+      latam.com
+
+      Codigo de Reserva / Booking Code: XR4K8N
+
+      Estimado(a) Sr. Alejandro Fuentes / Dear Mr. Alejandro Fuentes,
+
+      Su reserva ha sido confirmada. / Your booking has been confirmed.
+
+      DETALLES DEL VUELO / FLIGHT DETAILS
+      ----------------------------------------
+      Vuelo / Flight: LA 533
+      Fecha / Date: 22 de noviembre de 2024 (viernes / Friday)
+      Salida / Departure: Santiago de Chile, Arturo Merino Benitez (SCL) - 23:55
+      Llegada / Arrival: Miami International (MIA) - 08:40+1 (hora local / local time)
+      Aeronave / Aircraft: Boeing 787-9 Dreamliner
+      Clase / Class: Economy (W)
+      Asiento / Seat: 31G
+
+      Pasajero / Passenger: Alejandro Fuentes
+      LATAM Pass: 419283756
+      Numero de Boleto / Ticket Number: 045-8291037465
+
+      EQUIPAJE / BAGGAGE
+      Bodega / Checked: 1 x 23kg incluido / included
+      Cabina / Cabin: 1 x 10kg
+
+      Check-in en linea disponible desde 48 horas antes de la salida en latam.com.
+      Online check-in available from 48 hours before departure at latam.com.
+
+      Buen viaje! / Have a great trip!
+
+      LATAM Airlines
+    ground_truth: '{"flights":[{"origin":"SCL","destination":"MIA","date":"2024-11-22","airline":"LATAM Airlines","flightNumber":"LA 533"}]}'
+  assert: []
+
+- vars:
+    email_text: |
+      Subject: Qatar Airways Booking Confirmation - QR 702
+
+      Qatar Airways
+      qatarairways.com
+
+      Booking Reference: QR8M3W
+
+      Dear Mr. James Harrington,
+
+      Thank you for choosing Qatar Airways, the World's Best Airline (Skytrax 2024). Your booking is confirmed.
+
+      FLIGHT DETAILS
+      ----------------------------------------
+      Flight: QR 702
+      Date: Monday, 5 August 2024
+      Departure: Hamad International Airport, Doha (DOH) at 08:00
+      Arrival: London Heathrow (LHR) Terminal 4 at 12:50 (local time)
+      Aircraft: Airbus A350-1000
+      Class: Business Class (J)
+      Seat: 5A
+
+      Passenger: Mr. James Harrington
+      Privilege Club (Qmiles): 2930184756
+      Ticket Number: 157-3928174650
+
+      LOUNGE ACCESS
+      As a Business Class passenger, you are invited to the Al Mourjan Business Lounge at Hamad International Airport. The lounge is located in the main terminal after immigration and security. Access is complimentary for you and one guest.
+
+      BAGGAGE ALLOWANCE
+      Checked: 2 x 32kg
+      Cabin: 1 x 15kg (including laptop bag)
+
+      ADDITIONAL SERVICES
+      - Complimentary chauffeur-driven airport transfer (within 60 miles of airport)
+      - Priority check-in and boarding
+      - Onboard Wi-Fi: Complimentary for Privilege Club members
+
+      Online check-in opens 48 hours before departure at qatarairways.com.
+
+      We look forward to welcoming you on board.
+
+      Qatar Airways
+      Going Places Together
+    ground_truth: '{"flights":[{"origin":"DOH","destination":"LHR","date":"2024-08-05","airline":"Qatar Airways","flightNumber":"QR 702"}]}'
+  assert: []
+
+- vars:
+    email_text: |
+      Subject: Etihad Airways - Booking Confirmation EY 103
+
+      Etihad Airways
+      etihad.com
+
+      Booking Reference: EY9K2WT
+
+      Dear Dr. Fatima Al-Rashid,
+
+      Your Etihad Airways booking has been confirmed. We look forward to welcoming you on board.
+
+      FLIGHT DETAILS
+      ----------------------------------------
+      Flight: EY 103
+      Date: Wednesday, 15 January 2025
+      Departure: Abu Dhabi International Airport (AUH) Terminal 3 at 02:20
+      Arrival: New York John F. Kennedy (JFK) Terminal 1 at 08:05 (local time)
+      Aircraft: Boeing 787-10 Dreamliner
+      Class: Business (J)
+      Seat: 8K
+      Duration: 13h 45m (nonstop)
+
+      Passenger: Dr. Fatima Al-Rashid
+      Etihad Guest: 104829375
+      Ticket Number: 607-2918374650
+
+      ABU DHABI STOPOVER
+      Extend your journey with an Abu Dhabi Stopover from USD 23 per night at premium hotels. Book at etihad.com/stopover to explore the capital of the UAE.
+
+      BAGGAGE ALLOWANCE
+      Checked: 2 x 32kg
+      Cabin: 1 x 12kg + 1 briefcase/handbag
+
+      LOUNGE ACCESS
+      Business Class passengers enjoy access to the Etihad Premium Lounge at AUH Terminal 3, featuring a la carte dining, spa facilities, and a relaxation area.
+
+      Check-in online from 30 hours before departure at etihad.com.
+
+      Safe travels,
+
+      Etihad Airways
+      Choose Well
+    ground_truth: '{"flights":[{"origin":"AUH","destination":"JFK","date":"2025-01-15","airline":"Etihad Airways","flightNumber":"EY 103"}]}'
+  assert: []

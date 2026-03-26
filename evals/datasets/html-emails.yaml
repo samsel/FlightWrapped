@@ -1,0 +1,186 @@
+- vars:
+    email_text: |
+      Subject: Your Trip Confirmation - Delta Air Lines
+
+      Delta Air Lines Your Trip Receipt Confirmation Number GKWT49
+      Passenger  Ticket Number  SkyMiles Number
+      Jason Lee  006-7291048372  4829103847
+      Flight Details
+      DL 472 JFK LAX 2024-04-18 Economy
+      Departs 08:15 AM EDT Arrives 11:22 AM PDT
+      Terminal 4  Terminal 2  Boeing 757-200
+      Seat 28A Main Cabin
+      1 Personal Item 1 Carry-On
+      Base Fare $149.00 Taxes & Fees $29.83 Total $178.83
+      VISA ending 8472
+      Manage Your Trip at delta.com
+      Need help? Call 800-221-1212
+      Delta Air Lines Inc Atlanta GA 30354
+    ground_truth: '{"flights":[{"origin":"JFK","destination":"LAX","date":"2024-04-18","airline":"Delta Air Lines","flightNumber":"DL 472"}]}'
+  assert: []
+
+- vars:
+    email_text: |
+      Subject: United Airlines - Flight Confirmation
+
+
+
+      United Airlines
+
+
+
+
+      Confirmation Number: WQKN84
+
+
+      Your flight is confirmed.
+
+
+      Flight Details
+
+
+      UA 891
+      June 10, 2024
+
+      Departing:   Chicago O'Hare (ORD)    Terminal 1
+      Arriving:   San Francisco (SFO)    Terminal 3
+
+      Departure Time: 9:30 AM CDT
+      Arrival Time: 11:55 AM PDT
+
+
+      Class: Economy   Seat: 31C
+
+      Passenger: Rebecca Thornton
+
+
+
+      MileagePlus Number: QK82917430
+
+
+
+
+      Add bags   Select seats   Check in
+
+
+
+      Download the United app for mobile boarding pass.
+
+
+      United Airlines Inc. 233 S Wacker Dr Chicago IL 60606
+      Privacy Policy   Terms   Unsubscribe
+    ground_truth: '{"flights":[{"origin":"ORD","destination":"SFO","date":"2024-06-10","airline":"United Airlines","flightNumber":"UA 891"}]}'
+  assert: []
+
+- vars:
+    email_text: |
+      Subject: Southwest Airlines Confirmation
+
+      Southwest Airlines(R) -- Confirmation # N8KW4T
+      AIR Itinerary
+      Content-Type: text/plain; charset=utf-8
+      PASSENGER(S): Marcus Johnson
+
+      DEPART: Friday, March 22, 2024
+      WN 2341
+      Departs Arrives
+      Chicago Midway (MDW) Fort Lauderdale (FLL)
+      03:45 PM CDT 07:52 PM EDT
+      Wanna Get Away(TM)
+
+      You can check in for your flight at southwest.com starting
+      24 hours before departure. No assigned seats -- earlier
+      check-in = better boarding position!
+
+      RAPID REWARDS # 7291048
+      This is a text/html email with this text/plain fallback.
+      southwest.com | 1-800-435-9792
+      Southwest Airlines Co. P.O. Box 36647 Dallas, TX 75235
+    ground_truth: '{"flights":[{"origin":"MDW","destination":"FLL","date":"2024-03-22","airline":"Southwest Airlines","flightNumber":"WN 2341"}]}'
+  assert: []
+
+- vars:
+    email_text: |
+      Subject: Emirates Booking Confirmation - Your upcoming flight
+
+      Emirates Fly Better Hello. Fly Emirates to over 150 destinations.
+      BOOK HOTELS BOOK CARS HOLIDAY PACKAGES JOIN SKYWARDS
+      Earn miles on every flight! Sign up for Emirates Skywards today.
+      ___________________________________________________________
+      Dear Mr. Ahmed Khalil,
+      Your booking is confirmed. Booking Reference: EKWN92
+      ___________________________________________________________
+      FLIGHT INFORMATION
+      Flight: EK 215
+      Date: 01 December 2024
+      From: Dubai International Airport (DXB) Terminal 3
+      To: John F. Kennedy International Airport (JFK) Terminal 4
+      Departure: 02:30 GST Arrival: 08:05 EST
+      Class: Economy Duration: 13h 35m
+      Seat: 38K Aircraft: Airbus A380
+      ___________________________________________________________
+      Complimentary: Meals Beverages Entertainment 30kg baggage
+      ___________________________________________________________
+      UPGRADE TO BUSINESS CLASS Experience our lie-flat seats
+      gourmet dining and onboard lounge. Upgrade from USD 1,299.
+      Click here to upgrade now.
+      ___________________________________________________________
+      DUBAI STOPOVER Add a Dubai stopover to your trip from just
+      USD 35/night at participating hotels. Explore Dubai!
+      ___________________________________________________________
+      EMIRATES HOLIDAYS Book your hotel Car rental Tours
+      ___________________________________________________________
+      Manage your booking at emirates.com
+      Emirates Group | dnata | Emirates Skywards
+      The Emirates Group HQ PO Box 686 Dubai UAE
+      Privacy Unsubscribe Contact
+    ground_truth: '{"flights":[{"origin":"DXB","destination":"JFK","date":"2024-12-01","airline":"Emirates","flightNumber":"EK 215"}]}'
+  assert: []
+
+- vars:
+    email_text: |
+      Subject: Ryanair Booking Confirmation
+
+      Ryanair Booking Ref: RYN4KW8
+      FR 8164
+      15/05/2024
+      London Stansted (STN) Barcelona (BCN)
+      06:40 10:00
+      Pax: Oliver Smith
+      Fare: Regular
+      Seat: Not allocated
+      Check in online 24hrs-2hrs before. EUR 55 airport fee if not.
+      Add bags priority seats at ryanair.com
+      Ryanair DAC Dublin Ireland
+    ground_truth: '{"flights":[{"origin":"STN","destination":"BCN","date":"2024-05-14","airline":"Ryanair","flightNumber":"FR 8164"}]}'
+  assert: []
+
+- vars:
+    email_text: |
+      Subject: American Airlines - Electronic Ticket Receipt
+
+      American Airlines Electronic Ticket Receipt
+      Date of Issue: December 22, 2024 Issuing Office: AA.COM
+      PASSENGER THOMPSON/KAREN MS RECORD LOCATOR VQKN82
+      TICKET NUMBER 001-4829103847 AADVANTAGE 8KQ2917
+      FORM OF PAYMENT VISA XXXXXXXXXXXX7291
+      ITINERARY
+      01 AA 1782 09JAN DFWLAX 0830 1005 ECONOMY (S) OK
+      DALLAS/FT WORTH INTL (DFW) Terminal A Gate A22
+      LOS ANGELES INTL (LAX) Terminal 4
+      BOEING 737-800 DURATION 2H 35M NON-STOP
+      SEAT 18F MAIN CABIN
+      FARE CALCULATION DFW AA LAX 179.00 USD END
+      BASE FARE USD 179.00
+      TAX US USD 13.43
+      TAX ZP USD 4.20
+      TAX AY USD 5.60
+      TAX XF DFW4.50 USD 4.50
+      TOTAL USD 206.73
+      FARE BASIS SAVNR7NR FARE RULES NON-REFUNDABLE
+      CHANGE FEE MAY APPLY BAGGAGE 1 PERSONAL ITEM
+      CHECKED BAGS ADDITIONAL FEE FIRST BAG USD 35 SECOND BAG USD 45
+      NEED HELP? CALL 800-433-7300 AA.COM
+      American Airlines Inc Fort Worth TX 76155
+    ground_truth: '{"flights":[{"origin":"DFW","destination":"LAX","date":"2025-01-09","airline":"American Airlines","flightNumber":"AA 1782"}]}'
+  assert: []

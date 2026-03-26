@@ -1,0 +1,32 @@
+# FlightWrapped Batch Extraction Eval Configuration
+# Tests the batch extraction prompt (3 emails per LLM call).
+#
+# Usage:
+#   cd evals && npx promptfoo eval -c promptfooconfig.batch.yaml
+#   npx promptfoo view
+
+description: FlightWrapped Batch Flight Extraction Evals
+
+providers:
+  - id: ollama:chat:llama3.2:3b
+    label: llama3.2-3b
+    config:
+      temperature: 0.1
+      num_predict: 1500
+      passthrough:
+        format: 'json'
+
+prompts:
+  - file://prompts/batch-extract.txt
+
+tests:
+  - file://datasets/batch-extraction.yaml
+
+defaultTest:
+  assert:
+    # Custom assertion: validates batch JSON extraction, per-email keys,
+    # IATA codes, dates, and ground truth accuracy per email.
+    - type: javascript
+      value: file://assertions/batch-assertions.mjs
+
+outputPath: output/batch-eval-results.json

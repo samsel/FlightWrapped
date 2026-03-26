@@ -1,0 +1,301 @@
+- vars:
+    email_text: |
+      Subject: Your Flight Confirmation - United Airlines
+
+      Dear Michael Chen,
+
+      Thank you for booking with United Airlines. Your reservation is confirmed.
+
+      Confirmation Number: J7K2M9
+
+      Flight Details:
+      Flight: UA 1452
+      Date: March 15, 2024
+      Departure: San Francisco (SFO) at 8:30 AM
+      Arrival: Chicago O'Hare (ORD) at 2:45 PM
+      Class: Economy (N)
+
+      Passenger: Michael Chen
+      Seat: 24A
+
+      Please arrive at the airport at least 2 hours before departure.
+
+      Manage your reservation at united.com
+    ground_truth: '{"flights":[{"origin":"SFO","destination":"ORD","date":"2024-03-15","airline":"United Airlines","flightNumber":"UA 1452"}]}'
+  assert: []
+
+- vars:
+    email_text: |
+      Subject: Delta Air Lines - Trip Confirmation
+
+      Confirmation #: GHTW4N
+
+      Hello Sarah Johnson,
+
+      Your trip is confirmed! Here are your flight details:
+
+      OUTBOUND
+      Delta Flight DL 847
+      Saturday, June 22, 2024
+      Departs: Atlanta (ATL) 11:15 AM
+      Arrives: New York JFK (JFK) 3:05 PM
+      Aircraft: Boeing 737-900ER
+      Duration: 2h 50m
+
+      Seat: 14C (Main Cabin)
+
+      Check in online 24 hours before departure at delta.com.
+
+      Thank you for choosing Delta Air Lines.
+    ground_truth: '{"flights":[{"origin":"ATL","destination":"JFK","date":"2024-06-22","airline":"Delta Air Lines","flightNumber":"DL 847"}]}'
+  assert: []
+
+- vars:
+    email_text: |
+      Subject: American Airlines Reservation Confirmation - RECORD LOCATOR: PQXL3R
+
+      American Airlines
+
+      Passenger Name: David Williams
+      Record Locator: PQXL3R
+
+      Your Itinerary
+
+      Flight AA 2291
+      Wednesday, October 9, 2024
+      Dallas/Fort Worth (DFW) to Miami (MIA)
+      Depart: 7:00 AM CDT
+      Arrive: 11:15 AM EDT
+
+      Cabin: Main Cabin Extra
+      Seat: 9F
+
+      AAdvantage Number: 4A72K91
+
+      Ticket Number: 0012345678901
+
+      Need to make changes? Visit aa.com or call 800-433-7300.
+    ground_truth: '{"flights":[{"origin":"DFW","destination":"MIA","date":"2024-10-09","airline":"American Airlines","flightNumber":"AA 2291"}]}'
+  assert: []
+
+- vars:
+    email_text: |
+      Subject: Southwest Airlines Flight Confirmation
+
+      Howdy, Jessica Martinez!
+
+      You're all set to fly! Here's your upcoming trip:
+
+      Confirmation #: R4T6WQ
+
+      Air Itinerary
+
+      WN 3087
+      Departing: Denver (DEN)
+      Date: April 5, 2024
+      Time: 2:20 PM MDT
+
+      Arriving: Seattle (SEA)
+      Time: 4:10 PM PDT
+
+      Wanna Get Away fare
+
+      Remember, open seating! Check in 24 hours early for the best boarding position.
+
+      RAPID REWARDS #: 88412065
+
+      Have a great flight!
+      Southwest Airlines
+    ground_truth: '{"flights":[{"origin":"DEN","destination":"SEA","date":"2024-04-05","airline":"Southwest Airlines","flightNumber":"WN 3087"}]}'
+  assert: []
+
+- vars:
+    email_text: |
+      Subject: JetBlue Booking Confirmation - B6 416
+
+      JetBlue Airways
+
+      Hi Robert Kim,
+
+      Your reservation is confirmed.
+
+      Confirmation Code: NLPQTM
+
+      Flight B6 416
+      August 18, 2024
+      Boston Logan (BOS) -> Fort Lauderdale (FLL)
+      Departure: 6:45 AM EDT
+      Arrival: 10:30 AM EDT
+
+      Fare Class: Blue Extra
+      Seat: 3A (Even More Space)
+
+      TrueBlue Points Earned: 842
+
+      Add bags, pick seats, and check in at jetblue.com.
+
+      Happy Jetting!
+    ground_truth: '{"flights":[{"origin":"BOS","destination":"FLL","date":"2024-08-18","airline":"JetBlue Airways","flightNumber":"B6 416"}]}'
+  assert: []
+
+- vars:
+    email_text: |
+      Subject: British Airways Booking Confirmation - Ref: Z3K7PN
+
+      British Airways
+
+      Booking Reference: Z3K7PN
+
+      Dear Mr. James Thornton,
+
+      Thank you for your booking with British Airways.
+
+      Flight BA 178
+      Date: 14 November 2024
+      From: London Heathrow (LHR) Terminal 5
+      To: New York John F. Kennedy (JFK) Terminal 7
+      Departure: 09:25 GMT
+      Arrival: 12:40 EST
+
+      Cabin: World Traveller Plus (Premium Economy)
+      Seat: 21K
+
+      E-Ticket Number: 125-4567890123
+      Executive Club Number: 09182736
+
+      Please ensure your passport details are up to date. Online check-in opens 24 hours before departure.
+
+      Kind regards,
+      British Airways
+    ground_truth: '{"flights":[{"origin":"LHR","destination":"JFK","date":"2024-11-14","airline":"British Airways","flightNumber":"BA 178"}]}'
+  assert: []
+
+- vars:
+    email_text: |
+      Subject: Emirates Booking Confirmation | Reference: EK4827LM
+
+      Emirates
+
+      Booking Reference: EK4827LM
+
+      Dear Ms. Aisha Al-Rashid,
+
+      Your Emirates flight has been confirmed.
+
+      Flight EK 231
+      Date: 20 December 2024
+      Route: Dubai International (DXB) Terminal 3 to London Heathrow (LHR) Terminal 3
+      Departure: 14:45 GST
+      Arrival: 19:10 GMT
+      Aircraft: Airbus A380-800
+
+      Class: Business Class
+      Seat: 12A
+
+      Skywards Number: EK 291847562
+
+      Complimentary chauffeur service has been arranged.
+
+      Please check in online at emirates.com from 48 hours before departure.
+
+      Warm regards,
+      Emirates
+    ground_truth: '{"flights":[{"origin":"DXB","destination":"LHR","date":"2024-12-20","airline":"Emirates","flightNumber":"EK 231"}]}'
+  assert: []
+
+- vars:
+    email_text: |
+      Subject: Lufthansa Buchungsbestätigung / Booking Confirmation - PNR: LH8K2Q
+
+      Lufthansa
+
+      Booking Code: LH8K2Q
+
+      Dear Mr. Thomas Müller,
+
+      Your Lufthansa booking is confirmed.
+
+      Flight LH 400
+      Date: 07 January 2025
+      From: Frankfurt (FRA) Terminal 1
+      To: New York (JFK) Terminal 1
+      Departure: 10:30 CET
+      Arrival: 13:25 EST
+      Duration: 8h 55m
+      Aircraft: Airbus A340-600
+
+      Booking Class: Business (C)
+      Seat: 5K
+
+      Miles & More Number: 2918374650
+
+      Online check-in is available from 23 hours before departure at lufthansa.com.
+
+      Mit freundlichen Grüßen / Kind regards,
+      Lufthansa German Airlines
+    ground_truth: '{"flights":[{"origin":"FRA","destination":"JFK","date":"2025-01-07","airline":"Lufthansa","flightNumber":"LH 400"}]}'
+  assert: []
+
+- vars:
+    email_text: |
+      Subject: Ryanair Booking Confirmation - REF: RYN7X2K
+
+      Ryanair
+
+      Booking Reference: RYN7X2K
+
+      Hi Emma O'Brien,
+
+      Your booking is confirmed!
+
+      Flight FR 206
+      Date: 30/08/2024
+      From: Dublin (DUB) Terminal 1
+      To: Barcelona El Prat (BCN) Terminal 2
+      Departure: 06:15
+      Arrival: 09:55 (local time)
+
+      Fare Type: Value
+      Seat: 17B (allocated at check-in if not selected)
+
+      IMPORTANT: Check in online between 24 hours and 2 hours before departure to avoid airport check-in fee (EUR 55).
+
+      Add bags, seats, and priority at ryanair.com.
+
+      Ryanair - Low Fares. Made Simple.
+    ground_truth: '{"flights":[{"origin":"DUB","destination":"BCN","date":"2024-08-30","airline":"Ryanair","flightNumber":"FR 206"}]}'
+  assert: []
+
+- vars:
+    email_text: |
+      Subject: Air Canada - Booking Confirmation AC 887
+
+      Air Canada
+
+      Booking Reference: BK4NWT
+
+      Dear Patricia Nguyen,
+
+      Your Air Canada reservation has been confirmed.
+
+      Flight: AC 887
+      Date: May 3, 2024
+      From: Toronto Pearson (YYZ) Terminal 1
+      To: Vancouver (YVR) Domestic Terminal
+      Departure: 4:55 PM EDT
+      Arrival: 7:15 PM PDT
+      Duration: 5h 20m
+
+      Class: Premium Economy (O)
+      Seat: 11D
+
+      Aeroplan Number: MR92841
+
+      E-ticket Number: 014-7291038476
+
+      Check in online starting 24 hours before departure at aircanada.com.
+
+      Merci / Thank you,
+      Air Canada
+    ground_truth: '{"flights":[{"origin":"YYZ","destination":"YVR","date":"2024-05-03","airline":"Air Canada","flightNumber":"AC 887"}]}'
+  assert: []

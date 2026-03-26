@@ -1,0 +1,84 @@
+# FlightWrapped LLM Eval Configuration
+# Evaluates flight extraction accuracy using local Ollama models.
+#
+# Prerequisites:
+#   1. Ollama running locally: https://ollama.com
+#   2. Model pulled: ollama pull llama3.2:3b
+#
+# Usage:
+#   cd evals && npx promptfoo eval
+#   npx promptfoo view          # open HTML report
+
+description: FlightWrapped Flight Extraction Evals
+
+providers:
+  # Primary: Llama 3.2 3B (lightweight, fast on any laptop)
+  - id: ollama:chat:llama3.2:3b
+    label: llama3.2-3b
+    config:
+      temperature: 0.1
+      num_predict: 500
+      passthrough:
+        format: 'json'
+
+  # Alternative: SmolLM3 3B (outperforms Llama 3.2 on benchmarks, 128K context)
+  # Uncomment if you have smollm3:3b installed in Ollama
+  # - id: ollama:chat:smollm3:3b
+  #   label: smollm3-3b
+  #   config:
+  #     temperature: 0.1
+  #     num_predict: 500
+  #     passthrough:
+  #       format: 'json'
+
+  # Alternative: Llama 3.1 8B (better accuracy, needs more RAM)
+  # - id: ollama:chat:llama3.1:8b
+  #   label: llama3.1-8b
+  #   config:
+  #     temperature: 0.1
+  #     num_predict: 500
+  #     passthrough:
+  #       format: 'json'
+
+# --- Single-email extraction tests ---
+prompts:
+  - file://prompts/single-extract.txt
+
+tests:
+  # Category 1: Single flight extraction (diverse airlines)
+  - file://datasets/single-flight.yaml
+
+  # Category 2: Multi-flight itineraries (round trips, connections)
+  - file://datasets/multi-flight.yaml
+
+  # Category 3: No-flight emails (should return empty flights array)
+  - file://datasets/no-flight.yaml
+
+  # Category 4: Edge cases (date formats, languages, noise)
+  - file://datasets/edge-cases.yaml
+
+  # Category 5: Airline-specific email formats
+  - file://datasets/airline-formats.yaml
+
+  # Category 6: Booking platforms (Expedia, Kayak, Trip.com)
+  - file://datasets/booking-platforms.yaml
+
+  # Category 7: HTML email content (stripped to plain text)
+  - file://datasets/html-emails.yaml
+
+  # Category 8: Adversarial & robustness tests
+  - file://datasets/robustness.yaml
+
+  # Category 9: Additional high-traffic airlines
+  - file://datasets/high-traffic-airlines.yaml
+
+defaultTest:
+  assert:
+    # Custom assertion: validates JSON extraction, IATA codes, dates,
+    # and ground truth accuracy (precision/recall). Handles markdown
+    # code fences and thinking tags in LLM output gracefully.
+    - type: javascript
+      value: file://assertions/flight-assertions.mjs
+
+# Output configuration
+outputPath: output/eval-results.json

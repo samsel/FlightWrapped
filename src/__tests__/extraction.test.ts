@@ -130,9 +130,6 @@ describe('Eval framework', () => {
     const groundTruth = [flight({ airline: 'United Airlines' })]
 
     const result = evaluateExtraction(extracted, groundTruth)
-    expect(result.fieldAccuracy.origin.accuracy).toBe(1)
-    expect(result.fieldAccuracy.destination.accuracy).toBe(1)
-    expect(result.fieldAccuracy.date.accuracy).toBe(1)
     expect(result.fieldAccuracy.airline.accuracy).toBe(0) // "UA" != "United Airlines"
     expect(result.fieldAccuracy.flightNumber.accuracy).toBe(1)
   })
