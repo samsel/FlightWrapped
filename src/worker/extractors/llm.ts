@@ -131,13 +131,22 @@ export function validateFlightItems(items: unknown[], emailDate: string): Flight
 export function parseLlmResponse(content: string, emailDate: string): Flight[] {
   // Strip Qwen3 thinking tags if present (should be suppressed by /no_think)
   content = content.replace(/<think>[\s\S]*?<\/think>/g, '').trim()
+  // Strip markdown code fences
+  content = content.replace(/^```(?:json)?\s*\n?/i, '').replace(/\n?```\s*$/i, '').trim()
+  // Merge duplicate "flights" keys: {"flights":[A],"flights":[B]} → {"flights":[A,B]}
+  const firstFlightsIdx = content.indexOf('"flights"')
+  content = content.replace(/"flights"\s*:\s*\[/g, (match, offset: number) => {
+    if (offset === firstFlightsIdx) return match
+    return '"__dup_flights":['
+  })
+
   const openIdx = content.indexOf('{')
   if (openIdx === -1) return []
 
-  let parsed: { flights?: unknown; flight?: unknown } | null = null
+  let parsed: Record<string, unknown> | null = null
   for (let i = content.lastIndexOf('}'); i > openIdx; i = content.lastIndexOf('}', i - 1)) {
     try {
-      parsed = JSON.parse(content.slice(openIdx, i + 1))
+      parsed = JSON.parse(content.slice(openIdx, i + 1)) as Record<string, unknown>
       break
     } catch {
       // try a shorter slice
@@ -145,10 +154,18 @@ export function parseLlmResponse(content: string, emailDate: string): Flight[] {
   }
   if (!parsed) return []
 
+  // Re-merge any duplicate flights arrays
+  if (parsed.__dup_flights) {
+    const existing = Array.isArray(parsed.flights) ? parsed.flights : []
+    const dup = Array.isArray(parsed.__dup_flights) ? parsed.__dup_flights : []
+    parsed.flights = [...existing, ...dup]
+    delete parsed.__dup_flights
+  }
+
   try {
     const rawFlights = parsed.flights ?? parsed.flight ?? []
     const items = Array.isArray(rawFlights) ? rawFlights : [rawFlights]
-    return validateFlightItems(items, emailDate)
+    return validateFlightItems(items as unknown[], emailDate)
   } catch {
     return []
   }
@@ -271,6 +288,9 @@ export function parseBatchLlmResponse(content: string, emails: NormalizedEmail[]
 
   // Strip Qwen3 thinking tags if present (should be suppressed by /no_think)
   content = content.replace(/<think>[\s\S]*?<\/think>/g, '').trim()
+  // Strip markdown code fences
+  content = content.replace(/^```(?:json)?\s*\n?/i, '').replace(/\n?```\s*$/i, '').trim()
+
   const openIdx = content.indexOf('{')
   if (openIdx === -1) return results
 

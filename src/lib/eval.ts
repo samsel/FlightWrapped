@@ -31,6 +31,9 @@ export interface EvalResult {
  * Matching: origin + destination + date (case-insensitive, trimmed).
  * Field accuracy is tracked only for airline and flightNumber since
  * origin/destination/date are the match keys (always 100% for matched pairs).
+ *
+ * NOTE: This matching logic is also implemented in evals/assertions/shared.mjs
+ * for the promptfoo eval suite. Keep both in sync if you change the algorithm.
  */
 export function evaluateExtraction(
   extracted: Flight[],

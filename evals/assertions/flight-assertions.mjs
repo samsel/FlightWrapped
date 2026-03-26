@@ -2,166 +2,22 @@
  * Custom promptfoo assertion provider for single-email flight extraction.
  *
  * Validates LLM output structure, IATA codes, date formats, and compares
- * extracted flights against ground truth using the same matching logic
- * as the production eval.ts (origin + destination + date).
+ * extracted flights against ground truth using precision/recall/F1 scoring.
  *
- * Features:
- *   - Configurable pass threshold via context.vars.pass_threshold (default 0.8)
- *   - Exact-match (EM) metric: 1 if every flight and field matches perfectly
- *   - componentResults for per-flight breakdowns in promptfoo UI
+ * All parsing, validation, and comparison logic lives in shared.mjs to
+ * stay in sync with batch-assertions.mjs and production code.
  *
  * Export: default function(output, context) => { pass, score, reason, componentResults }
  */
 
-// Common IATA codes used in test fixtures + high-traffic airports worldwide.
-const VALID_IATA = new Set([
-  'ATL', 'PEK', 'LAX', 'DXB', 'HND', 'ORD', 'LHR', 'PVG', 'CDG', 'DFW',
-  'AMS', 'FRA', 'IST', 'CAN', 'JFK', 'SIN', 'DEN', 'ICN', 'BKK', 'SFO',
-  'KUL', 'MAD', 'CTU', 'LAS', 'MUC', 'BOM', 'MIA', 'SEA', 'CLT', 'EWR',
-  'PHX', 'IAH', 'SYD', 'MEL', 'GRU', 'YYZ', 'FCO', 'LGW', 'BCN', 'MNL',
-  'BOS', 'MSP', 'DTW', 'NRT', 'HKG', 'MEX', 'DOH', 'ZRH', 'VIE', 'OSL',
-  'CPH', 'HEL', 'ARN', 'LIS', 'WAW', 'PRG', 'BUD', 'DUB', 'EDI', 'MAN',
-  'AKL', 'DEL', 'TPE', 'KIX', 'BNE', 'PER', 'SCL', 'BOG', 'LIM', 'EZE',
-  'JNB', 'CPT', 'CAI', 'ADD', 'NBO', 'CMB', 'DAC', 'KTM', 'RUH', 'JED',
-  'TLV', 'AMM', 'BWI', 'SAN', 'TPA', 'MCO', 'PDX', 'SLC', 'IAD', 'FLL',
-  'AUS', 'RDU', 'STL', 'PIT', 'CLE', 'IND', 'CMH', 'MCI', 'OAK', 'SMF',
-  'STN', 'BGY', 'MDW', 'YVR', 'AUH', 'GIG', 'TBS', 'KBP',
-]);
-
-const DEFAULT_THRESHOLD = 0.8;
-const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
-const IATA_RE = /^[A-Z]{3}$/;
-
-// ---------------------------------------------------------------------------
-// JSON extraction -- mirrors the greedy { ... } approach in production llm.ts
-// ---------------------------------------------------------------------------
-
-function extractJson(raw) {
-  if (!raw || typeof raw !== 'string') return null;
-
-  let content = raw.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
-  content = content.replace(/^```(?:json)?\s*\n?/i, '').replace(/\n?```\s*$/i, '').trim();
-
-  // Merge duplicate "flights" keys: {"flights":[A],"flights":[B]} → {"flights":[A,B]}
-  content = content.replace(/"flights"\s*:\s*\[/g, (match, offset) => {
-    if (offset === content.indexOf('"flights"')) return match;
-    return '"__dup_flights":[';
-  });
-
-  const openIdx = content.indexOf('{');
-  if (openIdx === -1) return null;
-
-  for (let i = content.lastIndexOf('}'); i > openIdx; i = content.lastIndexOf('}', i - 1)) {
-    try {
-      const parsed = JSON.parse(content.slice(openIdx, i + 1));
-      // Re-merge any duplicate flights arrays
-      if (parsed.__dup_flights) {
-        parsed.flights = [...(parsed.flights || []), ...parsed.__dup_flights];
-        delete parsed.__dup_flights;
-      }
-      return parsed;
-    } catch {
-      // try shorter slice
-    }
-  }
-  return null;
-}
-
-// ---------------------------------------------------------------------------
-// Flight validation helpers
-// ---------------------------------------------------------------------------
-
-function isValidIata(code) {
-  if (!code || typeof code !== 'string') return false;
-  return IATA_RE.test(code.toUpperCase().trim());
-}
-
-function isKnownIata(code) {
-  return VALID_IATA.has(code.toUpperCase().trim());
-}
-
-function isValidDate(d) {
-  return typeof d === 'string' && DATE_RE.test(d);
-}
-
-function normalizeFlightNum(fn) {
-  if (!fn || typeof fn !== 'string') return '';
-  return fn.replace(/\s+/g, '').toUpperCase();
-}
-
-// ---------------------------------------------------------------------------
-// Ground-truth comparison (mirrors eval.ts logic)
-// ---------------------------------------------------------------------------
-
-function compareToGroundTruth(extracted, groundTruth) {
-  if (groundTruth.length === 0 && extracted.length === 0) {
-    return { precision: 1, recall: 1, f1: 1, truePositives: 0, exactMatch: true, airlineAcc: 1, flightNumAcc: 1, perFlight: [] };
-  }
-  if (groundTruth.length === 0) {
-    return { precision: 0, recall: 1, f1: 0, truePositives: 0, exactMatch: false, airlineAcc: 0, flightNumAcc: 0, perFlight: [] };
-  }
-  if (extracted.length === 0) {
-    return { precision: 1, recall: 0, f1: 0, truePositives: 0, exactMatch: false, airlineAcc: 0, flightNumAcc: 0, perFlight: [] };
-  }
-
-  const matched = new Set();
-  let truePositives = 0;
-  let airlineCorrect = 0;
-  let flightNumCorrect = 0;
-  const perFlight = [];
-
-  for (const ext of extracted) {
-    const matchIdx = groundTruth.findIndex((gt, i) =>
-      !matched.has(i) &&
-      (gt.origin || '').toUpperCase().trim() === (ext.origin || '').toUpperCase().trim() &&
-      (gt.destination || '').toUpperCase().trim() === (ext.destination || '').toUpperCase().trim() &&
-      (gt.date || '') === (ext.date || '')
-    );
-
-    if (matchIdx >= 0) {
-      matched.add(matchIdx);
-      truePositives++;
-      const gt = groundTruth[matchIdx];
-
-      const airlineMatch = (ext.airline || '').toUpperCase().trim() === (gt.airline || '').toUpperCase().trim();
-      const fnMatch = normalizeFlightNum(ext.flightNumber) === normalizeFlightNum(gt.flightNumber);
-      if (airlineMatch) airlineCorrect++;
-      if (fnMatch) flightNumCorrect++;
-
-      perFlight.push({
-        extracted: `${ext.origin}-${ext.destination} ${ext.date}`,
-        matched: true,
-        airlineMatch,
-        flightNumMatch: fnMatch,
-      });
-    } else {
-      perFlight.push({
-        extracted: `${ext.origin || '?'}-${ext.destination || '?'} ${ext.date || '?'}`,
-        matched: false,
-        airlineMatch: false,
-        flightNumMatch: false,
-      });
-    }
-  }
-
-  const precision = truePositives / extracted.length;
-  const recall = truePositives / groundTruth.length;
-  const f1 = precision + recall > 0 ? (2 * precision * recall) / (precision + recall) : 0;
-  const airlineAcc = truePositives > 0 ? airlineCorrect / truePositives : 0;
-  const flightNumAcc = truePositives > 0 ? flightNumCorrect / truePositives : 0;
-
-  // Exact match: every ground truth flight matched AND every field is correct
-  const exactMatch = truePositives === groundTruth.length &&
-    truePositives === extracted.length &&
-    airlineCorrect === truePositives &&
-    flightNumCorrect === truePositives;
-
-  return { precision, recall, f1, truePositives, exactMatch, airlineAcc, flightNumAcc, perFlight };
-}
-
-// ---------------------------------------------------------------------------
-// Main assertion entry point
-// ---------------------------------------------------------------------------
+import {
+  extractJson,
+  validateFlights,
+  normalizeFlightDates,
+  compareToGroundTruth,
+  parseGroundTruth,
+  DEFAULT_THRESHOLD,
+} from './shared.mjs';
 
 /**
  * @param {string} output  - Raw LLM response string
@@ -191,34 +47,10 @@ export default function flightAssertion(output, context) {
   const flights = Array.isArray(rawFlights) ? rawFlights : [rawFlights];
 
   // Normalize dates: strip time components (e.g. "2024-11-04T07:00:00" → "2024-11-04")
-  for (const f of flights) {
-    if (f && typeof f.date === 'string' && f.date.includes('T')) {
-      f.date = f.date.split('T')[0];
-    }
-  }
+  normalizeFlightDates(flights);
 
-  // -- Step 3: Validate IATA codes --
-  const iataErrors = [];
-  const unknownIata = [];
-  for (let i = 0; i < flights.length; i++) {
-    const f = flights[i];
-    if (!f || typeof f !== 'object') continue;
-
-    const origin = String(f.origin ?? '').toUpperCase().trim();
-    const dest = String(f.destination ?? '').toUpperCase().trim();
-
-    if (!isValidIata(origin)) {
-      iataErrors.push(`Flight ${i}: invalid origin "${origin}"`);
-    } else if (!isKnownIata(origin)) {
-      unknownIata.push(origin);
-    }
-
-    if (!isValidIata(dest)) {
-      iataErrors.push(`Flight ${i}: invalid destination "${dest}"`);
-    } else if (!isKnownIata(dest)) {
-      unknownIata.push(dest);
-    }
-  }
+  // -- Step 3: Validate IATA codes and dates --
+  const { iataErrors, unknownIata, dateErrors } = validateFlights(flights);
 
   if (iataErrors.length > 0) {
     reasons.push(`IATA errors: ${iataErrors.join('; ')}`);
@@ -226,45 +58,19 @@ export default function flightAssertion(output, context) {
   if (unknownIata.length > 0) {
     reasons.push(`Unknown but syntactically valid IATA codes: ${[...new Set(unknownIata)].join(', ')}`);
   }
-
-  // -- Step 4: Validate date format --
-  const dateErrors = [];
-  for (let i = 0; i < flights.length; i++) {
-    const f = flights[i];
-    if (!f || typeof f !== 'object') continue;
-    const date = String(f.date ?? '');
-    if (!isValidDate(date)) {
-      dateErrors.push(`Flight ${i}: invalid date "${date}"`);
-    }
-  }
-
   if (dateErrors.length > 0) {
     reasons.push(`Date errors: ${dateErrors.join('; ')}`);
   }
 
-  // -- Step 5: Compare against ground truth (if provided) --
+  // -- Step 4: Compare against ground truth (if provided) --
   const vars = context?.vars ?? {};
   const groundTruthRaw = vars.ground_truth;
-
-  // Configurable threshold: set pass_threshold in test vars to override default 0.8
   const threshold = parseFloat(vars.pass_threshold) || DEFAULT_THRESHOLD;
 
   if (groundTruthRaw) {
-    let groundTruth;
-    try {
-      groundTruth = typeof groundTruthRaw === 'string'
-        ? JSON.parse(groundTruthRaw)
-        : groundTruthRaw;
-      if (!Array.isArray(groundTruth)) {
-        groundTruth = groundTruth?.flights ?? groundTruth;
-        if (!Array.isArray(groundTruth)) groundTruth = [groundTruth];
-      }
-    } catch (e) {
-      return {
-        pass: false,
-        score: 0,
-        reason: `Failed to parse ground_truth: ${e.message}`,
-      };
+    const groundTruth = parseGroundTruth(groundTruthRaw);
+    if (!groundTruth) {
+      return { pass: false, score: 0, reason: 'Failed to parse ground_truth' };
     }
 
     const result = compareToGroundTruth(flights, groundTruth);
