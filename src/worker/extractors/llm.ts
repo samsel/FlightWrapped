@@ -81,17 +81,21 @@ export async function extractFromLlm(email: NormalizedEmail): Promise<Flight[]> 
   // Truncate to save tokens; flight info is usually near the top
   const truncated = text.slice(0, 2000)
 
-  const prompt = `Extract all flight information from this email. Return ONLY valid JSON, no other text.
+  const prompt = `Extract confirmed flight bookings from this email. Return ONLY valid JSON, no other text.
 
 Format:
-{"flights":[{"origin":"JFK","destination":"LAX","date":"2024-01-15","airline":"United Airlines","flightNumber":"UA 1234"}]}
+{"flights":[{"origin":"<IATA>","destination":"<IATA>","date":"<YYYY-MM-DD>","airline":"<full airline name>","flightNumber":"<code number>"}]}
 
 Rules:
-- origin and destination must be 3-letter IATA airport codes
-- date must be YYYY-MM-DD format
-- flightNumber should include airline code prefix (e.g. "UA 1234" not just "1234")
-- If no flights found, return: {"flights":[]}
-- Include ALL flights mentioned (outbound + return)
+- Only extract flights from booking confirmations or itinerary receipts
+- Do NOT extract flights from cancellation notices, delay notifications, baggage claims, promotional deals, loyalty account summaries, credit card statements, or other non-booking emails
+- origin is the departure airport, destination is the arrival airport (3-letter IATA codes)
+- date must be YYYY-MM-DD only, no time (e.g. "March 15, 2024" becomes "2024-03-15", "15/06/2024" becomes "2024-06-15", "20MAR2024" becomes "2024-03-20")
+- airline must be the full name (e.g. "American Airlines" not "AA")
+- flightNumber must include airline code prefix (e.g. "UA 1234" not just "1234")
+- Put ALL flights in ONE "flights" array — do not repeat the "flights" key
+- Only include flights explicitly stated with a specific route and date — do not infer or fabricate flights
+- If no confirmed flight bookings found, return: {"flights":[]}
 
 Email:
 ${truncated} /no_think`

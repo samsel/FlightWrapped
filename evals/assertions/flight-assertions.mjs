@@ -42,12 +42,24 @@ function extractJson(raw) {
   let content = raw.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
   content = content.replace(/^```(?:json)?\s*\n?/i, '').replace(/\n?```\s*$/i, '').trim();
 
+  // Merge duplicate "flights" keys: {"flights":[A],"flights":[B]} → {"flights":[A,B]}
+  content = content.replace(/"flights"\s*:\s*\[/g, (match, offset) => {
+    if (offset === content.indexOf('"flights"')) return match;
+    return '"__dup_flights":[';
+  });
+
   const openIdx = content.indexOf('{');
   if (openIdx === -1) return null;
 
   for (let i = content.lastIndexOf('}'); i > openIdx; i = content.lastIndexOf('}', i - 1)) {
     try {
-      return JSON.parse(content.slice(openIdx, i + 1));
+      const parsed = JSON.parse(content.slice(openIdx, i + 1));
+      // Re-merge any duplicate flights arrays
+      if (parsed.__dup_flights) {
+        parsed.flights = [...(parsed.flights || []), ...parsed.__dup_flights];
+        delete parsed.__dup_flights;
+      }
+      return parsed;
     } catch {
       // try shorter slice
     }
@@ -177,6 +189,13 @@ export default function flightAssertion(output, context) {
   }
 
   const flights = Array.isArray(rawFlights) ? rawFlights : [rawFlights];
+
+  // Normalize dates: strip time components (e.g. "2024-11-04T07:00:00" → "2024-11-04")
+  for (const f of flights) {
+    if (f && typeof f.date === 'string' && f.date.includes('T')) {
+      f.date = f.date.split('T')[0];
+    }
+  }
 
   // -- Step 3: Validate IATA codes --
   const iataErrors = [];
