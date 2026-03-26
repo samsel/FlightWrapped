@@ -42,7 +42,7 @@ providers:
 
 # --- Single-email extraction tests ---
 prompts:
-  - file://prompts/single-extract.txt
+  - file://../src/prompts/single-extract.txt
 
 tests:
   # Category 1: Single flight extraction (diverse airlines)

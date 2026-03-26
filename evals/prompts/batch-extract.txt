@@ -2,9 +2,10 @@ Extract flight information from each email below. Return ONLY valid JSON, no oth
 
 Format: {"email_1":{"flights":[]},"email_2":{"flights":[]},"email_3":{"flights":[]}}
 
-For each email, list flights with: origin (3-letter IATA), destination (3-letter IATA), date (YYYY-MM-DD), airline, flightNumber (with airline prefix).
-If no flights found for an email, return empty flights array.
-Include ALL flights mentioned (outbound + return).
+For each email, extract only confirmed flight bookings with: origin (3-letter IATA), destination (3-letter IATA), date (YYYY-MM-DD), airline (full name), flightNumber (with airline prefix).
+Do NOT extract flights from cancellation notices, delay notifications, baggage claims, or promotional emails.
+If no confirmed flight bookings found for an email, return empty flights array.
+Only include flights explicitly stated — do not infer or fabricate flights.
 
 === EMAIL 1 ===
 {{email_1}}

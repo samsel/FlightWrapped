@@ -1,5 +1,6 @@
 import type { Flight, NormalizedEmail } from '@/lib/types'
 import { isValidIATA } from '@/lib/airports'
+import singleExtractPrompt from '@/prompts/single-extract.txt?raw'
 
 /**
  * Local LLM flight extraction. The sole extraction method.
@@ -81,24 +82,7 @@ export async function extractFromLlm(email: NormalizedEmail): Promise<Flight[]> 
   // Truncate to save tokens; flight info is usually near the top
   const truncated = text.slice(0, 2000)
 
-  const prompt = `Extract confirmed flight bookings from this email. Return ONLY valid JSON, no other text.
-
-Format:
-{"flights":[{"origin":"<IATA>","destination":"<IATA>","date":"<YYYY-MM-DD>","airline":"<full airline name>","flightNumber":"<code number>"}]}
-
-Rules:
-- Only extract flights from booking confirmations or itinerary receipts
-- Do NOT extract flights from cancellation notices, delay notifications, baggage claims, promotional deals, loyalty account summaries, credit card statements, or other non-booking emails
-- origin is the departure airport, destination is the arrival airport (3-letter IATA codes)
-- date must be YYYY-MM-DD only, no time (e.g. "March 15, 2024" becomes "2024-03-15", "15/06/2024" becomes "2024-06-15", "20MAR2024" becomes "2024-03-20")
-- airline must be the full name (e.g. "American Airlines" not "AA")
-- flightNumber must include airline code prefix (e.g. "UA 1234" not just "1234")
-- Put ALL flights in ONE "flights" array — do not repeat the "flights" key
-- Only include flights explicitly stated with a specific route and date — do not infer or fabricate flights
-- If no confirmed flight bookings found, return: {"flights":[]}
-
-Email:
-${truncated} /no_think`
+  const prompt = singleExtractPrompt.replace('{{email_text}}', truncated + ' /no_think')
 
   try {
     const response = await engine.chat.completions.create({
@@ -257,9 +241,10 @@ export async function extractFromLlmBatch(emails: NormalizedEmail[]): Promise<Fl
 
 Format: {${formatEntries}}
 
-For each email, list flights with: origin (3-letter IATA), destination (3-letter IATA), date (YYYY-MM-DD), airline, flightNumber (with airline prefix).
-If no flights found for an email, return empty flights array.
-Include ALL flights mentioned (outbound + return).
+For each email, extract only confirmed flight bookings with: origin (3-letter IATA), destination (3-letter IATA), date (YYYY-MM-DD), airline (full name), flightNumber (with airline prefix).
+Do NOT extract flights from cancellation notices, delay notifications, baggage claims, or promotional emails.
+If no confirmed flight bookings found for an email, return empty flights array.
+Only include flights explicitly stated — do not infer or fabricate flights.
 
 ${emailBlocks} /no_think`
 
